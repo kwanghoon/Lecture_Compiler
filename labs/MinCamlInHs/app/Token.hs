@@ -41,11 +41,12 @@ data Token =
 tokenStrList :: [(Token,String)]
 tokenStrList =
   [ (EOF,  "$"),
-    (LPAREN,        "("),
-    (RPAREN,        ")"),
+    (LPAREN,       "("),
+    (RPAREN,       ")"),
     (CONSTINT,     "const_int"),
     (CONSTFLOAT,   "const_float"),
-    (MINUS,         "-"),
+    (MINUS,        "-"),
+    (PLUS,         "+"),
     (MINUSDOT,     "-."),
     (PLUSDOT,      "+."),
     (ASTDOT,       "*."),

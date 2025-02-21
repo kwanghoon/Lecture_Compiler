@@ -35,12 +35,15 @@ library
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
       base >=4.7 && <5
+    , containers
+    , transformers
     , yapb >=0.2.7
   default-language: Haskell2010
 
 executable MinCamlInHs-exe
   main-is: Main.hs
   other-modules:
+      Lexer
       Token
       Paths_MinCamlInHs
   autogen-modules:
@@ -51,6 +54,8 @@ executable MinCamlInHs-exe
   build-depends:
       MinCamlInHs
     , base >=4.7 && <5
+    , containers
+    , transformers
     , yapb >=0.2.7
   default-language: Haskell2010
 
@@ -67,5 +72,7 @@ test-suite MinCamlInHs-test
   build-depends:
       MinCamlInHs
     , base >=4.7 && <5
+    , containers
+    , transformers
     , yapb >=0.2.7
   default-language: Haskell2010
