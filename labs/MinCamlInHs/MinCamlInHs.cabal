@@ -37,7 +37,7 @@ library
       base >=4.7 && <5
     , containers
     , transformers
-    , yapb >=0.2.7
+    , yapb >=0.2.6
   default-language: Haskell2010
 
 executable MinCamlInHs-exe
@@ -57,7 +57,7 @@ executable MinCamlInHs-exe
     , base >=4.7 && <5
     , containers
     , transformers
-    , yapb >=0.2.7
+    , yapb >=0.2.6
   default-language: Haskell2010
 
 test-suite MinCamlInHs-test
@@ -75,5 +75,5 @@ test-suite MinCamlInHs-test
     , base >=4.7 && <5
     , containers
     , transformers
-    , yapb >=0.2.7
+    , yapb >=0.2.6
   default-language: Haskell2010

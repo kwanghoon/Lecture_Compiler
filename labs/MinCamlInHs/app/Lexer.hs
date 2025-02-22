@@ -24,9 +24,9 @@ lexerSpec = LexerSpec
         ("\\("     , mkFn LPAREN),
         ("\\)"     , mkFn RPAREN),
 
-        ("[0-9]+"  , mkFn CONSTINT),
         ("[0-9]+(\\.[0-9]*)?([eE][+-]?[0-9]+)?", 
                      mkFn CONSTFLOAT),
+        ("[0-9]+"  , mkFn CONSTINT),
         
         ("\\-\\."     , mkFn MINUSDOT),
         ("\\+\\."     , mkFn PLUSDOT),
@@ -68,16 +68,19 @@ keywordOrIdentifier text =
 comment :: LexAction Token IO ()
 comment _ =
   do (state_parm_, line, col, text) <- ST.get
-     (newLine, newCol, newText) <- mlc (tail (tail text)) line (col+2)
+     (newLine, newCol, newText) <- mlc 1 (tail (tail text)) line (col+2)
      ST.put (state_parm_, newLine, newCol, newText)
      return Nothing
   where
-    mlc [] line col =
+    mlc :: Integer -> String -> Line -> Column -> 
+            ST.StateT (LexerParserState ()) IO (Line, Column, String)
+    mlc _ [] line col =
       do lift $ putStrLn $ "Lex warning: unclosed comment: " ++ show (line, col)
          return (line, col, [])
-    mlc ('*':')':text) line col = return (line, col+2, text)
-    mlc ('(':'*':text) line col = mlc text line (col+2) 
-    mlc ('\n':text) line col = mlc text (line+1) col
-    mlc ('\r':text) line col = mlc text (line+1) col
-    mlc (_:text) line col = mlc text line (col+1)
+    mlc 1 ('*':')':text) line col = do {- lift $ putStrLn (show (line, col+2)); -} return (line, col+2, text)
+    mlc n ('*':')':text) line col = do {- lift $ putStr "*)"; -} mlc (n-1) text line (col+2)
+    mlc n ('(':'*':text) line col = do {- lift $ putStr "(*"; -} mlc (n+1) text line (col+2) 
+    mlc n ('\n':text) line _      = do {- lift $ putStrLn ""; -} mlc n text (line+1) 1
+    mlc n ('\r':text) line _      = do {- lift $ putStrLn ""; -} mlc n text (line+1) 1
+    mlc n (_:text) line col       = do {- lift $ putStr (c:[]); -} mlc n text line (col+1)
      
