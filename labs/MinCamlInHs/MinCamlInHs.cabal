@@ -44,6 +44,7 @@ executable MinCamlInHs-exe
   main-is: Main.hs
   other-modules:
       Lexer
+      MainUtil
       Token
       Paths_MinCamlInHs
   autogen-modules:

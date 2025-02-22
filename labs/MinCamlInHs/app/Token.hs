@@ -1,4 +1,4 @@
-module Token(Token(..), keywords) where
+module Token(Token(..), keywords, fromToken) where
 
 import TokenInterface
 
@@ -43,8 +43,8 @@ tokenStrList =
   [ (EOF,  "$"),
     (LPAREN,       "("),
     (RPAREN,       ")"),
-    (CONSTINT,     "const_int"),
-    (CONSTFLOAT,   "const_float"),
+    (CONSTINT,     "int"),
+    (CONSTFLOAT,   "float"),
     (MINUS,        "-"),
     (PLUS,         "+"),
     (MINUSDOT,     "-."),
@@ -60,7 +60,8 @@ tokenStrList =
     (COMMA,        ","),
     (DOT,          "."),
     (LESSMINUS,    "<-"),
-    (SEMICOLON,    ";")
+    (SEMICOLON,    ";"),
+    (IDENT,        "ident")
   ] ++ keywords
 
 keywords :: [(Token, String)]
@@ -79,16 +80,16 @@ keywords =
   ]
 
 findTok :: Token -> [(Token, String)] -> Maybe String
-findTok tok [] = Nothing
+findTok _   [] = Nothing
 findTok tok ((tok_,str):list)
   | tok == tok_ = Just str
   | otherwise   = findTok tok list
 
-findStr :: Token -> [(String, Token)] -> Maybe String
-findStr str [] = Nothing
-findStr str ((tok,str_):list)
-  | str == str_ = Just tok
-  | otherwise   = findStr str list
+-- findStr :: Token -> [(String, Token)] -> Maybe String
+-- findStr _   [] = Nothing
+-- findStr str ((tok,str_):list)
+--   | str == str_ = Just tok
+--   | otherwise   = findStr str list
 
 instance TokenInterface Token where
   fromToken tok =

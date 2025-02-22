@@ -22,8 +22,8 @@ description:         Please see the README on GitHub at <https://github.com/gith
 dependencies:
 - base >= 4.7 && < 5
 - yapb >= 0.2.7
-- transformers
-- containers
+- transformers               # Control.Monad.Trans
+- containers                 # Data.Map
 
 ghc-options:
 - -Wall
