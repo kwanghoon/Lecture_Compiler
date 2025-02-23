@@ -1,0 +1,44 @@
+0: Start -> Exp
+1: SimpleExp -> ( Exp )
+2: SimpleExp -> ( )
+3: SimpleExp -> true
+4: SimpleExp -> false
+5: SimpleExp -> int
+6: SimpleExp -> float
+7: SimpleExp -> ident
+8: SimpleExp -> SimpleExp . ( Exp )
+9: Exp -> SimpleExp
+10: Exp -> not Exp
+11: Exp -> - Exp
+12: Exp -> Exp + Exp
+13: Exp -> Exp - Exp
+14: Exp -> Exp = Exp
+15: Exp -> Exp <> Exp
+16: Exp -> Exp < Exp
+17: Exp -> Exp > Exp
+18: Exp -> Exp <= Exp
+19: Exp -> Exp >= Exp
+20: Exp -> if Exp then Exp else Exp
+21: Exp -> -. Exp
+22: Exp -> Exp +. Exp
+23: Exp -> Exp -. Exp
+24: Exp -> Exp *. Exp
+25: Exp -> Exp /. Exp
+26: Exp -> let ident = Exp in Exp
+27: Exp -> let rec FunDef in Exp
+28: Exp -> SimpleExp ActualArgs
+29: Exp -> Elems
+30: Exp -> let ( Pat ) = Exp in Exp
+31: Exp -> SimpleExp . ( Exp ) <- Exp
+32: Exp -> Exp ; Exp
+33: Exp -> Array.create SimpleExp SimpleExp
+34: Exp -> error
+35: FunDef -> ident FormalArgs = Exp
+36: FormalArgs -> ident FormalArgs
+37: FormalArgs -> ident
+38: ActualArgs -> ActualArgs SimpleExp
+39: ActualArgs -> SimpleExp
+40: Elems -> Elems , Exp
+41: Elems -> Exp , Exp
+42: Pat -> Pat , ident
+43: Pat -> ident , ident
