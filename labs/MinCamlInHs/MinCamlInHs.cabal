@@ -45,6 +45,7 @@ executable MinCamlInHs-exe
   other-modules:
       Lexer
       MainUtil
+      Parser
       Token
       Paths_MinCamlInHs
   autogen-modules:
