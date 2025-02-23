@@ -1,9 +1,9 @@
-module Parser(parserSpec) where
+module Parser(parserSpec, expFrom) where
 
 import Attrs
 import CommonParserUtil
 import Token
--- import Expr
+import Syntax
 
 import ParserTime
 
@@ -15,7 +15,7 @@ ruleWithPrec :: String -> String -> b -> (String, b, Maybe String)
 ruleWithPrec prodRule prec action = (prodRule, action, Just prec)
 
 --
-parserSpec :: ParserSpec Token () IO () -- AST
+parserSpec :: ParserSpec Token PET IO () -- AST
 parserSpec = ParserSpec
   {
     startSymbol = "Start",
@@ -38,19 +38,28 @@ parserSpec = ParserSpec
 
     parserSpecList =
     [
+      -- Start :: Exp
       rule "Start -> Exp" (\rhs -> return $ get rhs 1),
 
-      -- SimpleExp: 
-      rule "SimpleExp -> ( Exp )" (\_rhs -> undefined),
-      rule "SimpleExp -> ( )" (\_rhs -> undefined),
-      rule "SimpleExp -> true" (\_rhs -> undefined),
-      rule "SimpleExp -> false" (\_rhs -> undefined),
-      rule "SimpleExp -> int" (\_rhs -> undefined),
-      rule "SimpleExp -> float" (\_rhs -> undefined),
-      rule "SimpleExp -> ident" (\_rhs -> undefined),
-      rule "SimpleExp -> SimpleExp . ( Exp )" (\_rhs -> undefined),
+      -- SimpleExp :: Exp 
+      rule "SimpleExp -> ( Exp )" 
+        (\rhs -> return $ get rhs 2),
+      rule "SimpleExp -> ( )" 
+        (\_rhs -> return $ fromExp Unit),
+      rule "SimpleExp -> true" 
+        (\_rhs -> return $ fromExp (Bool True)),
+      rule "SimpleExp -> false" 
+        (\_rhs -> return $ fromExp (Bool False)),
+      rule "SimpleExp -> int" 
+        (\rhs -> return $ fromExp (Int (read (getText rhs 1) :: Int))),
+      rule "SimpleExp -> float" 
+        (\rhs -> return $ fromExp (Float (read (getText rhs 1) :: Double))),
+      rule "SimpleExp -> ident" 
+        (\rhs -> return $ fromExp (Var (getText rhs 1))),
+      rule "SimpleExp -> SimpleExp . ( Exp )" 
+        (\rhs -> return $ fromExp (Get (expFrom (get rhs 1)) (expFrom (get rhs 4)))),
 
-      -- Exp: 
+      -- Exp :: Exp 
       rule "Exp -> SimpleExp" (\_rhs -> undefined),
       ruleWithPrec "Exp -> not Exp" 
         {- %prec -} "prec_app" 
@@ -96,14 +105,14 @@ parserSpec = ParserSpec
         (\_rhs -> undefined),
       rule "Exp -> error" (\_rhs -> undefined),
 
-      -- FunDef 
+      -- FunDef :: FunDef
       rule "FunDef -> ident FormalArgs = Exp" (\_rhs -> undefined),
 
-      -- FormalArgs
+      -- FormalArgs :: [String]
       rule "FormalArgs -> ident FormalArgs" (\_rhs -> undefined),
       rule "FormalArgs -> ident" (\_rhs -> undefined),
 
-      -- ActualArgs
+      -- ActualArgs :: [Exp]
       ruleWithPrec "ActualArgs -> ActualArgs SimpleExp" 
         {- %prec -} "prec_app"
         (\_rhs -> undefined),
@@ -111,11 +120,11 @@ parserSpec = ParserSpec
         {- %prec -} "prec_app"
         (\_rhs -> undefined),
 
-      -- Elems
+      -- Elems :: [Exp]
       rule "Elems -> Elems , Exp" (\_rhs -> undefined),
       rule "Elems -> Exp , Exp" (\_rhs -> undefined),
 
-      -- Pat 
+      -- Pat :: [Ident]
       rule "Pat -> Pat , ident" (\_rhs -> undefined),
       rule "Pat -> ident , ident" (\_rhs -> undefined)
     ],
@@ -133,3 +142,32 @@ parserSpec = ParserSpec
                    pa_finishTime=finishTime
                  }
   }
+
+-- Parsed Expression tree 
+
+data PET = 
+    PETExp { expFrom :: Exp }
+  | PETFundef { fundefFrom :: Fundef }
+  | PETFormalArgs { formalArgsFrom :: [String] }
+  | PETActualArgs { actualArgsFrom :: [Exp] }
+  | PETElems { elemsFrom :: [Exp] }
+  | PETPats { patsFrom :: [Ident] }
+  deriving (Show,Eq)
+
+fromExp :: Exp -> PET
+fromExp exp = PETExp exp
+
+fromFundef :: Fundef -> PET
+fromFundef fundef = PETFundef fundef
+
+fromFormalArgs :: [Ident] -> PET
+fromFormalArgs formalArgs = PETFormalArgs formalArgs
+
+fromActualArgs :: [Exp] -> PET
+fromActualArgs actualArgs = PETActualArgs actualArgs
+
+fromElems :: [Exp] -> PET
+fromElems elems = PETElems elems 
+
+fromPats :: [Ident] -> PET
+fromPats pats = PETPats pats 

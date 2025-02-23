@@ -2,7 +2,7 @@ module MainUtil(lexer, parser) where
 
 import TokenInterface(fromToken)
 import Lexer (lexerSpec)
-import Parser (parserSpec)
+import Parser (parserSpec, expFrom)
 import Terminal (terminalToString)
 import CommonParserUtil (lexing, parsing, aLexer, endOfToken)
 
@@ -22,7 +22,10 @@ lexer fileName =
 parser :: String -> IO ()
 parser fileName =
   do text <- readFile fileName
-     parsing False 
-       parserSpec ((),1,1,text)
-       (aLexer lexerSpec)
-       (fromToken (endOfToken lexerSpec))        
+     ast <- 
+       parsing False 
+         parserSpec ((),1,1,text)
+         (aLexer lexerSpec)
+         (fromToken (endOfToken lexerSpec))
+     let exp = expFrom ast       
+     return ()
