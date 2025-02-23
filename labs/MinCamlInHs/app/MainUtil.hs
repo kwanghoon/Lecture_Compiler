@@ -4,12 +4,11 @@ import Lexer (lexerSpec)
 import Terminal (terminalToString)
 import CommonParserUtil (lexing)
 
-{-
- $ stack ghci
- ghci> lexer ".\\app\\test\fib.ml"
- ...
- an output of the lexer
--}
+--  Example usage:
+--
+--  $ stack ghci
+--  ghci> lexer ".\\app\\test\\fib.ml"
+--  ...
 
 lexer :: String -> IO ()
 lexer fileName =
