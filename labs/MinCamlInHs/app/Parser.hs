@@ -11,8 +11,8 @@ import ParserTime
 rule :: String -> b -> (String, b, Maybe a2)
 rule prodRule action              = (prodRule, action, Nothing  )
 
-_ruleWithPrec :: String -> String -> b -> (String, b, Maybe String)
-_ruleWithPrec prodRule prec action = (prodRule, action, Just prec)
+ruleWithPrec :: String -> String -> b -> (String, b, Maybe String)
+ruleWithPrec prodRule prec action = (prodRule, action, Just prec)
 
 --
 parserSpec :: ParserSpec Token () IO () -- AST
@@ -52,8 +52,12 @@ parserSpec = ParserSpec
 
       -- Exp: 
       rule "Exp -> SimpleExp" (\_rhs -> undefined),
-      rule "Exp -> not Exp" (\_rhs -> undefined),
-      rule "Exp -> - Exp" (\_rhs -> undefined),
+      ruleWithPrec "Exp -> not Exp" 
+        {- %prec -} "prec_app" 
+        (\_rhs -> undefined),
+      ruleWithPrec "Exp -> - Exp" 
+        {- %prec -} "prec_unary_minus"
+        (\_rhs -> undefined),
       rule "Exp -> Exp + Exp" (\_rhs -> undefined),
       rule "Exp -> Exp - Exp" (\_rhs -> undefined),
       rule "Exp -> Exp = Exp" (\_rhs -> undefined),
@@ -62,20 +66,34 @@ parserSpec = ParserSpec
       rule "Exp -> Exp > Exp" (\_rhs -> undefined),
       rule "Exp -> Exp <= Exp" (\_rhs -> undefined),
       rule "Exp -> Exp >= Exp" (\_rhs -> undefined),
-      rule "Exp -> if Exp then Exp else Exp" (\_rhs -> undefined),
-      rule "Exp -> -. Exp" (\_rhs -> undefined),
+      ruleWithPrec "Exp -> if Exp then Exp else Exp" 
+        {- %prec -} "prec_if"
+        (\_rhs -> undefined),
+      ruleWithPrec "Exp -> -. Exp" 
+        {- %prec -} "prec_unary_minus"
+        (\_rhs -> undefined),
       rule "Exp -> Exp +. Exp" (\_rhs -> undefined),
       rule "Exp -> Exp -. Exp" (\_rhs -> undefined),
       rule "Exp -> Exp *. Exp" (\_rhs -> undefined),
       rule "Exp -> Exp /. Exp" (\_rhs -> undefined),
-      rule "Exp -> let ident = Exp in Exp" (\_rhs -> undefined),
-      rule "Exp -> let rec FunDef in Exp" (\_rhs -> undefined),
-      rule "Exp -> SimpleExp ActualArgs" (\_rhs -> undefined),
-      rule "Exp -> Elems" (\_rhs -> undefined),
+      ruleWithPrec "Exp -> let ident = Exp in Exp"
+        {- %prec -} "prec_let"
+        (\_rhs -> undefined),
+      ruleWithPrec "Exp -> let rec FunDef in Exp" 
+        {- %prec -} "prec_let"
+        (\_rhs -> undefined),
+      ruleWithPrec "Exp -> SimpleExp ActualArgs" 
+        {- %prec -} "prec_app"
+        (\_rhs -> undefined),
+      ruleWithPrec "Exp -> Elems" 
+        {- %prec -} "prec_tuple"
+        (\_rhs -> undefined),
       rule "Exp -> let ( Pat ) = Exp in Exp" (\_rhs -> undefined),
       rule "Exp -> SimpleExp . ( Exp ) <- Exp" (\_rhs -> undefined),
       rule "Exp -> Exp ; Exp" (\_rhs -> undefined),
-      rule "Exp -> Array.create SimpleExp SimpleExp" (\_rhs -> undefined),
+      ruleWithPrec "Exp -> Array.create SimpleExp SimpleExp" 
+        {- %prec -} "prec_app"
+        (\_rhs -> undefined),
       rule "Exp -> error" (\_rhs -> undefined),
 
       -- FunDef 
@@ -86,8 +104,12 @@ parserSpec = ParserSpec
       rule "FormalArgs -> ident" (\_rhs -> undefined),
 
       -- ActualArgs
-      rule "ActualArgs -> ActualArgs SimpleExp" (\_rhs -> undefined),
-      rule "ActualArgs -> SimpleExp" (\_rhs -> undefined),
+      ruleWithPrec "ActualArgs -> ActualArgs SimpleExp" 
+        {- %prec -} "prec_app"
+        (\_rhs -> undefined),
+      ruleWithPrec "ActualArgs -> SimpleExp" 
+        {- %prec -} "prec_app"
+        (\_rhs -> undefined),
 
       -- Elems
       rule "Elems -> Elems , Exp" (\_rhs -> undefined),
