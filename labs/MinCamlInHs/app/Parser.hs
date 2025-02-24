@@ -4,6 +4,7 @@ import Attrs
 import CommonParserUtil
 import Token
 import Syntax
+import Type(noType)
 
 import ParserTime
 
@@ -57,46 +58,64 @@ parserSpec = ParserSpec
       rule "SimpleExp -> ident" 
         (\rhs -> return $ fromExp (Var (getText rhs 1))),
       rule "SimpleExp -> SimpleExp . ( Exp )" 
-        (\rhs -> return $ fromExp (Get (expFrom (get rhs 1)) (expFrom (get rhs 4)))),
+        (\rhs -> return $ fromExp (Get (expFrom (get rhs 1)) 
+                            (expFrom (get rhs 4)))),
 
       -- Exp :: Exp 
-      rule "Exp -> SimpleExp" (\_rhs -> undefined),
+      rule "Exp -> SimpleExp" (\rhs -> return $ get rhs 1),
       ruleWithPrec "Exp -> not Exp" 
         {- %prec -} "prec_app" 
-        (\_rhs -> undefined),
+        (\rhs -> return $ fromExp (Not (expFrom (get rhs 2)))),
       ruleWithPrec "Exp -> - Exp" 
-        {- %prec -} "prec_unary_minus"
-        (\_rhs -> undefined),
-      rule "Exp -> Exp + Exp" (\_rhs -> undefined),
-      rule "Exp -> Exp - Exp" (\_rhs -> undefined),
-      rule "Exp -> Exp = Exp" (\_rhs -> undefined),
-      rule "Exp -> Exp <> Exp" (\_rhs -> undefined),
-      rule "Exp -> Exp < Exp" (\_rhs -> undefined),
-      rule "Exp -> Exp > Exp" (\_rhs -> undefined),
-      rule "Exp -> Exp <= Exp" (\_rhs -> undefined),
-      rule "Exp -> Exp >= Exp" (\_rhs -> undefined),
+        {- %prec -} "prec_unary_minus" (\rhs -> 
+          return $ fromExp (Neg (expFrom (get rhs 2)))),
+      rule "Exp -> Exp + Exp" (\rhs -> 
+          return $ fromExp (Add (expFrom (get rhs 1)) (expFrom (get rhs 3)))),
+      rule "Exp -> Exp - Exp" (\rhs -> 
+          return $ fromExp (Sub (expFrom (get rhs 1)) (expFrom (get rhs 3)))),
+      rule "Exp -> Exp = Exp" (\rhs -> 
+          return $ fromExp (Eq (expFrom (get rhs 1)) (expFrom (get rhs 3)))),
+      rule "Exp -> Exp <> Exp" (\rhs -> 
+          return $ fromExp (Not (Eq (expFrom (get rhs 1)) (expFrom (get rhs 3))))),
+      rule "Exp -> Exp < Exp" (\rhs -> 
+          return $ fromExp (Not (LE (expFrom (get rhs 3)) (expFrom (get rhs 1))))),
+      rule "Exp -> Exp > Exp" (\rhs -> 
+          return $ fromExp (Not (LE (expFrom (get rhs 1)) (expFrom (get rhs 3))))),
+      rule "Exp -> Exp <= Exp" (\rhs -> 
+          return $ fromExp (LE (expFrom (get rhs 1)) (expFrom (get rhs 3)))),
+      rule "Exp -> Exp >= Exp" (\rhs -> 
+          return $ fromExp (LE (expFrom (get rhs 3)) (expFrom (get rhs 1)))),
       ruleWithPrec "Exp -> if Exp then Exp else Exp" 
         {- %prec -} "prec_if"
-        (\_rhs -> undefined),
+        (\rhs -> 
+          return $ fromExp (If (expFrom (get rhs 1)) 
+                             (expFrom (get rhs 2)) (expFrom (get rhs 3)))),
       ruleWithPrec "Exp -> -. Exp" 
         {- %prec -} "prec_unary_minus"
-        (\_rhs -> undefined),
-      rule "Exp -> Exp +. Exp" (\_rhs -> undefined),
-      rule "Exp -> Exp -. Exp" (\_rhs -> undefined),
-      rule "Exp -> Exp *. Exp" (\_rhs -> undefined),
-      rule "Exp -> Exp /. Exp" (\_rhs -> undefined),
+        (\rhs -> return $ fromExp (FNeg (expFrom (get rhs 2)))),
+      rule "Exp -> Exp +. Exp" (\rhs -> 
+          return $ fromExp (FAdd (expFrom (get rhs 1)) (expFrom (get rhs 3)))),
+      rule "Exp -> Exp -. Exp" (\rhs -> 
+          return $ fromExp (FSub (expFrom (get rhs 1)) (expFrom (get rhs 3)))),
+      rule "Exp -> Exp *. Exp" (\rhs -> 
+          return $ fromExp (FMul (expFrom (get rhs 1)) (expFrom (get rhs 3)))),
+      rule "Exp -> Exp /. Exp" (\rhs -> 
+          return $ fromExp (FDiv (expFrom (get rhs 1)) (expFrom (get rhs 3)))),
       ruleWithPrec "Exp -> let ident = Exp in Exp"
         {- %prec -} "prec_let"
-        (\_rhs -> undefined),
+        (\rhs -> return $ fromExp (Let (getText rhs 2, noType) 
+                            (expFrom (get rhs 4)) (expFrom (get rhs 6)))),
       ruleWithPrec "Exp -> let rec FunDef in Exp" 
         {- %prec -} "prec_let"
-        (\_rhs -> undefined),
+        (\rhs -> return $ fromExp (LetRec (fundefFrom (get rhs 3)) 
+                            (expFrom (get rhs 5)))),
       ruleWithPrec "Exp -> SimpleExp ActualArgs" 
         {- %prec -} "prec_app"
-        (\_rhs -> undefined),
+        (\rhs -> return $ fromExp (App (expFrom (get rhs 1)) 
+                            (actualArgsFrom (get rhs 2)))),
       ruleWithPrec "Exp -> Elems" 
         {- %prec -} "prec_tuple"
-        (\_rhs -> undefined),
+        (\rhs -> return $ fromExp (Tuple (elemsFrom (get rhs 1)))),
       rule "Exp -> let ( Pat ) = Exp in Exp" (\_rhs -> undefined),
       rule "Exp -> SimpleExp . ( Exp ) <- Exp" (\_rhs -> undefined),
       rule "Exp -> Exp ; Exp" (\_rhs -> undefined),
