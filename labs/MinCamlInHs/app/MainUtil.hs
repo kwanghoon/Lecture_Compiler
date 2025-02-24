@@ -27,5 +27,5 @@ parser fileName =
          parserSpec ((),1,1,text)
          (aLexer lexerSpec)
          (fromToken (endOfToken lexerSpec))
-     let exp = expFrom ast       
-     return ()
+     let e = expFrom ast       
+     putStrLn (show e)

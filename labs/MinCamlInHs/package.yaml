@@ -24,6 +24,7 @@ dependencies:
 - yapb >= 0.2.6
 - transformers               # Control.Monad.Trans
 - containers                 # Data.Map
+- mtl                        # lift 
 
 ghc-options:
 - -Wall
@@ -33,7 +34,7 @@ ghc-options:
 - -Wincomplete-uni-patterns
 - -Wmissing-export-lists
 - -Wmissing-home-modules
-- -Wpartial-fields
+# - -Wpartial-fields
 - -Wredundant-constraints
 
 library:

@@ -1,11 +1,15 @@
 module Parser(parserSpec, expFrom) where
 
+import Prelude hiding (exp)
+
 import Attrs
 import CommonParserUtil
 import Token
 import Syntax
-import Type(noType)
+import qualified Type as T
 
+import Control.Monad.Trans (lift)
+import qualified Control.Monad.Trans.State.Lazy as ST
 import ParserTime
 
 -- | Utility
@@ -54,7 +58,9 @@ parserSpec = ParserSpec
       rule "SimpleExp -> int" 
         (\rhs -> return $ fromExp (Int (read (getText rhs 1) :: Int))),
       rule "SimpleExp -> float" 
-        (\rhs -> return $ fromExp (Float (read (getText rhs 1) :: Double))),
+        (\rhs -> 
+           let read_ n = if last n == '.' then read (n++"0") else read n in
+             return $ fromExp (Float (read_ (getText rhs 1) :: Double))),
       rule "SimpleExp -> ident" 
         (\rhs -> return $ fromExp (Var (getText rhs 1))),
       rule "SimpleExp -> SimpleExp . ( Exp )" 
@@ -88,8 +94,8 @@ parserSpec = ParserSpec
       ruleWithPrec "Exp -> if Exp then Exp else Exp" 
         {- %prec -} "prec_if"
         (\rhs -> 
-          return $ fromExp (If (expFrom (get rhs 1)) 
-                             (expFrom (get rhs 2)) (expFrom (get rhs 3)))),
+          return $ fromExp (If (expFrom (get rhs 2)) 
+                             (expFrom (get rhs 4)) (expFrom (get rhs 6)))),
       ruleWithPrec "Exp -> -. Exp" 
         {- %prec -} "prec_unary_minus"
         (\rhs -> return $ fromExp (FNeg (expFrom (get rhs 2)))),
@@ -103,7 +109,7 @@ parserSpec = ParserSpec
           return $ fromExp (FDiv (expFrom (get rhs 1)) (expFrom (get rhs 3)))),
       ruleWithPrec "Exp -> let ident = Exp in Exp"
         {- %prec -} "prec_let"
-        (\rhs -> return $ fromExp (Let (getText rhs 2, noType) 
+        (\rhs -> return $ fromExp (Let (getText rhs 2, T.noType) 
                             (expFrom (get rhs 4)) (expFrom (get rhs 6)))),
       ruleWithPrec "Exp -> let rec FunDef in Exp" 
         {- %prec -} "prec_let"
@@ -116,36 +122,63 @@ parserSpec = ParserSpec
       ruleWithPrec "Exp -> Elems" 
         {- %prec -} "prec_tuple"
         (\rhs -> return $ fromExp (Tuple (elemsFrom (get rhs 1)))),
-      rule "Exp -> let ( Pat ) = Exp in Exp" (\_rhs -> undefined),
-      rule "Exp -> SimpleExp . ( Exp ) <- Exp" (\_rhs -> undefined),
-      rule "Exp -> Exp ; Exp" (\_rhs -> undefined),
+      rule "Exp -> let ( Pat ) = Exp in Exp" (\rhs -> 
+        return $ fromExp (LetTuple (patFrom (get rhs 3))
+                            (expFrom (get rhs 6)) (expFrom (get rhs 8)))),
+      rule "Exp -> SimpleExp . ( Exp ) <- Exp" (\rhs -> 
+        return $ fromExp (Put (expFrom (get rhs 1)) 
+                              (expFrom (get rhs 4))
+                              (expFrom (get rhs 7)))),
+      rule "Exp -> Exp ; Exp" (\rhs ->
+        return $ fromExp (Let ("Tu0", T.UnitType) 
+                                (expFrom (get rhs 1)) 
+                                (expFrom (get rhs 3)) )),
       ruleWithPrec "Exp -> Array.create SimpleExp SimpleExp" 
         {- %prec -} "prec_app"
-        (\_rhs -> undefined),
-      rule "Exp -> error" (\_rhs -> undefined),
+        (\rhs -> return $ fromExp (Array (expFrom (get rhs 2)) 
+                                         (expFrom (get rhs 3)))),
+      rule "Exp -> error" (\_rhs -> 
+        do (_,line,col,text) <- ST.get
+           lift $ putStrLn $ "error: " ++ " at Line " ++ show line ++ 
+                             ", Column " ++ show col
+           lift $ putStrLn $ " : " ++ take 77 text  -- 80 columns
+           return $ fromExp (Int 0)),
 
-      -- FunDef :: FunDef
-      rule "FunDef -> ident FormalArgs = Exp" (\_rhs -> undefined),
+      -- FunDef :: Fundef
+      rule "FunDef -> ident FormalArgs = Exp" (\rhs -> 
+        return $ fromFundef 
+                   (Fundef (getText rhs 1, T.noType)
+                           (formalArgsFrom (get rhs 2))
+                           (expFrom (get rhs 4)))),
 
-      -- FormalArgs :: [String]
-      rule "FormalArgs -> ident FormalArgs" (\_rhs -> undefined),
-      rule "FormalArgs -> ident" (\_rhs -> undefined),
+      -- FormalArgs :: [(Ident,T.Type)]
+      rule "FormalArgs -> ident FormalArgs" (\rhs ->
+        return $ fromFormalArgs ((getText rhs 1, T.noType) : formalArgsFrom (get rhs 2))),
+      rule "FormalArgs -> ident" (\rhs -> 
+        return $ fromFormalArgs [(getText rhs 1, T.noType)]),
 
       -- ActualArgs :: [Exp]
       ruleWithPrec "ActualArgs -> ActualArgs SimpleExp" 
         {- %prec -} "prec_app"
-        (\_rhs -> undefined),
+        (\rhs -> return $ fromActualArgs 
+                           (actualArgsFrom (get rhs 1) ++ [expFrom (get rhs 2)])),
       ruleWithPrec "ActualArgs -> SimpleExp" 
         {- %prec -} "prec_app"
-        (\_rhs -> undefined),
+        (\rhs -> return $ fromActualArgs [expFrom (get rhs 1)]),
 
       -- Elems :: [Exp]
-      rule "Elems -> Elems , Exp" (\_rhs -> undefined),
-      rule "Elems -> Exp , Exp" (\_rhs -> undefined),
+      rule "Elems -> Elems , Exp" (\rhs -> 
+        return $ fromElems ( elemsFrom (get rhs 1) ++ [expFrom (get rhs 3)] )),
+      rule "Elems -> Exp , Exp" (\rhs -> 
+        return $ fromElems [ expFrom (get rhs 1), expFrom (get rhs 3)]),
 
-      -- Pat :: [Ident]
-      rule "Pat -> Pat , ident" (\_rhs -> undefined),
-      rule "Pat -> ident , ident" (\_rhs -> undefined)
+      -- Pat :: [(Ident,Type)]
+      rule "Pat -> Pat , ident" (\rhs -> 
+        return $ fromPat ( patFrom (get rhs 1) 
+                             ++ [(getText rhs 3, T.noType)] ) ),
+      rule "Pat -> ident , ident" (\rhs ->
+        return $ fromPat [ (getText rhs 1, T.noType), 
+                           (getText rhs 3, T.noType)])
     ],
     
     baseDir        = "./",
@@ -167,10 +200,10 @@ parserSpec = ParserSpec
 data PET = 
     PETExp { expFrom :: Exp }
   | PETFundef { fundefFrom :: Fundef }
-  | PETFormalArgs { formalArgsFrom :: [String] }
+  | PETFormalArgs { formalArgsFrom :: [(Ident,T.Type)] }
   | PETActualArgs { actualArgsFrom :: [Exp] }
   | PETElems { elemsFrom :: [Exp] }
-  | PETPats { patsFrom :: [Ident] }
+  | PETPat { patFrom :: [(Ident,T.Type)] }
   deriving (Show,Eq)
 
 fromExp :: Exp -> PET
@@ -179,7 +212,7 @@ fromExp exp = PETExp exp
 fromFundef :: Fundef -> PET
 fromFundef fundef = PETFundef fundef
 
-fromFormalArgs :: [Ident] -> PET
+fromFormalArgs :: [(Ident,T.Type)] -> PET
 fromFormalArgs formalArgs = PETFormalArgs formalArgs
 
 fromActualArgs :: [Exp] -> PET
@@ -188,5 +221,5 @@ fromActualArgs actualArgs = PETActualArgs actualArgs
 fromElems :: [Exp] -> PET
 fromElems elems = PETElems elems 
 
-fromPats :: [Ident] -> PET
-fromPats pats = PETPats pats 
+fromPat :: [(Ident,T.Type)] -> PET
+fromPat pats = PETPat pats 
