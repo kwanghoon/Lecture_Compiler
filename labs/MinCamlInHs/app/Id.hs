@@ -1,4 +1,4 @@
-module Id where
+module Id(idOfTyp, gentmp) where
 
 import qualified Type as T
 import ParserState(ParserState,getCounter,setCounter)

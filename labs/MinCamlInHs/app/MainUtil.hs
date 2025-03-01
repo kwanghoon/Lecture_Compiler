@@ -1,4 +1,6 @@
-module MainUtil(lexer, parser) where
+module MainUtil(lexer, parser, lex, parse) where
+
+import Prelude hiding (lex)
 
 import TokenInterface(fromToken)
 import Lexer (lexerSpec)
@@ -15,15 +17,22 @@ import ParserState (initParserState)
 
 lexer :: String -> IO ()
 lexer fileName =
-  do let stateParm = initParserState
-     text <- readFile fileName
-     terminalList <- lexing lexerSpec stateParm text
+  do text <- readFile fileName
+     lex text
+
+lex :: String -> IO ()
+lex text = 
+  do terminalList <- lexing lexerSpec initParserState text
      mapM_ (putStrLn . terminalToString) terminalList
 
 parser :: String -> IO ()
 parser fileName =
   do text <- readFile fileName
-     ast <- 
+     parse text
+
+parse :: String -> IO ()
+parse text =
+  do ast <- 
        parsing False 
          parserSpec (initParserState,1,1,text)
          (aLexer lexerSpec)
