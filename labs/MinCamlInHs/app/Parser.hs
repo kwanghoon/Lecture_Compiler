@@ -7,6 +7,8 @@ import CommonParserUtil
 import Token
 import Syntax
 import qualified Type as T
+import ParserState
+import Id 
 
 import Control.Monad.Trans (lift)
 import qualified Control.Monad.Trans.State.Lazy as ST
@@ -20,7 +22,7 @@ ruleWithPrec :: String -> String -> b -> (String, b, Maybe String)
 ruleWithPrec prodRule prec action = (prodRule, action, Just prec)
 
 --
-parserSpec :: ParserSpec Token PET IO () -- AST
+parserSpec :: ParserSpec Token PET IO ParserState -- AST
 parserSpec = ParserSpec
   {
     startSymbol = "Start",
@@ -130,7 +132,10 @@ parserSpec = ParserSpec
                               (expFrom (get rhs 4))
                               (expFrom (get rhs 7)))),
       rule "Exp -> Exp ; Exp" (\rhs ->
-        return $ fromExp (Let ("Tu0", T.UnitType) 
+        do (s,line,col,text) <- ST.get
+           let (n,s') = gentmp T.UnitType s 
+           ST.put (s',line,col,text)
+           return $ fromExp (Let (n, T.UnitType) 
                                 (expFrom (get rhs 1)) 
                                 (expFrom (get rhs 3)) )),
       ruleWithPrec "Exp -> Array.create SimpleExp SimpleExp" 

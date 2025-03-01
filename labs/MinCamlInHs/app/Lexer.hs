@@ -2,18 +2,19 @@ module Lexer(lexerSpec) where
 
 import CommonParserUtil
 import Token
+import ParserState 
 
 import qualified Data.Map as Map
 import qualified Control.Monad.Trans.State.Lazy as ST
 import Control.Monad.Trans.Class(lift)
 
-mkFn :: Token -> LexAction Token IO ()
+mkFn :: Token -> LexAction Token IO ParserState
 mkFn tok = \_ -> return $ Just tok
 
-skip :: LexAction Token IO ()
+skip :: LexAction Token IO ParserState
 skip = \_ -> return $ Nothing
 
-lexerSpec :: LexerSpec Token IO ()
+lexerSpec :: LexerSpec Token IO ParserState
 lexerSpec = LexerSpec
   {
     endOfToken    = EOF,
@@ -65,7 +66,7 @@ keywordOrIdentifier text =
     Just tok -> return $ Just tok
 
 -- Invariant: text = "(*..."  
-comment :: LexAction Token IO ()
+comment :: LexAction Token IO ParserState
 comment _ =
   do (state_parm_, line, col, text) <- ST.get
      (newLine, newCol, newText) <- mlc 1 (tail (tail text)) line (col+2)
@@ -73,7 +74,7 @@ comment _ =
      return Nothing
   where
     mlc :: Integer -> String -> Line -> Column -> 
-            ST.StateT (LexerParserState ()) IO (Line, Column, String)
+            ST.StateT (LexerParserState ParserState) IO (Line, Column, String)
     mlc _ [] line col =
       do lift $ putStrLn $ "Lex warning: unclosed comment: " ++ show (line, col)
          return (line, col, [])
