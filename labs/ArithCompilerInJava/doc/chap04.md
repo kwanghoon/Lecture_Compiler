@@ -82,12 +82,18 @@ ArrayList<Instr> compile(Expr expr) {
 	return instrs;
 }
 ```
-컴파일 과정을 예제로 살펴보자.
+
+기본 아이디어는 주어진 식을 컴파일하여, 해당 식의 값을 계산한 후 스택의 최상단에 결과 값을 놓는 명령어로 변환하는 것이다.
+
+컴파일 과정을 예제로 살펴보자. 
+
 
  - `new Var("x")`  ===>  `new Push("x")`
  
  - `new Lit(123)`  ===>  `new Push(123)`
  
+Q. 변수와 상수의 컴파일 변환이 앞서 설명한 기본 아이디어를 따름을 설명하시오.
+
  - `new Assign("x", 123)`
 
     ===>
@@ -98,7 +104,17 @@ ArrayList<Instr> compile(Expr expr) {
 	new Push("x")
 	```
 
- - `new BinOp(BinOp.ADD, "x", 123)`
+ - new Assign("x", 
+      new Assign("y", new Lit(123)))
+     ===> new Push(123)
+          new Store("y")
+	      new Push("y")
+		  new Store("x")
+		  new Push("x")
+
+Q. 할당문에서 할당된 값은 최종적으로 스택의 최상단에 위치한다. 특히, 두 번째 예제 (x = y = 123)의 컴파일된 명령어를 분석하여, y에 할당된 값이 x에 어떻게 할당되는지를 설명하시오.
+
+ - `new BinOp(BinOp.ADD, "x", new Lit(123))`
 
     ===>
     ```java
@@ -106,6 +122,20 @@ ArrayList<Instr> compile(Expr expr) {
     new Push(123)
     new InstrOp(InstrOp.ADD)
     ```
+
+- `new BinOp(BinOp.ADD, "x", 
+     new BinOp(BinOp.Mul "x", new Lit(123))))`
+
+    ===>
+    ```java
+    new Push("x")
+    new Push(123)
+    new InstrOp(InstrOp.MUL)
+	new Push("x")
+	new InstrOp(InstrOp.ADD)
+    ```	
+
+Q. 두 번째 예제 (x + x * 123)의 컴파일된 명령어를 분석하여, 곱셈의 결과가 어떻게 덧셈의 오른쪽 피연산자로 전달되는지를 설명하시오.
 
 위 예제는 이해를 돕기 위해 다소 간략하게 작성되었으며, 정확한 표현과는 일부 차이가 있을 수 있다. 타겟 프로그램의 추상 구문 트리를 정확하게 작성하려면 `ArrayList<Instr>` 객체를 생성하고, 변환된 `Instr` 객체들을 리스트에 담아 구성해야 한다.
 
