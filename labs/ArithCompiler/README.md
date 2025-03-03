@@ -1,4 +1,4 @@
-d # 개념 이해 목적의 장난감 컴파일러: ArithCompiler
+# 개념 이해 목적의 장난감 컴파일러: ArithCompiler
 
 ## 연습용 템플릿 (tag: v0.1)
 
