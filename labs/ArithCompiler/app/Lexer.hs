@@ -19,7 +19,8 @@ lexerSpec = LexerSpec
     lexerSpecList = 
       [ 
         ("[ \t\n\r]" , skip)    -- space+ where space = [' ' '\t' '\n' '\r']
-
+        , ("="     , mkFn EQUAL)
+        , (";"     , mkFn SEMICOLON)
         -- Typical definition of keywords or identifiers
         , ("[_a-zA-Z][_a-zA-Z0-9]*", keywordOrIdentifier)
       ]

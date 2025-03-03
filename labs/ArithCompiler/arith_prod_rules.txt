@@ -1,0 +1,4 @@
+0: SeqExpr' -> SeqExpr
+1: SeqExpr -> SeqExpr ; AssignExpr
+2: SeqExpr -> AssignExpr
+3: AssignExpr -> identifier = identifier

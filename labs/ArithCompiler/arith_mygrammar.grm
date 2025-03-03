@@ -1,0 +1,10 @@
+(CFG "SeqExpr'" [
+ ProductionRule "SeqExpr'" [Nonterminal "SeqExpr"],
+ ProductionRule "SeqExpr" [Nonterminal "SeqExpr", Terminal ";", Nonterminal "AssignExpr"],
+ ProductionRule "SeqExpr" [Nonterminal "AssignExpr"],
+ ProductionRule "AssignExpr" [Terminal "identifier", Terminal "=", Terminal "identifier"]
+ ]
+,
+TokenAttrs [],
+ProdRuleAttrs [],
+"$")

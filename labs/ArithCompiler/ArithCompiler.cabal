@@ -42,8 +42,10 @@ library
 executable ArithCompiler-exe
   main-is: Main.hs
   other-modules:
+      Expr
       Lexer
       MainUtil
+      Parser
       ParserState
       Token
       Paths_ArithCompiler

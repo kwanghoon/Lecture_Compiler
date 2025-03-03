@@ -4,6 +4,8 @@ import TokenInterface
 
 data Token = END_OF_TOKEN
   {- List token names here. -}
+  | EQUAL
+  | SEMICOLON
   | IDENTIFIER
   deriving (Eq, Show)
 
@@ -12,6 +14,8 @@ tokenStrList =
   [ (END_OF_TOKEN, "$")  -- 
     {- List pairs of a token name 
        and a textual representation here. -}
+    , (EQUAL, "=")
+    , (SEMICOLON, ";")
     , (IDENTIFIER, "identifier")
   ]
 
