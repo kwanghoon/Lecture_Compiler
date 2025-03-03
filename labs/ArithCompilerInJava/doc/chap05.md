@@ -3,13 +3,13 @@
 전체 시스템을 구성하려면 Arith 프로그램 텍스트를 추상 구문 트리로 변환하는 파서가 필요하다. 파서의 구조와 구현 방법은 6장과 7장에서 다룰 예정이며, 여기서는 이미 구현된 파서를 그대로 사용한다. 
 
 ```
-src\org\arith\examples\arith\parser\{Token,Lexer,Parser}.java
+ArithCompilerInJava\src\org\arith\examples\arith\parser\{Token,Lexer,Parser}.java
 ```
 
 지금까지 설명한 파서, 컴파일러, 가상 기계를 모두 통합하여 다음과 같은 시스템을 구성할 수 있다. 이 프로그램을 실행하면 다음과 같은 과정을 거친다.
 
 ```
-src\org\arith\examples\arith\Main.java
+ArithCompilerInJava\src\org\arith\examples\arith\Main.java
 ```
 
  - 소스 프로그램으로 사용할 파일 이름을 입력받는다.
