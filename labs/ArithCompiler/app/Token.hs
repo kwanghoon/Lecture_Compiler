@@ -2,27 +2,38 @@ module Token(Token(..), keywords, fromToken) where
 
 import TokenInterface
 
-data Token = END_OF_TOKEN
-  {- List token names here. -}
+data Token = 
+    END_OF_TOKEN
+  | OPENPAREN
+  | CLOSEPAREN
+  | IDENTIFIER
+  | INTEGERNUMBER
+  | ADD
+  | SUB
+  | MUL 
+  | DIV 
   | EQUAL
   | SEMICOLON
-  | IDENTIFIER
   deriving (Eq, Show)
 
 tokenStrList :: [(Token,String)]
 tokenStrList =
-  [ (END_OF_TOKEN, "$")  -- 
-    {- List pairs of a token name 
-       and a textual representation here. -}
-    , (EQUAL, "=")
-    , (SEMICOLON, ";")
-    , (IDENTIFIER, "identifier")
+  [ (END_OF_TOKEN,  "$")  -- 
+  , (OPENPAREN,     "(" )
+  , (CLOSEPAREN,    ")" )
+  , (IDENTIFIER,    "identifier")
+  , (INTEGERNUMBER, "integer_number")
+  , (ADD,           "+")
+  , (SUB,           "-")
+  , (MUL,           "*")
+  , (DIV,           "/")
+  , (EQUAL,         "=")
+  , (SEMICOLON,     ";")
   ]
 
 keywords :: [(Token, String)]
 keywords =
-  [ {- List pairs of a keyword token name
-       and a textual representation here. -}
+  [ 
   ]  
 
 findTok :: Token -> [(Token, String)] -> Maybe String

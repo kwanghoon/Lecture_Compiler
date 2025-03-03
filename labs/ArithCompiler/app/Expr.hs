@@ -1,7 +1,13 @@
-module Expr(Expr(..), ExprList) where 
+module Expr(Expr(..), OpKind(..), ExprList) where 
 
-data Expr = Var String
+data Expr = 
+    Var String
   | Assign String Expr
+  | Lit Int
+  | BinOp OpKind Expr Expr 
+  deriving (Show,Eq)
+
+data OpKind = OPADD | OPSUB | OPMUL | OPDIV
   deriving (Show,Eq)
 
 type ExprList =[Expr]

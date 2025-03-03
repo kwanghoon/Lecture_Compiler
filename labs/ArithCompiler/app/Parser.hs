@@ -31,15 +31,49 @@ parserSpec = ParserSpec
       -- SeqExpr :: [Expr]
       rule "SeqExpr -> SeqExpr ; AssignExpr" 
         (\rhs -> return $ fromExprList 
-                            (exprListFrom (get rhs 1) ++ [ exprFrom (get rhs 3)])),
+                            (exprListFrom (get rhs 1) ++ [ exprFrom (get rhs 3) ])),
 
       rule "SeqExpr -> AssignExpr" 
         (\rhs -> return $ fromExprList [exprFrom (get rhs 1)]),
 
       -- Exp :: Exp 
-      rule "AssignExpr -> identifier = identifier" 
+      rule "AssignExpr -> identifier = AssignExpr" 
         (\rhs -> return $ fromExpr 
-                            ( Assign (getText rhs 1) (Var (getText rhs 3)) ))
+                            ( Assign (getText rhs 1) (exprFrom (get rhs 3)) )),
+
+      rule "AssignExpr -> AdditiveExpr" (\rhs -> return $ get rhs 1),
+
+      rule "AdditiveExpr -> AdditiveExpr + MultiplicativeExpr"
+        (\rhs -> return $ 
+                    fromExpr (BinOp OPADD
+                                 (exprFrom (get rhs 1)) (exprFrom (get rhs 3)))),      
+
+      rule "AdditiveExpr -> AdditiveExpr - MultiplicativeExpr"
+        (\rhs -> return $ 
+                    fromExpr (BinOp OPSUB
+                                 (exprFrom (get rhs 1)) (exprFrom (get rhs 3)))),
+
+      rule "AdditiveExpr -> MultiplicativeExpr" (\rhs -> return $ get rhs 1),
+
+      rule "MultiplicativeExpr -> MultiplicativeExpr * PrimaryExpr"
+        (\rhs -> return $ 
+                    fromExpr (BinOp OPMUL
+                                 (exprFrom (get rhs 1)) (exprFrom (get rhs 3)))),
+
+      rule "MultiplicativeExpr -> MultiplicativeExpr / PrimaryExpr" 
+        (\rhs -> return $ 
+                    fromExpr (BinOp OPDIV 
+                                 (exprFrom (get rhs 1)) (exprFrom (get rhs 3)))),
+
+      rule "MultiplicativeExpr -> PrimaryExpr" (\rhs -> return $ get rhs 1),
+
+      rule "PrimaryExpr -> identifier" 
+        (\rhs -> return $ fromExpr (Var (getText rhs 1))),
+
+      rule "PrimaryExpr -> integer_number" 
+        (\rhs -> return $ fromExpr (Lit (read (getText rhs 1) :: Int))),
+
+      rule "PrimaryExpr -> ( AssignExpr )" (\rhs -> return $ (get rhs 2))
     ],
     
     baseDir        = "./",

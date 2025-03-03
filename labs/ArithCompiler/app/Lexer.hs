@@ -19,6 +19,13 @@ lexerSpec = LexerSpec
     lexerSpecList = 
       [ 
         ("[ \t\n\r]" , skip)    -- space+ where space = [' ' '\t' '\n' '\r']
+        , ("\\(", mkFn OPENPAREN)
+        , ("\\)", mkFn CLOSEPAREN)
+        , ("[0-9]+", mkFn INTEGERNUMBER)
+        , ("\\+", mkFn ADD)
+        , ("\\-", mkFn SUB)
+        , ("\\*", mkFn MUL)
+        , ("\\/", mkFn DIV)
         , ("="     , mkFn EQUAL)
         , (";"     , mkFn SEMICOLON)
         -- Typical definition of keywords or identifiers
