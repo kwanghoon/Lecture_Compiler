@@ -42,12 +42,16 @@ library
 executable ArithCompiler-exe
   main-is: Main.hs
   other-modules:
+      Compiler
       Expr
+      Instr
+      Interp
       Lexer
       MainUtil
       Parser
       ParserState
       Token
+      VM
       Paths_ArithCompiler
   autogen-modules:
       Paths_ArithCompiler
