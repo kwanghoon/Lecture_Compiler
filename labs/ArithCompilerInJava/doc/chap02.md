@@ -128,7 +128,7 @@ C, C++, Java, Python, JavaScript에서도 이와 같이 해석하도록 정의�
 
 이 역시 C, C++, Java, Python, JavaScript에서도 동일하게 해석되며, 이를 **연산자 결합(operator associativity) 규칙**이라고 부른다.
 
-지금까지 주어진 Arith 소스 프로그램에 대한 추상 구문 트리(Abstract Syntax Tree, AST)를 작성하는 방법을 설명했다. 이제, 이 추상 구문 트리를 해석하여 Arith 소스 프로그램의 **의미(semantics)**를 정의해보자.
+지금까지 주어진 Arith 소스 프로그램에 대한 추상 구문 트리를 작성하는 방법을 설명했다. 이제, 이 추상 구문 트리를 해석하여 Arith 소스 프로그램의 **의미(semantics)**를 정의해보자.
 
 프로그래밍 언어의 의미는 **해석기(interpreter)**라는 함수를 작성하여 정의할 수 있다. 이 함수의 입력은 추상 구문 트리, 출력은 실행 결과이다.
 
@@ -238,6 +238,6 @@ HashMap<String,Integer> env = new HashMap<String,Integer>();
 Interp.seq(exprSeq, env);
 ```
 
-`exprSeq`는 세미콜론(;)으로 구분된 식들을 표현하는 식 리스트, 추상 구문 트리(Abstract Syntax Tree, AST)이다.
+`exprSeq`는 세미콜론(;)으로 구분된 식들을 표현하는 식 리스트, 추상 구문 트리이다.
 실행을 위해 빈 환경(env)을 생성한다.
 
