@@ -175,13 +175,6 @@ void seq(ArrayList<Expr> exprList, HashMap<String, Integer> env) {
 ```
 `expr` 함수는 다음과 같이 작성된다.
 
-이 함수는 `Expr` 객체를 입력으로 받아, 해당 식의 타입에 따라 다음과 같이 처리한다.
-
- - `BinOp` : 연산을 수행하여 산술 계산을 한다.
- - `Assign` : 변수에 값을 대입하고 환경(environment)을 변경한다.
- - `Lit` : 상수 값을 반환한다.
- - `Var` : 환경 `env`에서 해당 변수의 값을 읽어 반환한다.
-
 ```java
 Integer expr(Expr expr, HashMap<String, Integer> env) {
 	if (expr instanceof BinOp) {
@@ -228,6 +221,15 @@ Integer expr(Expr expr, HashMap<String, Integer> env) {
 	}
 }
 ```
+
+Q. 위 `expr` 함수는 첫 번째 인자인 `expr`이 `instanceof`를 사용하여 `BinOp`, `Assign`, `Lit`, `Var` 클래스의 객체인지 확인하는 구조로 작성되어 있다. 이러한 구조로 함수가 구현된 이유를 설명하시오.
+
+이 함수는 `Expr` 객체 `expr`을 입력으로 받아, 해당 식의 타입에 따라 다음과 같이 처리한다.
+
+ - `BinOp` : 연산을 수행하여 산술 계산을 한다.
+ - `Assign` : 변수에 값을 대입하고 환경(environment)을 변경한다.
+ - `Lit` : 상수 값을 반환한다.
+ - `Var` : 환경 `env`에서 해당 변수의 값을 읽어 반환한다.
 
 프로그래밍 언어 Arith의 해석기를 사용하여 주어진 소스 프로그램을 실행하는 방법은 다음과 같다.
 
