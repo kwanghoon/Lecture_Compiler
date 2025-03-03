@@ -2,11 +2,9 @@ module Lexer(lexerSpec) where
 
 import CommonParserUtil
 import Token 
+import ParserState (ParserState)
 
 import qualified Data.Map as Map
-
--- No parser state is used
-type ParserState = ()
 
 mkFn :: Token -> LexAction Token IO ParserState
 mkFn tok = \_ -> return $ Just tok

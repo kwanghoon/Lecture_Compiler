@@ -43,6 +43,8 @@ executable ArithCompiler-exe
   main-is: Main.hs
   other-modules:
       Lexer
+      MainUtil
+      ParserState
       Token
       Paths_ArithCompiler
   autogen-modules:
