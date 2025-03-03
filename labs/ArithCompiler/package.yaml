@@ -21,6 +21,7 @@ description:         Please see the README on GitHub at <https://github.com/gith
 
 dependencies:
 - base >= 4.7 && < 5
+- yapb >= 0.2.6
 
 ghc-options:
 - -Wall
@@ -30,7 +31,7 @@ ghc-options:
 - -Wincomplete-uni-patterns
 - -Wmissing-export-lists
 - -Wmissing-home-modules
-- -Wpartial-fields
+# - -Wpartial-fields
 - -Wredundant-constraints
 
 library:
