@@ -1,0 +1,2241 @@
+하향식 방법으로 컴파일러 작성하기 (A Topdown Approach to Writing a Compiler)
+
+ - 전남대학교 전자컴퓨터공학부 최광훈
+ - 2019년 1월 24일
+
+
+목차
+
+ 1. 컴파일러란 무엇인가
+ 2. 프로그래밍언어 Arith의 구문과 의미
+ 3. 가상기계 VM 명령어 구문과 의미
+ 4. Arith 프로그램을 VM 프로그램으로 컴파일하기
+ 5. 프로그래밍언어 Arith 파서 만들기
+ 6. 파서, 컴파일러, 가상기계를 합한 시스템
+ 7. 마무리
+
+
+1. 컴파일러란 무엇인가
+
+컴파일러는    소스프로그램(Source    program)을    타겟프로그램(Target
+program)으로 변환하는 프로그램이다. 
+
+일반적으로 C,  C++, Java,  Python, JavaScript와  같은 프로그래밍언어를
+사용하여     프로그램을    작성한다.     이러한    프로그램을     보통
+소스프로그램이라고 한다.
+
+타겟프로그램은    보통   어셈블리어(Assembly)    또는   기계어(Machine
+language)로 작성한다.  컴퓨터 중앙처리장치(CPU)에  따라 타겟프로그램을
+작성하는데 사용하는 프로그래밍언어가 다르다.  예를 들어, 보통 데스크탑
+컴퓨터에서  x86계열  중앙처리장치를  사용하는  경우  x86  어셈블리어로
+타겟프로그램을  작성하고,   스마트폰의  경우   ARM계열  중앙처리장치를
+사용하기    때문에    ARM   어셈블리어로    타겟프로그램을    작성하게
+된다.   자바가상기계(Java    vitual   machine)는   자바바이트코드(Java
+bytecode)로 타겟프로그램을 작성한다.
+
+예를 들어, 아래와 같은 소스프로그램을 가정해보자. 나중에 소개할 장난감
+프로그래밍언어 Arith로 작성한 프로그램이다.
+
+   x = 123;
+   x = x + 1;
+   y = x; 
+   y = y - 1 * 2 / 3;
+   z = y = x
+
+이  소스프로그램의  구문(syntax)과  의미(semantics)는  C,  C++,  Java,
+Python,  JavaScript와   같은  프로그래밍언어   중  어느   하나라도  배운
+사람이라면 쉽게 이해할 수 있을 것이다.
+
+Q. 위 소스프로그램의 구문을 설명하시오.
+
+Q. 위 소스프로그램의 의미를  설명하시오. 위 타겟프로그램을 실행한 다음
+   변수 x,y,z의 값은 무엇인가?
+
+
+또한  타겟프로그램의  예를  들어보자.   나중에  소개할  가상기계  VM의
+명령어(Instruction)으로 작성하였다.
+
+   PUSH 123
+   STORE x
+   PUSH x
+   POP
+   PUSH x
+   PUSH 1
+   ADD
+   STORE x
+   PUSH x
+   POP
+   PUSH x
+   STORE y
+   PUSH y
+   POP
+   PUSH y
+   PUSH 1
+   PUSH 2
+   MUL
+   PUSH 3
+   DIV
+   SUB
+   STORE y
+   PUSH y
+   POP
+   PUSH x
+   STORE y
+   PUSH y
+   STORE z
+   PUSH z
+   POP
+
+소스프로그램과 비교하면 구문과 의미를 이해하는데 조금 어려워졌다. 예제
+타겟프로그램을 이해하려면 스택(stack)과 기억장치(memory)에 대한 기초를
+알아야 한다.
+
+ - PUSH 123은  스택에 123을  집어넣는다.
+ - STORE x는 스택에서 숫자를 꺼내서 변수 x에 대입한다.
+ - PUSH x는 변수 x에 저장된 숫자를 꺼내서 스택에 집어넣는다.
+ - POP은 스택에서 숫자를 꺼내 버린다.
+ - ADD는 스택에서 숫자 두개를 꺼내서  더한다. SUB, MUL, DIV도 비슷하게
+   동작한다.
+
+각  명령어의 구문과  의미를  이해했다면  위에서 소개한  타겟프로그램을
+머리속으로 실행해 볼 수 있을 것이다.
+
+Q. 위 타겟프로그램을 실행한 다음 변수 x,y,z의 값은 무엇인가?
+
+사실  위의  타겟프로그램  예제는  소스프로그램  예제를  나중에  소개할
+컴파일러를 통해서 컴파일하여 얻은 것이다.
+
+일반적으로 컴파일 과정은 다음과 같다.
+
+  소스프로그램
+  
+     --> {구문 분석(Parsing)} -->
+     
+  소스프로그램 추상구문트리
+  
+     --> {컴파일} -->
+     
+  타겟프로그램 추상구문트리
+
+     --> {프리티프린트(Pretty Print)} -->
+     
+  타겟프로그램
+
+이렇게 얻어진 타겟프로그램을 가상기계 VM으로 실행한다.
+
+위의 예제에 대한 컴파일 과정과 가상기계에서 실행하는 과정은 다음과 같다.
+
+Parsing:
+(x = 123);
+(x = (x + 1));
+(y = x);
+(y = (y - ((1 * 2) / 3)));
+(z = (y = x))
+
+Compiling:
+PUSH 123
+STORE x
+PUSH x
+POP
+PUSH x
+PUSH 1
+ADD
+STORE x
+PUSH x
+POP
+PUSH x
+STORE y
+PUSH y
+POP
+PUSH y
+PUSH 1
+PUSH 2
+MUL
+PUSH 3
+DIV
+SUB
+STORE y
+PUSH y
+POP
+PUSH x
+STORE y
+PUSH y
+STORE z
+PUSH z
+POP
+
+Running VM:
+
+Environment:
+x = 124
+y = 124
+z = 124
+
+Successfully done.
+
+
+Q. 소스프로그램에서 세미콜론으로 분리된 4개의 식이 타겟프로그램의 어느
+   부분에 해당하는지 살펴보시오.
+
+
+
+
+2. 프로그래밍언어 Arith의 구문과 의미
+
+프로그래밍언어 Arith의 구문을 먼저 서술식으로 설명한다.
+
+ - Arith 프로그램은 식을 세미콜론으로 구분하여 나열한 것이다.
+
+   예) x = 123 ; x = x + 1 ; z = 0; y * z ; y = x
+
+ - 세미콜론으로  구분된  각각의  식은  산술식(arithmetic  expression),
+   할당식(assignment   expression)형태이다.   할당식의  왼편은   변수,
+   오른편은 임의의 식이 올 수 있다.
+
+   예) x = 123 또는 y * z
+
+ - 식을 구성하는 가장 기본식(primary expression)은 변수나 숫자이다.
+
+ - 괄호를 사용하여 복잡한 식을 구성할 수 있다.
+
+   예)  1 + (2 - 3) * 4 / 5
+
+Arith 프로그래밍언어의 식을 Java로 작성할 수 있다.
+
+ - x = 123
+
+   new Assign("x", new Lit(123))
+
+ - x = x + 1
+
+   new Assign("x",
+     new BinOp(BinOp.ADD, new Var("x"), new Lit(1)))
+
+ - y - 1 * 2 / 3
+
+   new BinOp(BinOp.SUB,
+	new Var("y"),
+	new BinOp(BinOp.DIV,
+		new BinOp(BinOp.MUL, new Lit(1), new Lit(2)),
+		new Lit(3)))
+
+ - x = 123 ; x = x + 1
+
+   Expr[] exprs = {
+   	  new Assign("x", new Lit(123)),
+	  new Assign("x",
+	       new BinOp(BinOp.ADD, new Var("x"), new Lit(1)))
+   };
+   
+   exprSeq = new ArrayList<Expr>(Arrays.asList(exprs));
+
+
+위에서 보여준  Java 코드를 추상구문트리(Abstract syntax  tree)라 한다.
+추상구문트리는   소스프로그램의   구문을   트리   자료구조(tree   data
+structure)로 요약해서 표현한 것이다.
+
+위 추상구문 트리를 위해서 Java 클래스들을 준비해두어야 한다.
+
+ - arith.ast 패키지의 클래스들
+     Expr
+     Assign extends Expr
+     BinOp extends Expr
+     Lit extends Expr
+     Var extends Expr
+
+ - 세미콜론으로  구분된   식들을  표현할  때   Java의  ArrayList<Expr>
+   클래스를 사용한다.
+
+Q. 다음 식을 Java로 작성한 추상구문트리를 만들어보시오.
+
+ - z = y
+
+ - z + 123
+
+다음 식을 Java로 작성한 추상구문트리를 만들때 주의할 점이 있다. 예를 들어,
+1 + 2 * 3에 대한 추상구문트리를 
+
+ new BinOp(BinOp.MUL,
+     new BinOp(BinOp.ADD, new Lit(1), new Lit(2)),
+     new Lit(3))
+
+와 같이 만들면 안된다. 정확한 추상구문트리는 아래와 같다.
+
+ new BinOp(BinOp.ADD,
+     new Lit(1),
+      new BinOp(BinOp.MUL, new Lit(2), new Lit(3)))
+
+앞의  추상구문트리가 표현한  Arith  프로그래밍언어의 식은
+
+ - (1 + 2) * 3이고,
+
+뒤에서 표현한 식은
+
+ - 1 + (2 * 3)이다.
+
+소스프로그램에서  직접 괄호를  사용하여  (1 +  2)  * 3이라고  작성하면
+덧셈을 하고 곱셈을 해야하지만 괄호가 없다면 먼저 곱셈을 한다.
+
+추상구문트리에서 아래쪽(루트와 멀리 떨어져  있는 곳에) 위치한 부분부터
+먼저 계산하는 것이 일반적이다.
+
+C,  C++, Java,  Python,  JavaScript에서도  이렇게 해석하도록  정의되어
+있는데 연산자 우선순위(operator precedence) 규칙이라고 부른다.
+
+위의 예는 서로 다른 연산자 +와 *를 혼합해서 사용할 때 인데, 동일한 연산자를
+여러번 사용하는 식을 추상구문트리로 작성할 때도 주의해야 한다.
+
+1 - 2 - 3에 대한 추상구문트리를 다음과 같이
+
+ new BinOp(BinOp.SUB,
+    new BinOp(BinOp.SUB,
+       new Lit(1),
+       new Lit(2)),
+    new Lit(3))
+
+작성하여  (1 -  2) -  3으로 왼쪽에서 차례로 뺄셈을 하도록 해석하는  것이 맞다.
+
+
+하지만  x =  y =  z에 대한 추상구문트리는
+
+ new Assign("x",
+     new Assign("y", Var("z")))
+
+와 같이  작성하여 x  = (y  = z)로  해석한다. 오른쪽에서  차례로 변수에
+대입하도록 해석한다. 즉,  변수 z의 값을 변수 y에 넣고,  대입한 그 값을
+변수 x에 넣는다.
+
+역시 C, C++, Java, Python, JavaScript에서도 이렇게 해석하도록 정의되어
+있는데 연산자 결합(operator associativity) 규칙이라고 부른다.
+
+주어진  Arith  소스프로그램에   대한  추상구문트리를  작성하는  방법을
+설명했다.  Arith 소스프로그램의 의미(semantics)를 정의해보자.
+
+해석기(interpreter)라고 하는  함수를 작성하여  프로그래밍언어의 의미를
+정의할  수  있다.   이  함수의 입력은  추상구문트리이고,  출력은  실행
+결과이다.  Arith언어의  경우 프로그램  실행이 종료되었을 때  각 변수에
+들어 있는 값이 실행 결과이다.
+
+ - 예) x = 123 ; x = x + 1 ; z = 0; y * z ; y = x
+
+      위 프로그램의 의미는 변수 x는 124, z는 0, y도 124이다.
+
+이렇게  어떤  변수가  어느  값을  가지고  있는지  보관하는  자료구조를
+환경(environment)라고 부른다. 환경은 보통 아래와 같이 표기한다.
+
+ - { x=124, y=124, z=0 }
+
+Java의  HashMap<String,Integer> 클래스를  사용하면 Java로  쉽게 환경을
+작성하여 다룰 수 있다.
+
+ - HashMap<String,Integer> env = new HashMap<String,Integer>();
+   env.put("x", 124);
+   env.put("y", 124);
+   env.put("z", 0);
+
+ - env.get("x")는 124가 될 것이다.
+
+프로그램언어 Arith의 해석기를 Interp 클래스의 seq함수와 expr함수로 작성해보자.
+
+seq함수는 세미콜론으로 구분된 식들을 받아 환경을 변경하여 결과로 내고,
+expr함수는 하나의 식을 받아 환경을 바꾸고 정수를 실행 결과로 반환한다.
+
+seq함수는  ArrayList<Expr>   객체로  표현된  식들을  받아   각  식마다
+expr함수를 호출하여 차례대로 실행하도록 작성한다.
+
+ - void seq(ArrayList<Expr> exprList, HashMap<String, Integer> env) {
+	int index = 0;
+		
+	while (index < exprList.size()) {
+		Integer retV = expr(exprList.get(index), env);
+		index = index + 1;
+	}
+   }
+
+expr함수는  다음과 같이  작성한다.   식을 Expr  객체로  받아, 이  식이
+BinOp이면 산술계산,  Assign이면 변수에 값을 대입하여  환경을 변경하고,
+Lit이면 상수, Var이면 환경 env에서 변수를 읽는 것을 실행한다.
+
+ - Integer expr(Expr expr, HashMap<String, Integer> env) {
+	if (expr instanceof BinOp) {
+		BinOp binOpExpr = (BinOp)expr;
+			
+		Integer leftV = expr(binOpExpr.getLeft(), env);
+		Integer rightV = expr(binOpExpr.getRight(), env);
+			
+		switch(binOpExpr.getOpKind()) {
+		case BinOp.ADD:
+			return leftV + rightV;
+		case BinOp.SUB:
+			return leftV - rightV;
+		case BinOp.MUL:
+			return leftV * rightV;
+		case BinOp.DIV:
+			return leftV / rightV;
+
+		}
+	} else if (expr instanceof Assign) {
+		Assign assignExpr = (Assign)expr;
+			
+		String varName = assignExpr.getVarName();
+		Expr rhs = assignExpr.getRhs();
+			
+		Integer rhsV = expr(rhs, env);
+		env.put(varName, rhsV);
+			
+		return rhsV;
+	} else if (expr instanceof Lit) {
+		Lit litExpr = (Lit)expr;
+			
+		Integer intLitV = litExpr.getInteger();
+			
+		return intLitV;
+	} else if (expr instanceof Var) {
+		Var varExpr = (Var)expr;
+			
+		String varName = varExpr.getVarName();
+		Integer varV = env.get(varName);
+		assert varV != null;
+			
+		return varV;
+	}
+}
+
+프로그래밍언어 Arith의 해석기를 사용하여 주어진 소스프로그램을 실행하는
+방법은 다음과 같다.
+
+ - ArrayList<Expr> exprSeq =  ... 추상구문트리 ...
+
+   HashMap<String,Integer> env = new HashMap<String,Integer>();
+   Interp.seq(exprSeq, env);
+
+exprSeq는 세미콜론으로  구분된 식들의 리스트에  대한 추상구문트리이다.
+실행을 위해서 비어있는 환경 env를 만든다.
+
+
+
+3. 가상기계 VM 명령어 구문과 의미
+
+이제  타겟프로그램을 작성할  때 사용하는  가상기계 VM  명령어의 구문과
+의미를 살펴보자.   앞서 프로그램언어 Arith의 구문과  의미를 살펴보면서
+기초 개념을 배웠는데 동일한 개념을 활용한다.
+
+
+각 명령어를 표현하는 추상구문트리를 위해서 Java 클래스들을 정의하였다.
+
+ - Instr
+ - Push extends Instr
+ - Pop extends Instr
+ - InstrOp extends Instr
+ - Store extends Instr
+
+예를  들어,  왼편의  가상기계 명령어를  오른편과  같이  추상구문트리를
+만든다.
+
+ Push 2      Instr i1 = new Push(2);
+ Push 1      Instr i2 = new Push(1);
+ Store x     Instr i3 = new Store("x");
+ Push x      Instr i4 = new Push("x");
+ Add         Instr i5 = new InstrOp(InstrOp.ADD);
+ Store y     Instr i6 = new Store("y");
+ Push y      Instr i7 = new Push("y");
+ Pop         Instr i8 = new Pop();
+
+             Instr[] instrArr = {i1,i2,i3,i4,i5,i6,i7,i8};
+             ArrayList<Instr> instrs
+	       = new ArrayList<Instr>(Arrays.asList(instrArr);
+
+각 명령어에 대해 동일한 이름의 Java 클래스를 작성하였다.
+
+ - Push 클래스는 Push(2) 또는 Push("x")와 같이 숫자나 변수를 지정할 수
+   있다.
+ - Store 클래스는 변수를 지정한다.
+ - 산술계산을 위한 명령어를 표현하기 위해  ADD, SUB, MUL, DIV 클래스가
+   있다. 가상기계의  스택에 숫자를 꺼내 계산하기  때문에 별도의 인자를
+   지정하지 않는다.
+ - Pop 클래스에도 별도의 인자를 지정하지 않는다.
+
+타겟프로그램은 이러한 클래스로 작성한 객체들을 Java의 ArrayList<Instr>
+클래스로 순서대로 모아 리스트로 만들어 작성한다.
+
+지금까지 가상기계 명령어로 작성한 타겟프로그램을 Java로 추상구문트리를
+만드는  방법을 설명하였다.  이제  이 추상구문트리를  받아 각  명령어를
+차례로 실행하여  최종적으로 환경을  결과로 내는  타겟프로그램의 의미를
+정의해보자.  앞에서와 같이 타겟프로그램의 해석기 함수를 만든다.
+
+가상기계 해석기는 VM 클래스의 run함수와 interp함수로 작성한다.
+
+ - void run(ArrayList<Instr> instrs, HashMap<String,Integer> env) {
+	int index = 0;
+	Stack<Integer> stack = new Stack<Integer>();
+		
+	while (index < instrs.size()) {
+		interp(instrs.get(index), env, stack);
+		index = index + 1;
+	}
+   }
+
+ - void interp(
+   	Instr instr, HashMap<String,Integer> env, Stack<Integer> stack) {
+
+	if (instr instanceof InstrOp) {
+		InstrOp instrOp = (InstrOp)instr;
+		Integer v2 = stack.pop();
+		Integer v1 = stack.pop();
+		switch(instrOp.getOpcode()) {
+		case InstrOp.ADD:
+			stack.push(v1 + v2);
+			break;
+		case InstrOp.SUB:
+			stack.push(v1 - v2);
+			break;
+		case InstrOp.MUL:
+			stack.push(v1 * v2);
+			break;
+		case InstrOp.DIV:
+			stack.push(v1 / v2);
+			break;
+		}
+	} else if (instr instanceof Push) {
+		Push push = (Push)instr;
+		Integer v;
+			
+		switch(push.getOperandKind()) {
+		case Push.LIT:
+			v = push.getIntLit();
+			stack.push(v);
+			break;
+		case Push.VAR:
+			String varName = push.getVarName();
+			v = env.get(varName);
+			assert v != null;
+			stack.push(v);
+			break;
+		}
+	} else if (instr instanceof Pop) {
+		Pop pop = (Pop)instr;
+		Integer v = stack.pop();
+	} else if (instr instanceof Store) {
+		Store store = (Store)instr;
+		String varName = store.getVarName();
+		Integer v = stack.pop();
+		env.put(varName, v);
+	} 
+   }
+
+이렇게  작성한  가상기계  해석기를  사용하여  타겟프로그램을  실행하는
+방법은 다음과 같다.
+
+ - ArrayList<Instr> instrs = ... 추상구문트리 ...
+   HashMap<String,Integer> env = new HashMap<String,Integer>();
+		
+   VM.run(instrs, env);
+
+instrs는  주어진  타겟프로그램의 추상구문트리이고,  해석기를  실행하기
+전에 초기 환경 env를 만든다.
+
+
+4. Arith 프로그램을 VM 프로그램으로 컴파일하기
+
+지금까지  소스프로그램과 타겟프로그램을  각각 추상구문트리로  작성하는
+방법을 살펴보았다. 이제  소스프로그램을 타겟프로그램으로 컴파일 변환할
+준비가 되었다.
+
+Arith 컴파일러는 소스프로그램의 추상구문트리를 입력받아 타겟프로그램의
+추상구문트리를 출력하는 함수로 작성한다.
+
+ - 소스프로그램의 추상구문트리 : ArrayList<Expr>
+ - 타겟프로그램의 추상구문트리 : ArrayList<Instr>
+
+이름이   동일한(overloading된)   두  개의   compile함수로   컴파일러를
+작성해보자.
+
+ - 세미콜론으로 분리된 식 리스트를 입력받아 명령어 리스트를 출력하는 함수
+ - 하나의 식을 입력받아 명령어 리스트를 출력하는 함수
+
+
+ - ArrayList<Instr> compile(ArrayList<Expr> exprSeq) {
+	ArrayList<Instr> instrs = new ArrayList<Instr>();
+		
+	int index = 0;
+	while (index < exprSeq.size()) {
+		ArrayList<Instr> subInstrs = compile(exprSeq.get(index));
+			
+		instrs.addAll(subInstrs);
+		instrs.add(new Pop());
+			
+		index = index + 1;
+	}
+	
+	return instrs;
+   }
+
+ - ArrayList<Instr> compile(Expr expr) {
+	ArrayList<Instr> instrs = new ArrayList<Instr>();
+	if (expr instanceof BinOp) {
+		BinOp binOpExpr = (BinOp)expr;
+			
+		ArrayList<Instr> leftInstrs = compile(binOpExpr.getLeft());
+		ArrayList<Instr> rightInstrs = compile(binOpExpr.getRight());
+			
+		instrs.addAll(leftInstrs);
+		instrs.addAll(rightInstrs);
+			
+		switch(binOpExpr.getOpKind()) {
+		case BinOp.ADD:
+			instrs.add(new InstrOp(InstrOp.ADD));
+			break;
+		case BinOp.SUB:
+			instrs.add(new InstrOp(InstrOp.SUB));
+			break;
+		case BinOp.MUL:
+			instrs.add(new InstrOp(InstrOp.MUL));
+			break;
+		case BinOp.DIV:
+			instrs.add(new InstrOp(InstrOp.DIV));
+			break;
+		}
+	} else if (expr instanceof Assign) {
+		Assign assignExpr = (Assign)expr;
+			
+		String varName = assignExpr.getVarName();
+		Expr rhs = assignExpr.getRhs();
+			
+		ArrayList<Instr> rhsInstrs = compile(rhs);
+			
+		instrs.addAll(rhsInstrs);
+		instrs.add(new Store(varName));
+		instrs.add(new Push(varName));
+			
+	} else if (expr instanceof Lit) {
+		Lit litExpr = (Lit)expr;
+			
+		Integer intLitV = litExpr.getInteger();
+			
+		instrs.add(new Push(intLitV));
+	} else if (expr instanceof Var) {
+		Var varExpr = (Var)expr;
+			
+		String varName = varExpr.getVarName();
+			
+		instrs.add(new Push(varName));
+	}
+	return instrs;
+  }
+
+컴파일 과정을 예를 들어 살펴보자.
+
+ - new Var("x")  ===>  new Push("x")
+ 
+ - new Lit(123)  ===>  new Push(123)
+ 
+ - new Assign("x", 123)
+     ===> new Push(123)
+          new Store("x")
+	  new Push("x")
+	  
+ - new BinOp(BinOp.ADD, "x", 123)
+     ===> new Push("x")
+          new Push(123)
+	  new InstrOp(InstrOp.ADD)
+
+참고로  위  예제에서는 이해하기  쉬운  형태로  다소 부정확하게  작성한
+것이다.   컴파일  변환으로  얻은  타겟프로그램  추상구문트리를  정확히
+작성하려면  ArrayList<Instr>  객체를   만들어  나열한  Instr  객체들을
+리스트로 작성해야 한다.
+
+
+이제    컴파일러를    완성하였다.   그러면    주어진    소스프로그램의
+추상구문트리를 컴파일 변환하여 타겟프로그램의 추상구문트리를 만들고 이
+타겟프로그램을 가상기계를 통해 실행하는 과정을 쉽게 작성할 수 있다.
+
+ - ArrayList<Expr> exprSeq = ... 소스프로그램 추상구문트리 ...
+
+   Expr.prettyPrint(exprSeq);
+
+   ArrayList<Instr> instrs = 
+	arith.comp.Compiler.compile(exprSeq);
+		
+   Instr.prettyPrint(instrs);
+
+   HashMap<String,Integer> envVM = new HashMap<String,Integer>();
+   VM.run(instrs, envVM);
+
+
+소스프로그램   추상구문트리가   exprSeq에  주어져   있다고   가정하자.
+compile함수로  타겟프로그램  추상구문트리  instrs를  만들고,  초기환경
+envVM을을 만들어 run함수로 이 타겟프로그램을 실행시킬 수 있다.
+
+
+
+5. 프로그래밍언어 Arith 파서 만들기
+
+프로그래밍언어   Arith와   가상기계    VM에   대한   컴파일러에   대해
+알아보았다.  전체  컴파일러를  완성하기   위해서는  구문  분석  과정이
+필요하다.  앞에서 언급했었던 컴파일 과정을 다시 떠올려보자.
+
+  소스프로그램
+  
+     --> {구문 분석(Parsing)} -->
+     
+  소스프로그램 추상구문트리
+  
+     --> {컴파일} -->
+     
+  타겟프로그램 추상구문트리
+
+     --> {프리티프린트(Pretty Print)} -->
+     
+  타겟프로그램
+
+구문  분석이란  텍스트  파일  형태로  주어진  소스프로그램을  입력받아
+해당하는 추상구문트리를  만드는 과정이다. 텍스트 파일은  사실 바이트를
+나열한 것이다. 예를 들면, 텍스트 파일에 포함된 1 + 2 * 3은
+
+ - '1', ' ', '+', '2', ' ', '*', ' ', '3'
+
+과 같은 바이트 리스트에 불과하다. 구문 분석을 통하여
+
+ - new BinOp(BinOp.ADD,
+       new Lit(1),
+       new BinOp(BinOp.MUL, new Lit(2), new Lit(3)))
+
+의 추상구문트리를  만들어야 그 다음  단계인 컴파일 과정에서  사용할 수
+있다. 추상구문트리에서  깊은 곳에 있는 서브트리에  기록된 연산자일수록
+보통 먼저  계산한다. 이렇게  추상구문트리에는 계산 순서에  대한 정보를
+가지고  있다. 바이트  리스트에  불과한 텍스트  파일에는 이러한  정보가
+없다.
+
+그럼  어떻게 구문을  분석할까?  구문분석은 3단계로 구성되어 있다.
+
+ 1) 구문 구조를 정의하는 문법(grammar)를 정의하고,
+ 2) 이 문법을 따르는 텍스트 파일을 인식하는 오토마톤(automaton)을 만든
+    다음,
+ 3)  이  오토마타를  적용하여  텍스트 파일에서  구문  구조를  파악하는
+ 것이다.
+
+구문분석을  설명하기  위해  문법이나  오토마톤과  같은  복잡한  용어를
+사용하였다. 하나씩 살펴보기로 하자.
+
+
+5.1 프로그래밍언어 Arith의 문법
+
+문법이란 구문의  구조를 정의하는  방법이다.  특히  컴파일러의 파서에서
+문맥자유문법  (Context-free grammar)을  사용한다. 문맥자유문법은  트리
+구조로 구문의 구조를 표현한다.
+
+프로그래밍언어 Arith에서 가장 간단한 구조는 변수나 숫자다. 이 구조는
+다음과 같은 문맥자유문법으로 표현할 수 있다.
+
+ - PrimaryExpr -> identifier
+ - PrimaryExpr -> integer_number
+
+문맥자유문법은 생산규칙(Production rule)들로  정의한다.  각 생산규칙은
+화살표  ->를  기준으로  왼편(lhs)과  오른편(rhs)으로  구분한다.
+
+트리 자료구조의 노드들을 잎 노드(leaf node)와 내부 노드(internal node)
+두가지 종류로 구분할 수 있다.
+
+생산규칙의  왼편, PrimaryExpr,은  내부 노드에  해당하는 심볼로  트리의
+끝이  아니기 때문에  넌터미널(Non-terminal)이라 부르고,  변수나 숫자에
+해당하는  identifier나  integer_number  심볼은  트리의  끝에  해당하는
+터미널(Terminal)이라 부른다.
+
+ - 심볼은 넌터미널 또는 터미널이다.
+
+두  종류의 심볼을  쉽게 구분하기  위해서 넌터미널은  대문자로 표기하고
+터미널은 소문자로 표기하자.
+
+터미널 identifier는 알파벳 소문자 또는 대문자로 시작하고 중간이나 끝에
+알파벳과 숫자가 원하는만큼 추가하여 만든 문자열로 정의할 것이다.
+
+터미널  integer_number는  숫자를  1개   이상  반복해서  만든  문자열로
+정의한다.
+
+문맥자유문법의  생산규칙의 왼편은  1개의 넌터미널만  나타나고 오른편은
+0개 이상의 넌터미널과 터미널을 자유롭게 늘어놓을 수 있다.
+
+프로그래밍언어  Arith에서  산술  연산자, 대입  연산자,  식을  나열하는
+연산자를 사용하여  변수나 숫자를  감싸는 구조를 이룬다.  이렇게 감싸는
+구조를  표현하기  위해서  먼저  각  연산자의  우선순위와  결합  규칙을
+살펴보아야 한다.
+
+프로그래밍언어 Arith에서 연산자 우선순위와 연산자 결합 규칙을 요약하면
+다음과 같다.
+
+-------------------------------------------
+  연산자      우선순위      결합성
+-------------------------------------------
+   ;          낮다         왼쪽에서 오른쪽으로
+   =                      오른쪽에서 왼쪽으로
+   +,-                    왼쪽에서 오른쪽으로
+   *,/        높다         왼쪽에서 오른쪽으로
+-------------------------------------------
+
+문법을 작성하는  요령은 우선순위가 높은 연산자에  대한 생산규칙을 먼저
+작성하고 그 다음 우선순위에 따라 차례로 작성한다.
+
+우선순위가  높은 연산자가  트리 안쪽에  있고 우선순위가  낮은 연산자가
+트리 바깥쪽에  있도록 문법을  작성한다.  따라서, 우선순위가  가장 높은
+연산자가 변수와 숫자  구조를 바로 감싸고 있다.  곱셈과 나눗셈 연산자를
+사용한 구문 구조를 표현하기 위해 다음과 같은 생산규칙을 도입한다.
+
+ - MultiplicativeExpr -> PrimaryExpr
+ - MultiplicativeExpr -> MultiplicativeExpr * PrimaryExpr
+ - MultiplicativeExpr -> MultiplicativeExpr / PrimaryExpr
+
+즉,  MultiplicativeExpr  넌터미널로  시작하는  구문구조는  PrimaryExpr
+넌터미널로  시작하는  구문구조이거나  곱셈  연산자나  나눗셈  연산자를
+사용하는 구문구조이다. *와 /는 터미널이다.
+
+Q. 지금까지 설명한 생산규칙을 모으면 다음과 같다.
+
+ - PrimaryExpr -> identifier
+ - PrimaryExpr -> integer_number
+ - MultiplicativeExpr -> PrimaryExpr
+ - MultiplicativeExpr -> MultiplicativeExpr * PrimaryExpr
+ - MultiplicativeExpr -> MultiplicativeExpr / PrimaryExpr
+
+ 1 * x * 123을 위 생산규칙만을 사용해서 유도해보시오.
+
+
+이때 두번째와 세번째 생산규칙에서 오른편은 곱셈과 나눗셈 연산자의 결합
+규칙을 고려한 결과로 작성한  것이다. 즉, MultiplicativeExpr 넌터미널을
+곱셈이나  나누셈의 왼쪽에  두고,  PrimaryExpr을  이 연산자의  오른쪽에
+두었다.  그 이유는 곱셈과 나눗셈  연산자의 결합 규칙에 의하면 왼쪽부터
+먼저 계산하기  때문이다. 1 *  x *  123를 (1 *  x) * 123의  트리 구조로
+만든다.
+
+만일 아래와 같이 생산규칙을 작성한다면,
+
+ - MultiplicativeExpr -> PrimaryExpr * MultiplicativeExpr
+ - MultiplicativeExpr -> PrimaryExpr / MultiplicativeExpr
+
+1 * x  * 123에서 1 *  (x * 123)의 트리 구조를  만들어, 곱셈과 나눗셈을
+오른쪽부터 계산하는 결합규칙으로 잘못 정의하게 된다.
+
+또는 두번째와 세번째 생산규칙에서 PrimaryExpr대신 MultiplicativeExpr로
+바꾸면 모호성(ambiguity) 문제가 발생한다.
+
+ - MultiplicativeExpr -> PrimaryExpr
+ - MultiplicativeExpr -> MultiplicativeExpr * MultiplicativeExpr
+ - MultiplicativeExpr -> MultiplicativeExpr / MultiplicativeExpr
+
+예를 들어, 1 / x / 123을 (1 / x) / 123으로 트리 구조를 만들수도 있고 1
+/ (x / 123)으로 트리  구조를 만들수도 있다. 따라서 계산순서가 한가지로
+결정되지 않고 두가지로 모호하게 정의되는데  각 순서에 따라 계산 결과가
+다르다. 이를 모호성 문제라고 부른다.
+
+그 다음으로 우선순위가 높은 연산자는 덧셈과 뺄셈이다. 이 연산자에 대한
+트리를 만드는 생산규칙은 다음과 같다. 
+
+ - AdditiveExpr -> MultiplicativeExpr
+ - AdditiveExpr -> AdditiveExpr + MultiplicativeExpr
+ - AdditiveExpr -> AdditiveExpr - MultiplicativeExpr
+
+앞에서  PrimaryExpr  넌터미널을 감싸는  MultiplicativeExpr  넌터미널을
+왼편에   두는  생산규칙을   만들었던것을   응용하면  비슷한   모양으로
+생산규칙을 만들 수 있을 것이다.  덧셈과 뺄셈 연산자 역시 왼쪽부터 먼저
+계산하는  결합 규칙을  반영하여  AdditiveExpr  넌터미널을 덧셈과  뺄셈
+연산자의 왼편에 두었다. +와 -는 모두 터미널이다.
+
+Q. 지금까지 설명한 생산규칙을 모으면 다음과 같다.
+
+ - PrimaryExpr -> identifier
+ - PrimaryExpr -> integer_number
+ - MultiplicativeExpr -> PrimaryExpr
+ - MultiplicativeExpr -> MultiplicativeExpr * PrimaryExpr
+ - MultiplicativeExpr -> MultiplicativeExpr / PrimaryExpr
+ - AdditiveExpr -> MultiplicativeExpr
+ - AdditiveExpr -> AdditiveExpr + MultiplicativeExpr
+ - AdditiveExpr -> AdditiveExpr - MultiplicativeExpr
+
+1  + x  * 123을  위 생산규칙을  사용하여 구문분석해보시오.  시작심볼로
+AdditiveExpr을 사용하시오.
+
+
+다음은 할당연산자에 관한 생산규칙이다.
+
+ - AssignExpr -> AdditiveExpr
+ - AssignExpr -> identifier = AssignExpr
+
+Q. 지금까지 설명한 생산규칙을 모으면 다음과 같다.
+
+ - PrimaryExpr -> identifier
+ - PrimaryExpr -> integer_number
+ - MultiplicativeExpr -> PrimaryExpr
+ - MultiplicativeExpr -> MultiplicativeExpr * PrimaryExpr
+ - MultiplicativeExpr -> MultiplicativeExpr / PrimaryExpr
+ - AdditiveExpr -> MultiplicativeExpr
+ - AdditiveExpr -> AdditiveExpr + MultiplicativeExpr
+ - AdditiveExpr -> AdditiveExpr - MultiplicativeExpr
+ - AssignExpr -> AdditiveExpr
+ - AssignExpr -> identifier = AssignExpr
+
+  x  = y  =  1 +  2  * 3을  위  생산규칙을 사용하여  구문분석해보시오.
+  시작심볼로 AssignExpr을 사용하시오.
+
+앞서  정의했던   생산규칙과  다른  점은   할당연산자는  오른쪽에서부터
+계산하는 결합규칙을 따르는  것이다. 즉 x =  y = 1로부터 x =  (y = 1)의
+구조를 갖는 트리를 만들도록 정의되어 있다. =는 터미널이다.
+
+가장  바깥쪽에 여러  식을 세미콜론으로  구분하여 나열한  나열식에 관한
+생산규칙이다.
+
+ - SeqExpr -> AssignExpr
+ - SeqExpr -> SeqExpr ; AssignExpr
+
+세미콜론 ;는 터미널이다. 나열식은  AssignExpr 넌터미널로 정의된 구조의
+식을 나열한다.
+
+마지막으로 괄호를  사용해서 계산순서를 지정하는 식의  구조를 설명한다.
+지금까지 설명한 생산규칙에는 괄호가 없을 때 우선순위와 결합규칙에 따라
+연산자 계산 순서를 고려하도록 식의 구조를 정의하였다.
+
+ - PrimaryExpr -> ( AssignExpr )
+
+Q.  x =  (y =  123) *  2와 x  = y  = 123  * 2의  실행하면 어떤  차이가
+   발생하는가?
+   
+Q.  x  =  (y  =   123)  *  2을  구문분석하시오.  시작심볼로  SeqExpr을
+   가정하시오.
+
+Q. x = y * 3 = 7 구문분석을 하면 그 결과는 무엇인가? 
+
+Q.  아래  생산규칙에서 AssignExpr을  괄호 안에 배치한  이유는 무엇인지
+   설명하시오. 또는 AssignExpr 대신 SeqExpr을 놓으면 어떻게 되는가?
+
+ - PrimaryExpr -> ( AssignExpr )
+ 
+이 생산규칙에서 여는 괄호 (와  닫는 괄호)도 모두 터미널이다. 괄호 안에
+올 수 있는 식은 AssignExpr 넌터미널로 정의된 구조를 갖는다. 예를 들어,
+SeqExpr 넌터미널로 정의된 구조의 식은 괄호 안에 올 수 없다.
+
+지금까지 설명한 생산규칙을 모두 모으면 다음과 같다.
+
+ - SeqExpr -> AssignExpr
+ - SeqExpr -> SeqExpr ; AssignExpr
+ 
+ - AssignExpr -> AdditiveExpr
+ - AssignExpr -> identifier = AssignExpr
+ 
+ - AdditiveExpr -> MultiplicativeExpr
+ - AdditiveExpr -> AdditiveExpr + MultiplicativeExpr
+ - AdditiveExpr -> AdditiveExpr - MultiplicativeExpr
+ 
+ - MultiplicativeExpr -> PrimaryExpr
+ - MultiplicativeExpr -> MultiplicativeExpr * PrimaryExpr
+ - MultiplicativeExpr -> MultiplicativeExpr / PrimaryExpr
+ 
+ - PrimaryExpr -> identifier
+ - PrimaryExpr -> integer_number
+ - PrimaryExpr -> ( AssignExpr )
+
+넌터미널 리스트
+
+ - SeqExpr, AssignExpr, AdditiveExpr, MultiplicativeExpr, PrimaryExpr
+
+터미널 리스트
+
+ - ; = + - * / ( )
+ - identifer
+ - integer_number
+
+프로그래밍언어  Arith를  위한  문법으로 구문  구조를  분석하기  위해서
+소스프로그램 텍스트에서 각 터미널을 하나의 심볼로 구분해놓아야 한다. 
+
+소스프로그램의   텍스트로 다음을 가정하자.
+
+ - "myvar = 123; myvar = myvar + 1"
+
+아래와 같은 문자 리스트와 동일하다.
+
+ - 'm', 'y', 'v',  'a', 'r', ' ',  '=', '1', '2', '3', ';',  ' ', 'm',
+   'y', 'v', 'a', 'r', ' ', '=', 'm',  'y', 'v', 'a', 'r', ' ', '+', '
+   ', '1'
+
+구문분석의 첫번째  단계는 텍스트 문자 리스트를  터미널 리스트로 바꾸는
+작업이다.  이를 Lexical analysis라고 부른다.
+
+이러한 입력 텍스트를 Java로 작성한 터미널 리스트로 바꾸면 다음과 같다.
+
+ - Teriminal("myvar", IDENTIFIER("identifier"),         1, 1),
+   Teriminal("=",     EQ("="),                          7, 1),
+   Teriminal("123",   INTEGER_NUMBER("integer_number),  9, 1),
+   Teriminal(";",     SEMICOLON(";"),                   12, 1),
+   Teriminal("myvar", IDENTIFIER("identifier"),         14, 1),
+   Teriminal("=",     EQ("="),                          20, 1),
+   Teriminal("myvar", IDENTIFIER("identifier"),         22, 1),
+   Teriminal("+",     ADD("+"),                         28, 1),
+   Teriminal("1",     INTEGER_NUMBER("integer_number"), 30, 1)
+
+각  터미널은 Java  클래스  Terminal로 표현하고,  첫번째 인자는  터미널
+문자열, 두번째  인자는 토큰,  세번째 인자는  터미널의 시작  문자 위치,
+네번째 인자는 터미널의 시작줄 위치이다.
+
+직관적으로 더이상  분해할 수 없는  가장 작은 심볼에  해당하는 문자열을
+나열한  리스트이다.   여기에 리스트의  끝을  나타내는  심볼 (보통  $로
+표시)을  포함시킨다. 특별한  심볼을 토큰끝(End  Of Token)이라  부른다.
+즉, 토큰은 터미널 리스트 또는 토큰 리스트의 끝을 나타내는 심볼이다.
+
+ - Teriminal("$",    END_OF_TOKEN("$"), -1, -1)
+
+토큰끝 터미널의 경우 특별 취급하여 문자열 시작 위치와 시작줄 모두 -1로
+정한다.
+
+예제에서 보여준  터미널 리스트의  특징은 다음과  같다. 먼저  공백(' ',
+'\t',  '\n')은 터미널에서  제외하고, 숫자로  0부터 9까지의  숫자를 1개
+이상  공백없이  나열하고, 변수  이름으로  알파벳을  1개 이상  공백없이
+나열한다.
+
+소스프로그램의  텍스트를 터미널  리스트로  바꿀때 정규식(정규  표현식,
+regular expression)을 사용하여 각 종류의 터미널에 해당하는 단위 토큰을
+정의한다.
+
+예를 들어,  +나 -와 같은  토큰은 텍스트에서도 +와 -  그대로 나타나지만
+identifier는 알파벳과  숫자로 이루어진  정해진 규칙에  따르는 텍스트를
+의미한다.  integer_number도   마찬가지이다.  따라서   토큰에  해당하는
+텍스트가 무엇인가를 정의해야하는데 보통 정규식을 사용한다.
+
+ - 정규식에 대한 설명은 다음 웹 사이트를 참고한다.
+ 
+   https://ko.wikipedia.org/wiki/정규_표현식
+
+나중에 오토마톤을 만들 때 사용하기  위해 토큰 리스트의 마지막에 토큰이
+더이상 없음을  표시하는 특별한  토큰(EOT, End  Of Token)을  둔다. 보통
+"$"로 토큰끝을 표시한다.
+
+ -----------------------------------------------  
+   정규식 (매치될 텍스트 정의)       토큰/터미널 (이름)
+ -----------------------------------------------  
+   [0-9]+                  ==>   integer_number
+   (                       ==>   (
+   )                       ==>   )
+   +                       ==>   +
+   -                       ==>   -
+   *                       ==>   *
+   /                       ==>   /
+   =                       ==>   =
+   ;                       ==>   ;
+   [a-zA-Z][a-zA-Z0-9]*    ==>   identifier
+ -----------------------------------------------
+
+소스프로그램  텍스트에서  정규식에  매치되는  문자열을  찾을때마다  이
+정규식에 해당하는 터미널로  바꿔준다.  (, _, +와  같은 터미널은 별도의
+정보가  필요하지 않지만  identifer와 integer_number  터미널은 정규식에
+매칭된 문자열을  속성으로 가지고  있어야 한다. 따라서  앞서 설명한바와
+같이 터미널에 매치된 문자열과 토큰을 모두 저장해둔다.
+
+문법에서도  터미널을  언급할 때  토큰  이름을  사용하지만 이  터미널을
+가지고   구문트리를   만들기   위해서는  매치된   텍스트가   필요하다.
+
+이와  같이 소스프로그램  텍스트를 토큰리스트로  바꾸는 과정을  lexical
+analysis라고 부르고, 이 과정을 담당하는 모듈을 lexer라고 한다.
+
+
+Q. 토큰과 터미널의 차이는 무엇인가?
+
+Q.  소스프로그램 텍스트  "x123  + 123"의  터미널 리스트를  작성하시오.
+   정규식과 터미널 이름 표와 터미널 리스트 예제를 참고하여 작성하시오.
+
+
+5.2 프로그래밍언어 Arith 구문을 받아들이는 오토마톤
+
+앞에서 소개한  프로그래밍언어 Arith  문법의 구조를 갖는  텍스트를 받아
+트리구조로  변환하는  오토마톤(automaton)을  설명한다.  이  오토마톤은
+3가지 테이블로 구성한다.
+
+ - 액션 테이블(action table)
+ - 고우투 테이블(goto table)
+ - 문법 테이블(grammar table)
+
+이 테이블을  어떻게 만드는가는 유명한 컴파일러책  드래곤북을 참고한다.
+우리는  앞으로  문법(LALR(1)  문법)에서  오토마톤(LALR(1)  오토마톤)을
+생성하는 라이브러리를 사용할 예정이기  때문에 테이블 만드는 알고리즘을
+이해하기  보다   테이블을  사용하여  구문분석  트리를   만드는  방법을
+이해하는데 중점을 둔다.
+
+액션테이블은 3개의 컬럼으로 구성되어 있다.
+
+ - 상태 번호, 터미널, 액션
+ - 액션 : Shift 상태 번호, Reduce 생성규칙 번호, Accept
+
+아래는 프로그래밍언어 Arith 문법으로부터 생성한 액션테이블이다.
+
+0	identifier	Shift 6
+0	integer_number	Shift 7
+0	(	Shift 8
+1	$	Accept
+1	;	Shift 9
+2	$	Reduce 2
+2	;	Reduce 2
+3	$	Reduce 4
+3	;	Reduce 4
+3	)	Reduce 4
+3	+	Shift 10
+3	-	Shift 11
+4	$	Reduce 7
+4	;	Reduce 7
+4	+	Reduce 7
+4	-	Reduce 7
+4	)	Reduce 7
+4	*	Shift 12
+4	/	Shift 13
+5	$	Reduce 10
+5	;	Reduce 10
+5	+	Reduce 10
+5	-	Reduce 10
+5	*	Reduce 10
+5	/	Reduce 10
+5	)	Reduce 10
+6	=	Shift 14
+6	$	Reduce 11
+6	;	Reduce 11
+6	+	Reduce 11
+6	-	Reduce 11
+6	*	Reduce 11
+6	/	Reduce 11
+6	)	Reduce 11
+7	$	Reduce 12
+7	;	Reduce 12
+7	+	Reduce 12
+7	-	Reduce 12
+7	*	Reduce 12
+7	/	Reduce 12
+7	)	Reduce 12
+8	identifier	Shift 6
+8	integer_number	Shift 7
+8	(	Shift 8
+9	identifier	Shift 6
+9	integer_number	Shift 7
+9	(	Shift 8
+10	identifier	Shift 18
+10	integer_number	Shift 7
+10	(	Shift 8
+11	identifier	Shift 18
+11	integer_number	Shift 7
+11	(	Shift 8
+12	identifier	Shift 18
+12	integer_number	Shift 7
+12	(	Shift 8
+13	identifier	Shift 18
+13	integer_number	Shift 7
+13	(	Shift 8
+14	identifier	Shift 6
+14	integer_number	Shift 7
+14	(	Shift 8
+15	)	Shift 23
+16	$	Reduce 1
+16	;	Reduce 1
+17	$	Reduce 5
+17	;	Reduce 5
+17	+	Reduce 5
+17	-	Reduce 5
+17	)	Reduce 5
+17	*	Shift 12
+17	/	Shift 13
+18	$	Reduce 11
+18	;	Reduce 11
+18	+	Reduce 11
+18	-	Reduce 11
+18	)	Reduce 11
+18	*	Reduce 11
+18	/	Reduce 11
+19	$	Reduce 6
+19	;	Reduce 6
+19	+	Reduce 6
+19	-	Reduce 6
+19	)	Reduce 6
+19	*	Shift 12
+19	/	Shift 13
+20	$	Reduce 8
+20	;	Reduce 8
+20	+	Reduce 8
+20	-	Reduce 8
+20	*	Reduce 8
+20	/	Reduce 8
+20	)	Reduce 8
+21	$	Reduce 9
+21	;	Reduce 9
+21	+	Reduce 9
+21	-	Reduce 9
+21	*	Reduce 9
+21	/	Reduce 9
+21	)	Reduce 9
+22	$	Reduce 3
+22	;	Reduce 3
+22	)	Reduce 3
+23	$	Reduce 13
+23	;	Reduce 13
+23	+	Reduce 13
+23	-	Reduce 13
+23	*	Reduce 13
+23	/	Reduce 13
+23	)	Reduce 13
+
+고우투테이블 역시 3개의 컬럼으로 구성되어 있다.
+
+ - (현재) 상태 번호, 넌터미널, (다음) 상태 번호
+
+아래는 프로그래밍언어 Arith 문법으로부터 생성한 고우투 테이블이다.
+
+0	SeqExpr	1
+0	AssignExpr	2
+0	AdditiveExpr	3
+0	MultiplicativeExpr	4
+0	PrimaryExpr	5
+8	AssignExpr	15
+8	AdditiveExpr	3
+8	MultiplicativeExpr	4
+8	PrimaryExpr	5
+9	AssignExpr	16
+9	AdditiveExpr	3
+9	MultiplicativeExpr	4
+9	PrimaryExpr	5
+10	MultiplicativeExpr	17
+10	PrimaryExpr	5
+11	MultiplicativeExpr	19
+11	PrimaryExpr	5
+12	PrimaryExpr	20
+13	PrimaryExpr	21
+14	AssignExpr	22
+14	AdditiveExpr	3
+14	MultiplicativeExpr	4
+14	PrimaryExpr	5
+
+문법 테이블은  문법의 각  생산규칙에 고유번호를 매긴  것이다. 기술적인
+이유로  SeqExpr' ->  SeqExpr  생산규칙을  추가했으며, 시작  넌터미널을
+SeqExpr'으로 설정한다.
+
+0: SeqExpr' -> SeqExpr
+1: SeqExpr -> SeqExpr ; AssignExpr
+2: SeqExpr -> AssignExpr
+3: AssignExpr -> identifier = AssignExpr
+4: AssignExpr -> AdditiveExpr
+5: AdditiveExpr -> AdditiveExpr + MultiplicativeExpr
+6: AdditiveExpr -> AdditiveExpr - MultiplicativeExpr
+7: AdditiveExpr -> MultiplicativeExpr
+8: MultiplicativeExpr -> MultiplicativeExpr * PrimaryExpr
+9: MultiplicativeExpr -> MultiplicativeExpr / PrimaryExpr
+10: MultiplicativeExpr -> PrimaryExpr
+11: PrimaryExpr -> identifier
+12: PrimaryExpr -> integer_number
+13: PrimaryExpr -> ( AssignExpr )
+
+
+3개의  테이블이 주어졌다고  가정할 때  소스프로그램 텍스트로부터  구문
+트리를 만드는 오토마톤은 다음과 같다.
+
+ - 입력:
+    1) 액션 테이블, 고우투 테이블, 생산규칙 테이블
+    2) 터미널 리스트 
+ - 출력:
+    1) 추상구문트리 (구문 에러가 발생하지 않은 경우)
+
+ - 알고리즘:
+    1) 초기화
+      1-1) 현재 상태를 0을 스택에 넣기
+      1-2) 터미널 리스트의 맨 앞에 있는 터미널을 현재 터미널로 설정
+    
+    2) 아래 과정을 반복
+      2-1) 스택 탑의 상태와 현재 터미널을 키로 액션 테이블을 참고하여
+           취할 액션을 구한다.
+
+        2-1-1) Shift n 액션이면,
+	   현재 터미널을 스택에 넣고, 상태 번호 n을 스택에 넣기
+
+        2-1-2) Reduce i 액션이면,
+	   - 생산규칙 테이블에서 번호 i의 생산규칙을 A -> RHS을 찾아,
+	   
+	   - RHS의 길이의 2배만큼 스택에서 원소를 꺼내 버리고,
+	   
+	   - 스택  탑의  상태와  넌터미널  A를  가지고  고우투테이블을
+             참고하여 그 다음 상태를 결정한 다음
+	   
+	   - 넌터미널 A를 스택에 넣고, 다음 상태를 스택에 넣기
+
+        2-1-3) Accept 액션이면,
+	   - 종료
+
+Q.   소스프로그램  1 +  2  *  3을  가정하고 위의  오토마톤  알고리즘을
+    따라해보시오.
+
+소스프로그램 텍스트
+ 1 +  2  *  3
+
+={lexical analysis}=>
+n
+터미널 리스트
+ 1, +, 2, *, 3, $
+
+={syntactic analysis}=>
+
+추상구문트리
+
+
+
+(추상구문트리를 만들기 위해서) 오토마톤 알고리즘을 적용하는 과정
+
+ stack: 0
+
+ current terminal : integer_number("1")
+
+>>>
+
+ Shift 7
+
+ stack: 7 integer_number("1") 0
+ 
+ current terminal : ADD("+")
+
+>>>
+ 
+ Reduce 12
+
+ 12: PrimaryExpr -> integer_number
+
+ stack:  0
+
+ 0, PrimaryExpr => Goto 5
+
+ stack: 5 PrimarExpr 0
+
+ current terminal : ADD("+")
+
+>>>
+
+ Reduce 10
+
+ 10: MultiplicativeExpr -> PrimaryExpr 
+
+ stack: 0
+
+ 0, MultiplicativeExpr => Goto 4
+
+ stack: 4 MultiplicativeExpr 0
+
+ current terminal : ADD("+")
+
+>>>
+
+ Reduce 7
+
+ 7: AdditiveExpr -> MultiplicativeExpr
+
+ stack: 0
+
+ 0, AdditiveExpr => Goto 3
+
+ stack: 3 AdditiveExpr 0
+
+ current terminal : ADD("+")
+
+>>>
+
+ Shift 10
+
+ stack: 10 + 3 AdditiveExpr 0
+
+ current terminal : integer_number("2")
+
+>>>
+
+ Shift 7
+
+ stack: 7 2 10 + 3 AdditiveExpr 0
+
+ current terminal : MUL("*") 
+
+>>>
+
+ Reduce 12
+
+ 12: PrimaryExpr -> integer_number
+
+ stack: 10 + 3 AdditiveExpr 0
+  
+ 10, PrimaryExpr => 5
+
+ stack: 5 PrimaryExpr 10 + 3 AdditiveExpr 0
+
+ current terminal : MUL("*") 
+
+>>>
+
+ Reduce 10
+
+ 10: MultiplicativeExpr -> PrimaryExpr
+
+ stack: 10 + 3 AdditiveExpr 0
+
+ 10, MultiplicativeExpr => 17
+
+ stack: 17 MultiplicativeExpr 10 + 3 AdditiveExpr 0
+
+ current terminal : MUL("*") 
+
+>>>
+
+ Shift 12
+
+ stack: 12 * 17 MultiplicativeExpr 10 + 3 AdditiveExpr 0
+
+ current terminal : integer_number("3")
+
+>>>
+
+ Shift 7
+
+ stack: 7 3 12 * 17 MultiplicativeExpr 10 + 3 AdditiveExpr 0
+
+ current terminal : end_of_token("$")
+
+>>>
+
+ Reduce 12
+
+ 12: PrimaryExpr -> integer_number
+
+  stack: 12 * 17 MultiplicativeExpr 10 + 3 AdditiveExpr 0
+
+ 12, PrimaryExpr => Goto 20
+
+ stack: 20 PrimaryExpr 12 * 17 MultiplicativeExpr 10 + 3 AdditiveExpr 0
+
+ current terminal : end_of_token("$")
+
+>>>
+
+ Reduce 8
+
+ 8: MultiplicativeExpr -> MultiplicativeExpr * PrimaryExpr 
+
+ stack: 10 + 3 AdditiveExpr 0
+
+ 10, MultiplicativeExpr => Goto 17
+
+ stack: 17 MultiplicativeExpr 10 + 3 AdditiveExpr 0
+
+ current terminal : end_of_token("$")
+
+>>>
+
+ Reduce 5
+
+ 5: AdditiveExpr -> AdditiveExpr + MultiplicativeExpr 
+
+ stack: 0
+
+ 0, AdditiveExpr => Goto 3
+
+ stack: 3 AdditiveExpr 0
+
+ current terminal : end_of_token("$")
+
+>>>
+
+ Reduce 4
+
+ 4: AssignExpr -> AdditiveExpr
+
+ stack: 0
+
+ 0, AssignExpr => Goto 2
+
+ stack: 2 AssignExpr 0
+
+ current terminal : end_of_token("$")
+
+>>>
+
+ Reduce 2
+
+ 2: SeqExpr -> AssignExpr 
+
+ stack: 0
+
+ 0, SeqExpr => Goto 1
+
+ stack: 1 SeqExpr 0
+
+ current terminal : end_of_token("$")
+
+>>>
+
+ Accept
+
+지금까지  오토마톤   알고리즘을  적용하는  과정을   살펴보았지만  아직
+추상구문트리를 만든 것은 아니다.
+
+추상구문트리를  만들기   위해서  Reduce  i  액션을   취할때마다  i번째
+생산규칙에 대해 추상구문트리를 만드는 Java코드를 호출해주어야 한다.
+
+그래서 Reduce i 액션들만을 일단 모두 모아보자.
+
+ Reduce 12
+  12: PrimaryExpr -> integer_number
+ Reduce 10
+  10: MultiplicativeExpr -> PrimaryExpr 
+ Reduce 7
+   7: AdditiveExpr -> MultiplicativeExpr
+ Reduce 12
+  12: PrimaryExpr -> integer_number
+ Reduce 10
+  10: MultiplicativeExpr -> PrimaryExpr
+ Reduce 12
+  12: PrimaryExpr -> integer_number
+ Reduce 8
+   8: MultiplicativeExpr -> MultiplicativeExpr * PrimaryExpr 
+ Reduce 5
+   5: AdditiveExpr -> AdditiveExpr + MultiplicativeExpr 
+ Reduce 4
+   4: AssignExpr -> AdditiveExpr
+ Reduce 2
+   2: SeqExpr -> AssignExpr 
+
+Reduce   i에서   언급한    각   생산규칙을   참고하여   추상구문트리를
+만들어보자.
+
+ - 참고로, 아래 설명에서 사용한 스택은 본질적으로 위의 설명에서 사용한
+   스택과 동일하지만  추상구문트리를 만드는 과정을 담고  있다는 점에서
+   ast_stack(그냥 stack이라 하지 않고)이라 이름지었다.
+
+ Reduce 12
+  12: PrimaryExpr -> integer_number("1")
+
+  return new Lit("1")
+  ast_stack: []
+
+ Reduce 10
+  10: MultiplicativeExpr -> PrimaryExpr
+
+  return PrimaryExpr이 가리키는 추상구문트리
+  ast_stack: [new Lit("1")]
+  
+ Reduce 7
+   7: AdditiveExpr -> MultiplicativeExpr
+
+  return MultiplicativeExpr가 가리키는 추상구문트리
+  ast_stack: [new Lit("1")]
+
+ Reduce 12
+  12: PrimaryExpr -> integer_number("2")
+
+  return new Lit("2")
+  ast_stack: [ new Lit("2"), new Lit("1") ]
+
+ Reduce 10
+  10: MultiplicativeExpr -> PrimaryExpr
+  
+  return PrimaryExpr이 가리키는 추상구문트리
+  ast_stack: [ new Lit("2"), new Lit("1") ]
+  
+ Reduce 12
+  12: PrimaryExpr -> integer_number("3")
+
+  return new Lit("3")
+  ast_stack: [ new Lit("3"), new Lit("2"), new Lit("1") ]
+
+ Reduce 8
+   8: MultiplicativeExpr -> MultiplicativeExpr * PrimaryExpr
+   
+  ast_stack: [ new BinOp(BinOp.MUL, new Lit("3"), new Lit("2"))
+         , new Lit("1") ]
+  
+ Reduce 5
+   5: AdditiveExpr -> AdditiveExpr + MultiplicativeExpr
+   
+  ast_stack: [
+      new BinOp(BinOp.ADD,
+      	      new Lit("1")
+	      new BinOp(BinOp.MUL,
+	      	  new Lit("3"),
+		  new Lit("2")))
+	 ]
+
+ Reduce 4
+   4: AssignExpr -> AdditiveExpr
+
+  ast_stack: [
+      new BinOp(BinOp.ADD,
+      	      new Lit("1")
+	      new BinOp(BinOp.MUL,
+	      	  new Lit("3"),
+		  new Lit("2")))
+	 ]
+
+Reduce 2
+   2: SeqExpr -> AssignExpr 
+
+  ast_stack: [
+      new BinOp(BinOp.ADD,
+      	      new Lit("1")
+	      new BinOp(BinOp.MUL,
+	      	  new Lit("3"),
+		  new Lit("2")))
+	 ]
+
+Accept
+
+  스택 탑에 있는 추상구문트리가 구문분석한 결과가 된다!
+
+
+=============================================================
+
+위  알고리즘은 문법으로부터  유도한  오토마톤에  따라 주어진  텍스트가
+문법에 맞는 구조를 갖으면  받아들이고 그렇지않으면 에러를 낸다. 하지만
+우리가 원하는  것은 구문분석 결과에  대한 가부도 있지만  올바른 구문인
+경우 구문트리를 만들어야 한다.
+
+이를 위해서  각 생산규칙마다 구문트리를 만드는  코드를 작성하고 2-1-2)
+단계에서  i번째  생산규칙을 사용할  때마다(Reduce  i  액션) 이  코드를
+실행하도록 변형한다. 
+
+
+Q. 소스프로그램의  텍스트로 1  + x를  가정하고, 소개한  3가지 테이블을
+   사용하는 오토마톤의 동작을 따라가며 설명하시오.
+
+
+
+5.3 swlab_parser 라이브러리를 이용하여 파서 만들기
+
+이제까지 이론을  길게 설명했다. 구문분석 사용자  입장에서 라이브러리를
+이용하여 파서를 쉽게 작성하는 방법을 살펴보자.
+
+5.3.1 토큰 클래스
+
+먼저   터미널에   해당하는    토큰을   정의해야   한다.   swlab_parser
+라이브러리에서 토큰을 Java의 열거형 클래스로 정의한다.
+
+  - END_OF_TOKEN
+  - OPEN_PAREN, CLOSE_PAREN
+  - IDENTIFIER
+  - INTEGER_NUMBER
+  - ADD, SUB, MUL, DIV, EQ, SEMICOLON
+
+추가로 각  토큰을 문자열로 바꾸었을  때 무엇이 되는지를  토큰의 인자로
+지정한다. 이 토큰의 인자는 문법을 정의할 때 터미널로 간주한다.
+
+프로그래밍언어 Arith의 토큰을 표현하는 클래스 Token은 다음과 같다.
+
+public enum Token implements TokenInterface<Token> {
+	END_OF_TOKEN("$"),
+	
+	OPEN_PAREN("("), CLOSE_PAREN(")"),
+	IDENTIFIER("identifier"),
+	INTEGER_NUMBER("integer_number"),
+	ADD("+"), SUB("-"), MUL("*"), DIV("/"),
+	EQ("="), SEMICOLON(";");
+
+	private String strToken;
+	
+	private Token(String strToken) {
+		this.strToken = strToken;
+	}
+	
+	@Override
+	public Token toToken(String str) throws ParserException {
+		for(Token token : Token.values()) {
+			if (token.strToken.equals(str))
+				return token;
+		}
+		throw new ParserException("Token.toToken: " + str + " not expected.");
+	}
+
+	@Override
+	public String toString(Token tok) {
+		return tok.strToken;
+	}
+
+}
+
+저네릭  인터페이스  TokenInterface<Token>를 구현하도록  라이브러리에서
+요구하고  있다.  그  이유는 토큰을  문자열로 또는  그 반대로  변환하는
+방법을 오토마톤을 구현하는 라이브러리에서 사용하고 있기 때문이다.
+
+ - 토큰을 문자열로  변환하기위해서 해당 토큰의 인자를  리턴하는 방법을
+   사용하고  (toToken 메소드)
+
+ - 문자열을 토큰으로  변환하기 위해서  이 문자열이 동일한  인자를 갖는
+   토큰을 찾는다. (toStrin 메소드)
+
+참고로 이 인터페이스를 통해서 파서 라이브러리에서 토큰을 다루는 코드와
+실제 파서에서의 토큰을 표현한 코드를 분리할 수 있다.
+
+
+5.3.2 Lexical analysis
+
+swlab_parser 라이브러리에서  렉서(lexer, lexical  analyzer)를 작성하는
+방법은 터미널을 정의하는 정규식과 이 정규식에 매칭하는 문자열을 찾아을
+때 이 문자열을 토큰을 변환하는 코드를 모두 나열하는 것이다.
+
+public class Lexer {
+	public Lexer(CommonParserUtil<Token> pu) {
+		pu.lexEndToken(Token.END_OF_TOKEN);
+		
+		// Remove all white spaces
+		pu.lex("[ \t\n]", text -> { return null; });
+		
+		pu.lex("[0-9]+",  text -> { return Token.INTEGER_NUMBER; } );
+		pu.lex("\\(", text -> { return Token.OPEN_PAREN; });
+		pu.lex("\\)", text -> { return Token.CLOSE_PAREN; });
+		
+		pu.lex("\\+", text -> { return Token.ADD; });
+		pu.lex("\\-", text -> { return Token.SUB; });
+		pu.lex("\\*", text -> { return Token.MUL; });
+		pu.lex("\\/", text -> { return Token.DIV; });
+		
+		pu.lex("\\=", text -> { return Token.EQ; });
+		pu.lex("\\;", text -> { return Token.SEMICOLON; });
+		
+		pu.lex("[a-zA-Z]+[a-zA-Z0-9]*", text -> {
+			return Token.IDENTIFIER;
+		} );
+		
+	}
+}
+
+
+5.3.3 구문 분석
+
+구문분석을    하려면    기본적으로    라이브러리의    핵심    클래스인
+CommonParserUtil<Token> 클래스의 객체 pu의 rule 메소드에 생산규칙과 이
+생산규칙을 사용할때마다 실행할 코드를 지정한다.
+
+또한 ruleStartSymbol 메소드를 통해 시작 넌터미널 심볼을 지정한다.
+
+public class Parser {
+ private CommonParserUtil<Token> pu;
+	
+ public Parser() throws IOException {
+	pu = new CommonParserUtil<Token>();
+		
+	new Lexer(pu);
+		
+	pu.ruleStartSymbol("SeqExpr'");
+	pu.rule("SeqExpr' -> SeqExpr", () -> { return pu.get(1); });
+		
+	pu.rule("SeqExpr -> SeqExpr ; AssignExpr", () -> { 
+		ArrayList<Expr> seqexpr = (ArrayList<Expr>)pu.get(1);
+		Expr assignexpr = (Expr)pu.get(3);
+		seqexpr.add(assignexpr);
+		return seqexpr; 
+	});
+	pu.rule("SeqExpr -> AssignExpr", () -> {
+		ArrayList<Expr> seqexpr = new ArrayList<Expr>();
+		Expr assignexpr = (Expr)pu.get(1);
+		seqexpr.add(assignexpr);
+		return seqexpr; 
+	});
+		
+	pu.rule("AssignExpr -> identifier = AssignExpr", () -> { 
+		String identifier = pu.getText(1);
+		Expr assignexpr = (Expr)pu.get(3);
+		return new Assign(identifier, assignexpr); 
+	});
+	pu.rule("AssignExpr -> AdditiveExpr", () -> { return pu.get(1); });
+		
+	pu.rule("AdditiveExpr -> AdditiveExpr + MultiplicativeExpr", () -> { 
+		Expr additiveexpr = (Expr)pu.get(1);
+		Expr multiplicativeexpr = (Expr)pu.get(3);
+		return new BinOp(BinOp.ADD, additiveexpr, multiplicativeexpr); 
+	});
+	pu.rule("AdditiveExpr -> AdditiveExpr - MultiplicativeExpr", () -> { 
+		Expr additiveexpr = (Expr)pu.get(1);
+		Expr multiplicativeexpr = (Expr)pu.get(3);
+		return new BinOp(BinOp.SUB, additiveexpr, multiplicativeexpr); 
+	});
+	pu.rule("AdditiveExpr -> MultiplicativeExpr", () -> { return pu.get(1); });
+		
+	pu.rule("MultiplicativeExpr -> MultiplicativeExpr * PrimaryExpr", () -> {
+		Expr multiplicativeexpr = (Expr)pu.get(1);
+		Expr primaryexpr = (Expr)pu.get(3);
+		return new BinOp(BinOp.MUL, multiplicativeexpr, primaryexpr); 
+	});
+	pu.rule("MultiplicativeExpr -> MultiplicativeExpr / PrimaryExpr", () -> {
+		Expr multiplicativeexpr = (Expr)pu.get(1);
+		Expr primaryexpr = (Expr)pu.get(3);
+		return new BinOp(BinOp.DIV, multiplicativeexpr, primaryexpr); 
+	});
+	pu.rule("MultiplicativeExpr -> PrimaryExpr", () -> { return pu.get(1); });
+		
+	pu.rule("PrimaryExpr -> identifier", () -> { return new Var(pu.getText(1)); });
+	pu.rule("PrimaryExpr -> integer_number", () -> {
+		String integer_number_str = pu.getText(1);
+		Integer integer_number = Integer.parseInt(integer_number_str);
+		return new Lit(integer_number); 
+	});
+	pu.rule("PrimaryExpr -> ( AssignExpr )", () -> { 
+		return pu.get(2); 
+	});		
+}
+
+5.3.4 swlab_parser 라이브러리 구성
+
+토큰 인터페이스는  문자열을 토큰으로  토큰을 문자열로  변환하는 각각의
+메소드가 있다는 것을 보장한다.
+
+public interface TokenInterface<Token> {
+	Token toToken(String s) throws ParserException;
+	String toString(Token tok);
+}
+
+오토마톤  스택의  원소를  기반  클래스  StkElem로  표현한다.  이  기반
+클래스를   상속받아  상태,   넌터미널,   터미널을  표현하는   클래스를
+도입하였다.
+
+ - class StkElem
+ - class ParseState extends StkElem
+ - class Nonterminal extends StkElem
+ - class Terminal extends StkElem
+
+Lexer에서  문자열로   토큰으로  변환하는   방법을  지정할   때  코드를
+작성하는데 TokenBuilder 인터페이스를 사용한다.
+
+public interface TokenBuilder<Token> {
+	public Token tokenBuilder(String tokenText);
+}
+
+class Token implements TokenInterface<Token> {
+  ...
+  // pu는 swlab 파서 라이브러리이다.
+  pu.lex("[0-9]+",  text -> { return Token.INTEGER_NUMBER; } );
+  ...
+}  
+
+Java로 작성한 ``text -> { return Token.INTEGER_NUMBER; }'' 부분은
+TokenBuilder 인터페이스를 만족하는 객체가 된다.
+
+swlab 라이브러리에서 다음과 같은 과정을 거친다.
+
+ 1. 정규식 "[0-9]+"을 만족하는 텍스트, 예를 들어 "123",를 찾는다.
+ 2. tokenBuilder("123")를 호출하여
+    ``text -> { return Token.INTEGER_NUMBER; }'' 를 실행한다.
+ 3. 그러면 인자 text는 "123"이 되어 INTEGER_NUMBER토큰을 리턴한다.
+ 4. 라이브러리에서 이 토큰을 받아 터미널
+     new Terminal(
+       "123",
+       INTEGER_NUMBER("integer_number"),
+       컬럼 시작 위치,
+       줄 시작 위치)
+
+    를 만든다.
+
+Parser에서   생산규칙을   사용할   때  트리를   만들기   위해   코드를
+지정한다. 이때 코드를 작성하기 위해 TreeBuilder 인터페이스를 사용한다.
+
+public interface TreeBuilder {
+	public Object treeBuilder();
+}
+
+class Parser {
+  ...
+  // pu는 swlab 파서 라이브러리이다.
+  pu.rule("AdditiveExpr -> AdditiveExpr + MultiplicativeExpr",
+    () -> { 
+	Expr additiveexpr = (Expr)pu.get(1);
+	Expr multiplicativeexpr = (Expr)pu.get(3);
+	return new BinOp(BinOp.ADD, additiveexpr, multiplicativeexpr); 
+     }
+  );  
+  ...
+}
+
+Java로  작성한  ``()->  {  ...  }''  부분은  TreeBuilder  인터페이스를
+만족하는 객체가 된다.
+
+swlab 라이브러리에서 다음과 같은 과정을 거친다.
+
+ 1. 생산규칙을 만족할때마다(Reduce i 액션을 취할때마다)
+ 2. treeBuilder()를 호출하여 ``() -> { ... }'' 을 실행한다.
+    명시적으로 인자를 통해서 전달하는 것은 아니지만 묵시적으로
+    오토마톤의 스택을 이 코드에서 사용할 수 있다.
+ 3. new BinOp(BinOp.ADD, ... , ...) 추상구문트리를 만들어 리턴한다.
+    이때, pu.get(1), pu.get(3)는 각각 오토마톤 스택에 저장되어 있는
+    AdditiveExpr 넌터미널에 해당하는 서브-추상구문트리와
+    MultiplicativeExpr 넌터미널에 해당하는 서브-추상구문트리를 가져온다.
+
+	Expr additiveexpr = (Expr)pu.get(1);
+	Expr multiplicativeexpr = (Expr)pu.get(3);
+
+    결과적으로 new BinOp(BinOp.ADD, additiveexpr, multiplicativeexpr)
+    추상구문트리를 만든다.
+
+ 4. 라이브러리에서 이 추상구문트리를 받고, 오토마톤 알고리즘의 그 다음
+    단계를 진행한다.
+
+
+Lexical analysis와 Syntactic analysis의 공통 부분을 실행하는 클래스가
+CommonParserUtil이다.
+
+이 클래스는 swlab_parser   라이브러리에서  가장  중요한   클래스다. 
+
+ - class CommonParserUtil<Token extends TokenInterface<Token>>
+
+   1) Lexing 메소드
+   2) Parsing 메소드
+
+요약하자마면, 이 클래스를 사용하기 위하여 
+
+ - 토큰을 정의한 Token 클래스와
+ - Lexer의 정규식과 문자열을 토큰으로 변환하는 코드 목록과
+ - Parser의 생산규칙과 추상구문트리를 만드는 코드 목록을
+
+작성해야 한다. 앞에서  설명한 enum Token, class  Lexer, class Parser를
+참고하자.
+
+위  3개의 클래스를  일단  작성하면  CommonParserUtil 클래스의  Parsing
+메소드를 호출하면 구문분석을 시작한다.
+
+ - 입력으로 소스프로그램의 텍스트를 받아
+ 
+ - Lexing 메소드를 호출하여 터미널 리스트를 만든다음
+
+ - Parsing  메소드에서  이  터미널 리스트와  3가지  테이블을  참고하여
+   오토마톤 알고리즘을 적용하여 추상구문트리를 만든다.
+
+따라서  CommonParserUtil  클래스의  Lexing 메소드와  Parsing  메소드가
+swlab parser 라이브러리의 핵심이다.
+
+참고로,   정규식을   적용하여   소스프로그램의   텍스트에서   터미널을
+분리할때는 Java의 정규식 라이브러리를 사용한다.
+
+그리고,  오토마톤 알고리즘을  적용할 때  필요한 3가지  테이블을 만들기
+위해서 외부 라이브러리(genlrparser)를 사용한다.
+
+ - Parser에 지정한 생산규칙을 모아 문법(mygrammar.grm 파일)을 만들고
+
+ - 외부  라이브러리(genlrparser)에 이  파일을 전달하여  3가지 테이블을
+   만든다. (action_table.txt, goto_table.txt, grammar_rules.txt)
+
+만일  문법을  변경하여 다시  테이블을  만들려면  기존 테이블이  저장된
+파일들을 모두 삭제해야 한다.
+
+6. 파서, 컴파일러, 가상기계를 합한 시스템
+
+지금까지 설명한 파서, 컴파일러, 가상기계를 모두 합하여 다음과 같은 시스템을
+구성할 수 있다. 이 프로그램을 실행하면
+
+ - 소스프로그램으로 사용할 파일 이름을 입력받고
+
+ - Parsing 메소드로 소스프로그램의 추상구문트리를 만들고
+
+ - compile 메소드로  VM 명령어로 구성된  타겟프로그램의 추상구문트리를
+   만든 다음
+
+ - run 메소드로 이 타겟프로그램의 추상구문트리를 받아 해석기로 실행한다.
+
+public class Main {
+ public static void main(String[] args) {
+	Scanner scan = new Scanner(System.in);
+	String base = System.getProperty("user.dir");
+	String prj = "src/org/swlab/lib/parser/examples/arith/test";
+	File file = null;
+		
+	while(true) {
+		try {
+			System.out.print("Enter your file name: ");
+			String filename = scan.next();
+			file = new File(base + "/" + prj + "/" + filename);
+			FileReader fr = new FileReader(file);
+			Parser parser = new Parser();
+		
+			ArrayList<Expr> exprSeq = (ArrayList<Expr>)parser.Parsing(fr);
+				
+			System.out.println("\nParsing:");
+			Expr.prettyPrint(exprSeq);
+				
+			ArrayList<Instr> instrs = (ArrayList<Instr>)Compiler.compile(exprSeq);
+				
+			System.out.println("\nCompiling:");
+			Instr.prettyPrint(instrs);
+				
+			System.out.println("\nRunning VM:");
+			HashMap<String,Integer> env = new HashMap<String,Integer>();
+			VM.run(instrs, env);
+				
+			System.out.println("\nEnvironment:");
+			Set<String> vars = env.keySet();
+			for(String var : vars) {
+				System.out.println(var + " = " + env.get(var));
+			}
+			
+			System.out.println("\nSuccessfully done.");
+		}
+		catch(FileNotFoundException e) {
+			System.err.println("Not found: " + file);
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (LexerException e) {
+			e.printStackTrace();
+		} catch (ParserException e) {
+			e.printStackTrace();
+		}
+	}
+ }
+
+}
+
+7. 마무리
+
+이  튜토리얼 문서는  간단한 언어를  설계하고 해석기를  구현하는 방법을
+공부하기 위한 예제로 적하하고, swlab 파서 라이브러리를 설명하는 문서로
+사용할 수 있다.
+
+7.1 swlab 파서 라이브러리와 파성 생성 도구와 비교
+
+swlab 파서는 라이브러리 사용 접근 방법으로 파서를 만드는 특징을 가지고
+있다.
+
+보통 다른 파서 도구는 파서를 생성하는 접근 방법을 사용하고 있다. 즉,
+
+  - 입력: 정규식 + 토큰 생성 코드 + 생산규칙 + 추상구문트리 생성 코드
+  - 출력: Parser.java + CommonParserUtil.java에 있는 내용을 혼합한 파서 코드
+
+특히 오토마톤 알고리즘에서 Reduce i 대신 Reduce 0부터 Reduce N으로 분류하고
+(생산규칙의 전체 갯수가 N이라고 가정) Parser.java에서 작성한 각 생산규칙에
+해당하는 추상구문트리 생성 코드를 직접 사용하는 형태이다.
+
+그리고,   액션테이블과   고우투테이블을   배열  형태로   가지고   있을
+것이다. 이때, 생산규칙들을 가지고 있는 생산규칙 테이블은 별도로 가지고
+있지 않고 출력한 코드에서 생산규칙 테이블에서 얻고자 했던 정보인 RHS의
+길이와 너터미널 심볼을 이미 참조한 코드가 포함되어 있을 것이다.
+
+파서 라이브러리 접근 방법과 파성  생성 방법은 서로 장단점이 있다. 파서
+생성 방법은 파서 프로그램을 C,  C++, Java와 같은 특정 프로그래밍언어로
+생성하하는  방법은 비교적  'heavyweight'한데  비하여,  C, C++,  Java로
+CommonParserUtil 모듈만 작성하면 파서 라이브러리 방법을 사용할 수 있기
+때문에  상대적으로  'lightweight'하다.    참고로  Java로  작성한  파서
+라이브러리에서  CommonParserUtil.java의 크기는  600라인 규모이다.   C,
+C++,  Python, Haskell  등으로 만들때도  이 크기는  크게 늘어나지  않을
+것으로  보인다.  따라서  각   프로그래밍언어  별로  파서  라이브러리를
+준비해놓으면,  액션테이블,   고우투테이블,  생산규칙테입을을  생성하는
+genlrparser.exe는  공유할  수  있기 때문에  파서를  작성하는데  사용할
+프로그래밍언어의 선택이 넓어진다.
+
+7.2 파서 라이브러리 구조
+
+전체 구조
+
+ - 파서 프로그래머가 작성하는 모듈 
+ - 파서 라이브러리에서 제공하는 모듈
+
+파서 프로그래머가 작성해야할 모듈
+
+ - Token.*
+
+    1) 토큰 상수들
+    2) 각 토큰 상수를 문자열로 변환하는 함수
+
+ - Lexer.*
+
+    1) End Of Token에 해당하는 토큰 상수를 지정하기
+    
+    2) [ (정규식, 정규식에 매칭된 텍스트를 인자로 받고 토큰을 반환하는
+                  함수) ]를 지정하기
+
+ - Parser.*
+
+    1) 시작 심볼 (Start symbol)
+    2) [ (생산규칙, ()를 받아서 AST를 리턴하는 함수) ]
+    
+    3) Base Dir 각종 파일을 저장할 디렉토리 기준
+    4) action table file name (e.g., action_table.txt)
+    5) goto table file name (e.g., goto_table.txt)
+    6) grammar file name (e.g., grammar.txt)
+    7) parser spec file name (e.g., mygrammar.grm)
+
+       2)의 생산규칙을 모아서 텍스트 파일로 만든 것
+       오토마톤 생성 도구에 이 텍스트 파일을 입력으로 전달
+
+          : 7) ==> 4),5),6)
+
+    8) 오토마톤을 생성하는 도구 프로그램 이름 (e.g., genlrparser-exe)
+
+
+파서 라이브러리에서 제공해야할 모듈
+
+ - Token을 받아 String으로 변환하는 함수
+
+   E.g., TokenInterface.java
+
+         interface TokenInterface<Token> {
+	    String toString(Token tok);
+	 }
+
+        
+         TokenInterface.hs
+
+         class TokenInterface token where
+            fromToken  :: token -> String
+
+ - CommonParserUtil
+
+   : Lexer 스펙과 Parser 스펙을 받아서
+     오토마톤 테이블을 생성하고
+     이 테이블을 참조하여
+     입력 파일로부터 읽은 텍스트를
+     lexical/syntactic analysis 수행해서
+     추상구문트리를 만든다.
+
+   1) Lexer 파트
+
+      (알고리즘)
+      입력: lexer 스펙, lexing 대상 텍스트 
+      출력: 터미널 리스트
+
+      while (전체 텍스트 끝에 도달하지 않은 동안)
+      
+      1.  Lexer  스펙에서  현재 col/line  위치에서  시작하는  prefix와
+         매치되는 정규식을 찾는다.
+
+      2.  해당 정규식의  쌍으로 주어진  lexer 함수를  호출한다.  이때
+          정규식에 매칭된  텍스트를 이  함수의 인자로  전달한다.  함수
+          호출 결과 토큰을 반환한다.
+
+      3. 현재 col/line/반환된 토큰/매칭된 텍스트 4가지 정보를 가지고
+         terminal을 한 개 만든다.
+
+      4. 이 terminal을 터미널 리스트 맨 뒤에 추가한다.
+
+      5. 이 정규식에 매칭된 텍스트에 대해 col/line을 조정한다.
+
+         while (매칭된 텍스트 끝에 도달하지 않은 동안)
+	    - 현재 문자가 '\n' => line++; col=1;
+	    - 그 이외 문자     => col++;
+
+      참고) 순차적으로 찾는 과정을 최적화가 필요함.
+
+   2) Parser 파트
+
+      (알고리즘)
+      입력: parser 스펙, 터미널 리스트 
+      출력: AST
+
+      1. paser 스펙으로부터 오토마톤을 생성한다.
+
+       1-1. 파서 스펙이 변경되었는지 검사한다.
+       1-2. 변경되었으면 오토마톤을 새로 생성한다.
+       1-3. 변경되지 않았으면 이전에 생성한 오토마톤을 이용한다.
+
+       참고) 파서 스펙의 변경 유무를 검사하는 방법
+
+         Cond1 && Conde2 ==> 이전 오토마톤을 이용
+	 otherwise       ==> 새로 오토마톤을 생성
+
+         Cond1: action_table.txt, goto_table.txt, grammar.txt이 이 있는지 확인
+	 
+	 Cond2: 기존 mygrammar.grm의 내용과 주어진 파서 스펙으로 만들 새로운
+	        mygrammar.grm의 내용이 같은지 확인.
+		mygrammar.grm.hash 파일을 mygrammar.grm과 함께 생성해둔다.
+
+      2. 생성된 3개의오토마톤 파일을 읽어들인다.
+         prod_rules/action_table/goto_table.txt
+
+         action_table ==>
+	    hash_map { key : (state_string, token_string)
+	               value : next_state_string }
+
+            참고) token을 받아 string으로 받아주는 함수가 있었다!!
+	    
+         prod_rules ==>
+	    [ lhs_string, [rhs_symbol_string] ]
+
+            참고) 0: S' -> S
+	          1: S -> C C
+		  2: C -> c C
+		  3: C -> d
+
+             [ ("S'", ["S"])       <-- 0번 생산 규칙
+	     , ("S",  ["C", "C"]   <-- 1번 생산 규칙
+	     , ("C",  ["c", "C"]   <-- 2번 생산 규칙
+	     , ("C",  ["d"]        <-- 3번 생산 규칙
+	     ]
+
+      3. 오토마톤을 이용해서 파싱을 진행
+
+         참고) Stack의 원소
+	         - Nonterminal :  ast를 갖고  있음 (디버깅  용으로 lhs
+                   string을 갖고 있을 수도 있음)
+		 - State : 상태를 문자열로 갖고 있음
+		 - Terminal : 앞에서 설명한 4개 원소
+
+         비어있는 스택 stack
+	 
+	 push "0" stack
+       
+         while ( end of token/terminal이 아닌 동안 반복 )
+
+          현재 terminal과 스택 top에 있는 상태 state_top을
+	  action table에서 찾는다.
+
+          1) Shift state i :
+
+               action table을 lookup해서 next state를 찾는다.
+	       push next_state stack
+	  
+	  2) Reduce j prod_rule :
+
+               production rule list를 looku해서 j번째 원소
+	        (lhs_string, rhs_symbol_string_list)
+	       를 찾으면
+
+               rhs_symbol_string_list 길이의 2배 만큼 stack에서 pop
+
+               현재 stack top의 상태와 lhs_string을 가지고
+	       goto table을 lookup해서 그 다음 상태 next_state를 찾기
+
+               j번째 생산규칙에 해당하는 parsing 함수를 호출한다.
+	       이때 인자로, 앞에서 pop한 stack원소들 중 state들을 제외한
+	       stack 원소들을 모으고 (스택이므로) 그 순서를 뒤집어서 리스트로
+	       만든다. 이 리스트를 paring 함수에 전달한다.
+
+               참고) 인자로 전달된 stack 원소들은 terminal 또는 nonterminal이다
+	             nonterminal에 ast가 들어 있다.
+
+               paring 함수 호출한 결과 ast를 반환 받는다.
+
+               pop한 다음의 스택 top에 있는 state와 lhs_string을 가지고
+	       goto table을 lookup해서 next_state를 찾는다.
+
+               반환받은 ast를 stack에   push하고, next_state를 stack에 push한다.
+	       (디버깅을 위해서 Nonterminal ast lhs_string을 고려할 수 있음)
+
+	  3) Accept :
+	       stack top에는 state가 있고, 그 바로 아래에 최종 ast를 갖고 있는
+	       nonterminal이 있다.
+	  
+	  4) otherwise : 에러
+
+--
+
+ Java
+   - Token.java
+     Lexer.java
+     Parser.java
+     
+   - TokenInterface.java
+   
+     CommonParserUtil.java
+     
+     StkElem.java
+     Terminal.java
+     Nonterminal.java
+     ParseState.java
+
+     TokenBuilder.java
+     TreeBuilder.java
+     
+ Haskell
+   - Token.hs
+     Lexer.ha
+     Parser.hs
+
+
+   - TokenInterface.hs
+
+     CommonParserutil.hs
+
+
+
+  

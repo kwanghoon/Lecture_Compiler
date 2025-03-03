@@ -1,0 +1,16 @@
+CFG "SeqExpr'" [
+	ProductionRule "SeqExpr'" [Nonterminal "SeqExpr"],
+	ProductionRule "SeqExpr" [Nonterminal "SeqExpr", Terminal ";", Nonterminal "AssignExpr"],
+	ProductionRule "SeqExpr" [Nonterminal "AssignExpr"],
+	ProductionRule "AssignExpr" [Terminal "identifier", Terminal "=", Nonterminal "AssignExpr"],
+	ProductionRule "AssignExpr" [Nonterminal "AdditiveExpr"],
+	ProductionRule "AdditiveExpr" [Nonterminal "AdditiveExpr", Terminal "+", Nonterminal "MultiplicativeExpr"],
+	ProductionRule "AdditiveExpr" [Nonterminal "AdditiveExpr", Terminal "-", Nonterminal "MultiplicativeExpr"],
+	ProductionRule "AdditiveExpr" [Nonterminal "MultiplicativeExpr"],
+	ProductionRule "MultiplicativeExpr" [Nonterminal "MultiplicativeExpr", Terminal "*", Nonterminal "PrimaryExpr"],
+	ProductionRule "MultiplicativeExpr" [Nonterminal "MultiplicativeExpr", Terminal "/", Nonterminal "PrimaryExpr"],
+	ProductionRule "MultiplicativeExpr" [Nonterminal "PrimaryExpr"],
+	ProductionRule "PrimaryExpr" [Terminal "identifier"],
+	ProductionRule "PrimaryExpr" [Terminal "integer_number"],
+	ProductionRule "PrimaryExpr" [Terminal "(", Nonterminal "AssignExpr", Terminal ")"]
+]
