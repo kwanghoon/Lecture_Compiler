@@ -1,9 +1,13 @@
-module MainUtil(lexer, lex, parser, parse, evaler, eval, compiler, compile) where
+module MainUtil(
+  lexer, lex, 
+  parser, parse, 
+  evaler, eval, 
+  compiler, compile, 
+  runner, run) where
 
 import Prelude hiding (lex)
 import qualified Data.Map as Map
 
-import Expr
 import TokenInterface(fromToken)
 import Lexer (lexerSpec)
 import Parser (parserSpec, progFrom)
@@ -12,6 +16,7 @@ import CommonParserUtil (lexing, parsing, aLexer, endOfToken)
 import ParserState (initParserState)
 import Interp
 import Compiler
+import VM
 
 lexer :: String -> IO ()
 lexer fileName =
@@ -74,3 +79,20 @@ compile text =
       do putStrLn (show i)
          prInstrList is
 
+runner :: String -> IO ()
+runner fileName =
+  do text <- readFile fileName
+     run text         
+
+run :: String -> IO ()
+run text = 
+  do ast <- 
+       parsing False 
+         parserSpec (initParserState,1,1,text)
+         (aLexer lexerSpec)
+         (fromToken (endOfToken lexerSpec))
+     let es = progFrom ast
+     let (env,stack) = runVM (compList es)
+     putStrLn ("env: " ++ show env)
+     putStrLn ("stack: " ++ show stack)
+  where 
