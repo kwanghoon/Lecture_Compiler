@@ -1,4 +1,4 @@
-module MainUtil(lexer, lex, parser, parse, evaler, eval) where
+module MainUtil(lexer, lex, parser, parse, evaler, eval, compiler, compile) where
 
 import Prelude hiding (lex)
 import qualified Data.Map as Map
@@ -11,6 +11,7 @@ import Terminal (terminalToString)
 import CommonParserUtil (lexing, parsing, aLexer, endOfToken)
 import ParserState (initParserState)
 import Interp
+import Compiler
 
 lexer :: String -> IO ()
 lexer fileName =
@@ -52,3 +53,24 @@ eval text =
      let es = progFrom ast
      let env = evalSeq es Map.empty
      putStrLn (show (Map.toList env))
+
+compiler :: String -> IO ()
+compiler fileName =
+  do text <- readFile fileName
+     compile text
+
+compile :: String -> IO ()
+compile text = 
+  do ast <- 
+       parsing False 
+         parserSpec (initParserState,1,1,text)
+         (aLexer lexerSpec)
+         (fromToken (endOfToken lexerSpec))
+     let es = progFrom ast
+     prInstrList (compList es)
+  where 
+    prInstrList [] = return ()
+    prInstrList (i:is) = 
+      do putStrLn (show i)
+         prInstrList is
+

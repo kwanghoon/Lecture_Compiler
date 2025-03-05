@@ -1,6 +1,6 @@
 module Main (main) where
 
-import MainUtil(lexer,parser,evaler)
+import MainUtil(lexer,parser,evaler,compiler)
 import System.Environment (getArgs)
 
 main :: IO ()
@@ -14,8 +14,10 @@ dispatch ("lex":fileNames) =
 dispatch ("parse":fileNames) = 
   mapM_ (prNameToRun parser) fileNames
 dispatch ("eval":fileNames) =
-  mapM_ (prNameToRun evaler) fileNames  
-dispatch _ = putStrLn "Usage: [lex|parse file1 file2 ...]"
+  mapM_ (prNameToRun evaler) fileNames
+dispatch ("compile":fileNames) =
+  mapM_ (prNameToRun compiler) fileNames   
+dispatch _ = putStrLn "Usage: [lex|parse|eval|compile file1 file2 ...]"
 
 prNameToRun :: (String -> IO b) -> String -> IO b
 prNameToRun cmd fileName =
