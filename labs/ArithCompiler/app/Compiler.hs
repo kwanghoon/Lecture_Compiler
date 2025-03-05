@@ -6,12 +6,12 @@ import Instr
 compList :: [Expr] -> [Instr]
 compList [] = []
 compList (expr:exprList) = 
-  comp expr ++ compList exprList
+  comp expr ++ [Pop] ++ compList exprList
 
 comp :: Expr -> [Instr]
 comp (Var x) = [Push (VarOp x)]  
 comp (Lit n) = [Push (LitOp n)]
 comp (Assign x expr) =
-  comp expr ++ [Store x]
+  comp expr ++ [Store x] ++ [Push (VarOp x)]
 comp (BinOp opkind expr1 expr2) =
   comp expr1 ++ comp expr2 ++ [InstrOp opkind]
