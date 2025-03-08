@@ -6,7 +6,7 @@ import Attrs
 import CommonParserUtil
 import Token
 import Syntax
-import qualified Type as T
+import Type
 import ParserState
 import Id 
 
@@ -52,19 +52,19 @@ parserSpec = ParserSpec
       rule "SimpleExp -> ( Exp )" 
         (\rhs -> return $ get rhs 2),
       rule "SimpleExp -> ( )" 
-        (\_rhs -> return $ fromExp Unit),
+        (\_rhs -> return $ fromExp Syntax.Unit),
       rule "SimpleExp -> true" 
-        (\_rhs -> return $ fromExp (Bool True)),
+        (\_rhs -> return $ fromExp (Syntax.Bool True)),
       rule "SimpleExp -> false" 
-        (\_rhs -> return $ fromExp (Bool False)),
+        (\_rhs -> return $ fromExp (Syntax.Bool False)),
       rule "SimpleExp -> int" 
-        (\rhs -> return $ fromExp (Int (read (getText rhs 1) :: Int))),
+        (\rhs -> return $ fromExp (Syntax.Int (read (getText rhs 1) :: Int))),
       rule "SimpleExp -> float" 
         (\rhs -> 
            let read_ n = if last n == '.' then read (n++"0") else read n in
-             return $ fromExp (Float (read_ (getText rhs 1) :: Double))),
+             return $ fromExp (Syntax.Float (read_ (getText rhs 1) :: Double))),
       rule "SimpleExp -> ident" 
-        (\rhs -> return $ fromExp (Var (getText rhs 1))),
+        (\rhs -> return $ fromExp (Syntax.Var (getText rhs 1))),
       rule "SimpleExp -> SimpleExp . ( Exp )" 
         (\rhs -> return $ fromExp (Get (expFrom (get rhs 1)) 
                             (expFrom (get rhs 4)))),
@@ -111,7 +111,7 @@ parserSpec = ParserSpec
           return $ fromExp (FDiv (expFrom (get rhs 1)) (expFrom (get rhs 3)))),
       ruleWithPrec "Exp -> let ident = Exp in Exp"
         {- %prec -} "prec_let"
-        (\rhs -> return $ fromExp (Let (getText rhs 2, T.noType) 
+        (\rhs -> return $ fromExp (Let (getText rhs 2, Type.noType) 
                             (expFrom (get rhs 4)) (expFrom (get rhs 6)))),
       ruleWithPrec "Exp -> let rec FunDef in Exp" 
         {- %prec -} "prec_let"
@@ -123,7 +123,7 @@ parserSpec = ParserSpec
                             (actualArgsFrom (get rhs 2)))),
       ruleWithPrec "Exp -> Elems" 
         {- %prec -} "prec_tuple"
-        (\rhs -> return $ fromExp (Tuple (elemsFrom (get rhs 1)))),
+        (\rhs -> return $ fromExp (Syntax.Tuple (elemsFrom (get rhs 1)))),
       rule "Exp -> let ( Pat ) = Exp in Exp" (\rhs -> 
         return $ fromExp (LetTuple (patFrom (get rhs 3))
                             (expFrom (get rhs 6)) (expFrom (get rhs 8)))),
@@ -133,34 +133,34 @@ parserSpec = ParserSpec
                               (expFrom (get rhs 7)))),
       rule "Exp -> Exp ; Exp" (\rhs ->
         do (s,line,col,text) <- ST.get
-           let (n,s') = gentmp T.UnitType s 
+           let (n,s') = gentmp Type.Unit s 
            ST.put (s',line,col,text)
-           return $ fromExp (Let (n, T.UnitType) 
+           return $ fromExp (Let (n, Type.Unit) 
                                 (expFrom (get rhs 1)) 
                                 (expFrom (get rhs 3)) )),
       ruleWithPrec "Exp -> Array.create SimpleExp SimpleExp" 
         {- %prec -} "prec_app"
-        (\rhs -> return $ fromExp (Array (expFrom (get rhs 2)) 
+        (\rhs -> return $ fromExp (Syntax.Array (expFrom (get rhs 2)) 
                                          (expFrom (get rhs 3)))),
       rule "Exp -> error" (\_rhs -> 
         do (_,line,col,text) <- ST.get
            lift $ putStrLn $ "error: " ++ " at Line " ++ show line ++ 
                              ", Column " ++ show col
            lift $ putStrLn $ " : " ++ take 77 text  -- 80 columns
-           return $ fromExp (Int 0)),
+           return $ fromExp (Syntax.Int 0)),
 
       -- FunDef :: Fundef
       rule "FunDef -> ident FormalArgs = Exp" (\rhs -> 
         return $ fromFundef 
-                   (Fundef (getText rhs 1, T.noType)
+                   (Fundef (getText rhs 1, Type.noType)
                            (formalArgsFrom (get rhs 2))
                            (expFrom (get rhs 4)))),
 
-      -- FormalArgs :: [(Ident,T.Type)]
+      -- FormalArgs :: [(Ident,Type.Type)]
       rule "FormalArgs -> ident FormalArgs" (\rhs ->
-        return $ fromFormalArgs ((getText rhs 1, T.noType) : formalArgsFrom (get rhs 2))),
+        return $ fromFormalArgs ((getText rhs 1, Type.noType) : formalArgsFrom (get rhs 2))),
       rule "FormalArgs -> ident" (\rhs -> 
-        return $ fromFormalArgs [(getText rhs 1, T.noType)]),
+        return $ fromFormalArgs [(getText rhs 1, Type.noType)]),
 
       -- ActualArgs :: [Exp]
       ruleWithPrec "ActualArgs -> ActualArgs SimpleExp" 
@@ -180,10 +180,10 @@ parserSpec = ParserSpec
       -- Pat :: [(Ident,Type)]
       rule "Pat -> Pat , ident" (\rhs -> 
         return $ fromPat ( patFrom (get rhs 1) 
-                             ++ [(getText rhs 3, T.noType)] ) ),
+                             ++ [(getText rhs 3, Type.noType)] ) ),
       rule "Pat -> ident , ident" (\rhs ->
-        return $ fromPat [ (getText rhs 1, T.noType), 
-                           (getText rhs 3, T.noType)])
+        return $ fromPat [ (getText rhs 1, Type.noType), 
+                           (getText rhs 3, Type.noType)])
     ],
     
     baseDir        = "./",
@@ -205,26 +205,26 @@ parserSpec = ParserSpec
 data PET = 
     PETExp { expFrom :: Exp }
   | PETFundef { fundefFrom :: Fundef }
-  | PETFormalArgs { formalArgsFrom :: [(Ident,T.Type)] }
+  | PETFormalArgs { formalArgsFrom :: [(Ident,Type.Type)] }
   | PETActualArgs { actualArgsFrom :: [Exp] }
   | PETElems { elemsFrom :: [Exp] }
-  | PETPat { patFrom :: [(Ident,T.Type)] }
+  | PETPat { patFrom :: [(Ident,Type.Type)] }
   deriving (Show,Eq)
 
 fromExp :: Exp -> PET
-fromExp exp = PETExp exp
+fromExp = PETExp
 
 fromFundef :: Fundef -> PET
-fromFundef fundef = PETFundef fundef
+fromFundef = PETFundef
 
-fromFormalArgs :: [(Ident,T.Type)] -> PET
-fromFormalArgs formalArgs = PETFormalArgs formalArgs
+fromFormalArgs :: [(Ident,Type.Type)] -> PET
+fromFormalArgs = PETFormalArgs
 
 fromActualArgs :: [Exp] -> PET
-fromActualArgs actualArgs = PETActualArgs actualArgs
+fromActualArgs = PETActualArgs
 
 fromElems :: [Exp] -> PET
-fromElems elems = PETElems elems 
+fromElems = PETElems
 
-fromPat :: [(Ident,T.Type)] -> PET
-fromPat pats = PETPat pats 
+fromPat :: [(Ident,Type.Type)] -> PET
+fromPat = PETPat

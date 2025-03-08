@@ -1,7 +1,7 @@
 module Type(Type(..),noType) where 
 
 data Type = 
-    UnitType
+    Unit
   | Bool 
   | Int
   | Float

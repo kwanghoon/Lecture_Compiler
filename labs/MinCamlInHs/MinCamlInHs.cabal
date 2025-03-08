@@ -44,12 +44,15 @@ library
 executable MinCamlInHs-exe
   main-is: Main.hs
   other-modules:
+      Id
       Lexer
       MainUtil
       Parser
+      ParserState
       Syntax
       Token
       Type
+      Typing
       Paths_MinCamlInHs
   autogen-modules:
       Paths_MinCamlInHs
