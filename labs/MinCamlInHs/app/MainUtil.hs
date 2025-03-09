@@ -11,6 +11,7 @@ import Terminal (terminalToString)
 import CommonParserUtil (lexing, parsing, aLexer, endOfToken)
 import ParserState (initParserState)
 
+import qualified Data.Map as Map
 
 --  Example usage:
 --
@@ -56,5 +57,5 @@ check text =
          (aLexer lexerSpec)
          (fromToken (endOfToken lexerSpec))
      let e = expFrom ast
-     let ty = tychecker e  
+     let ty = tychecker e Map.empty  
      putStrLn (show ty)

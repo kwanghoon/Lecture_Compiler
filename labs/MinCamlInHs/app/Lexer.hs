@@ -25,7 +25,7 @@ lexerSpec = LexerSpec
         ("\\("     , mkFn LPAREN),
         ("\\)"     , mkFn RPAREN),
 
-        ("[0-9]+(\\.[0-9]*)?([eE][+-]?[0-9]+)?", 
+        ("[0-9]+(\\.[0-9]*)([eE][+-]?[0-9]+)?", 
                      mkFn CONSTFLOAT),
         ("[0-9]+"  , mkFn CONSTINT),
         

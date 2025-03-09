@@ -32,7 +32,7 @@ _gentmp =
 _gentyp :: ST.StateT (LexerParserState ParserState) IO Type
 _gentyp =
   do (s,line,col,text) <- ST.get
-     let (t,c) = gentyp "p" (getCounter s) 
+     let (t,c) = gentyp "P" (getCounter s) 
      ST.put (setCounter c s,line,col,text)
      return t
 
