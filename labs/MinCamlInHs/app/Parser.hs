@@ -13,7 +13,6 @@ import Id
 import Control.Monad.Trans (lift)
 import qualified Control.Monad.Trans.State.Lazy as ST
 import ParserTime
-import Control.Monad.ST (ST)
 
 -- | Utility
 rule :: String -> b -> (String, b, Maybe a2)
@@ -33,7 +32,7 @@ _gentmp =
 _gentyp :: ST.StateT (LexerParserState ParserState) IO Type
 _gentyp =
   do (s,line,col,text) <- ST.get
-     let (t,c) = gentyp (getCounter s) 
+     let (t,c) = gentyp "p" (getCounter s) 
      ST.put (setCounter c s,line,col,text)
      return t
 

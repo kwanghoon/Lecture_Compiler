@@ -1,7 +1,6 @@
 module Id(idOfTyp, gentmp) where
 
 import Type
-import ParserState(ParserState,getCounter,setCounter)
 
 idOfTyp :: Type.Type -> String
 idOfTyp Type.Unit = "u"

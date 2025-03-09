@@ -11,7 +11,7 @@ import Control.Monad.Trans.Class (lift)
  to understand the concepts of monads and monad transformers, 
  which feels like using a hedgehammer.
  Instead, I aim to provide an approach similar to the one used 
- with the Either type in the TypeChecker from Chapter 7.
+ with the Either type in the TypeChecker.
 -}
 
 type InternalState = Integer
@@ -19,21 +19,22 @@ type InternalState = Integer
 type Either_ e a = ExceptT e (State InternalState) a
 
 _Right :: a -> Either_ e a
-_Right x = return x
+_Right = return
 
 _Left :: e -> Either_ e a
-_Left err = throwE err
+_Left = throwE
 
-initialInteger :: InternalState 
-initialInteger = 0
+_runFrom:: Integer -> Either_ e a -> Either e a 
+_runFrom _initialInteger e = 
+  let (r, _) = runState (runExceptT e) _initialInteger 
+  in r
 
-_run :: Either_ e a -> Either e a 
-_run exp = 
-  let (either, _) = runState (runExceptT exp) initialInteger 
-  in either
+_run :: Either_ e a -> Either e a
+_run = _runFrom initialInteger 
+  where initialInteger = 0
 
 _onLeft :: Either_ e a -> (e -> Either_ e a) -> Either_ e a
-_onLeft mExp action = catchE mExp action
+_onLeft= catchE
 
 _fresh :: Either_ e InternalState
 _fresh = do newNum <- lift $ get
