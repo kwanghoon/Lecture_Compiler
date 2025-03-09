@@ -1,15 +1,10 @@
 module ParserState(ParserState(..), initParserState, getCounter, setCounter) where
 
-data ParserState = ParState
-  {
-    counter :: Integer  -- ^ Counter for generating unique names
-  }
+-- ^ Counter for generating unique names
+newtype ParserState = ParState { counter :: Integer }
 
 initParserState :: ParserState
-initParserState = ParState
-  {
-    counter = 0
-  }
+initParserState = ParState { counter = 0 }
 
 getCounter :: ParserState -> Integer
 getCounter = counter

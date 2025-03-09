@@ -1,4 +1,4 @@
-module Parser(parserSpec, expFrom) where
+module Parser(parserSpec, expFrom, _gentmp) where
 
 import Prelude hiding (exp)
 
@@ -13,6 +13,7 @@ import Id
 import Control.Monad.Trans (lift)
 import qualified Control.Monad.Trans.State.Lazy as ST
 import ParserTime
+import Control.Monad.ST (ST)
 
 -- | Utility
 rule :: String -> b -> (String, b, Maybe a2)
@@ -20,6 +21,21 @@ rule prodRule action              = (prodRule, action, Nothing  )
 
 ruleWithPrec :: String -> String -> b -> (String, b, Maybe String)
 ruleWithPrec prodRule prec action = (prodRule, action, Just prec)
+
+-- ST.StateT (LexerParserState ParserState) IO (String) == LexerParserMonad IO ParserState (String)
+_gentmp :: ST.StateT (LexerParserState ParserState) IO String
+_gentmp =
+  do (s,line,col,text) <- ST.get
+     let (x,c) = gentmp Type.Unit (getCounter s) 
+     ST.put (setCounter c s,line,col,text)
+     return x
+
+_gentyp :: ST.StateT (LexerParserState ParserState) IO Type
+_gentyp =
+  do (s,line,col,text) <- ST.get
+     let (t,c) = gentyp (getCounter s) 
+     ST.put (setCounter c s,line,col,text)
+     return t
 
 --
 parserSpec :: ParserSpec Token PET IO ParserState -- AST
@@ -111,7 +127,8 @@ parserSpec = ParserSpec
           return $ fromExp (FDiv (expFrom (get rhs 1)) (expFrom (get rhs 3)))),
       ruleWithPrec "Exp -> let ident = Exp in Exp"
         {- %prec -} "prec_let"
-        (\rhs -> return $ fromExp (Let (getText rhs 2, Type.noType) 
+        (\rhs -> do t <- _gentyp 
+                    return $ fromExp (Let (getText rhs 2, t) 
                             (expFrom (get rhs 4)) (expFrom (get rhs 6)))),
       ruleWithPrec "Exp -> let rec FunDef in Exp" 
         {- %prec -} "prec_let"
@@ -132,10 +149,8 @@ parserSpec = ParserSpec
                               (expFrom (get rhs 4))
                               (expFrom (get rhs 7)))),
       rule "Exp -> Exp ; Exp" (\rhs ->
-        do (s,line,col,text) <- ST.get
-           let (n,s') = gentmp Type.Unit s 
-           ST.put (s',line,col,text)
-           return $ fromExp (Let (n, Type.Unit) 
+        do x <- _gentmp
+           return $ fromExp (Let (x, Type.Unit) 
                                 (expFrom (get rhs 1)) 
                                 (expFrom (get rhs 3)) )),
       ruleWithPrec "Exp -> Array.create SimpleExp SimpleExp" 
@@ -151,16 +166,19 @@ parserSpec = ParserSpec
 
       -- FunDef :: Fundef
       rule "FunDef -> ident FormalArgs = Exp" (\rhs -> 
-        return $ fromFundef 
-                   (Fundef (getText rhs 1, Type.noType)
+        do t <- _gentyp
+           return $ fromFundef 
+                   (Fundef (getText rhs 1, t)
                            (formalArgsFrom (get rhs 2))
                            (expFrom (get rhs 4)))),
 
       -- FormalArgs :: [(Ident,Type.Type)]
       rule "FormalArgs -> ident FormalArgs" (\rhs ->
-        return $ fromFormalArgs ((getText rhs 1, Type.noType) : formalArgsFrom (get rhs 2))),
+        do t <- _gentyp
+           return $ fromFormalArgs ((getText rhs 1, t) : formalArgsFrom (get rhs 2))),
       rule "FormalArgs -> ident" (\rhs -> 
-        return $ fromFormalArgs [(getText rhs 1, Type.noType)]),
+        do t <- _gentyp
+           return $ fromFormalArgs [(getText rhs 1, t)]),
 
       -- ActualArgs :: [Exp]
       ruleWithPrec "ActualArgs -> ActualArgs SimpleExp" 
@@ -179,11 +197,13 @@ parserSpec = ParserSpec
 
       -- Pat :: [(Ident,Type)]
       rule "Pat -> Pat , ident" (\rhs -> 
-        return $ fromPat ( patFrom (get rhs 1) 
-                             ++ [(getText rhs 3, Type.noType)] ) ),
+        do t <- _gentyp
+           return $ fromPat ( patFrom (get rhs 1) ++ [(getText rhs 3, t)] ) ),
       rule "Pat -> ident , ident" (\rhs ->
-        return $ fromPat [ (getText rhs 1, Type.noType), 
-                           (getText rhs 3, Type.noType)])
+        do t1 <- _gentyp 
+           t2 <- _gentyp
+           return $ fromPat [ (getText rhs 1, t1), 
+                              (getText rhs 3, t2)])
     ],
     
     baseDir        = "./",

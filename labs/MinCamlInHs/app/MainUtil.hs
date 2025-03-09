@@ -1,13 +1,16 @@
-module MainUtil(lexer, parser, lex, parse) where
+module MainUtil(lexer, parser, lex, parse, checker, check) where
 
 import Prelude hiding (lex)
 
-import TokenInterface(fromToken)
 import Lexer (lexerSpec)
 import Parser (parserSpec, expFrom)
+import Typing (tychecker)
+
+import TokenInterface(fromToken)
 import Terminal (terminalToString)
 import CommonParserUtil (lexing, parsing, aLexer, endOfToken)
 import ParserState (initParserState)
+
 
 --  Example usage:
 --
@@ -39,3 +42,19 @@ parse text =
          (fromToken (endOfToken lexerSpec))
      let e = expFrom ast       
      putStrLn (show e)
+
+checker :: String -> IO ()
+checker fileName =
+  do text <- readFile fileName
+     check text 
+
+check :: String -> IO ()
+check text =
+  do ast <- 
+       parsing False 
+         parserSpec (initParserState,1,1,text)
+         (aLexer lexerSpec)
+         (fromToken (endOfToken lexerSpec))
+     let e = expFrom ast
+     let ty = tychecker e  
+     putStrLn (show ty)

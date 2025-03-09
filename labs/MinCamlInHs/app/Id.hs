@@ -13,7 +13,5 @@ idOfTyp (Type.Tuple ts) = "t" ++ concatMap idOfTyp ts
 idOfTyp (Type.Array t) = "a" ++ idOfTyp t
 idOfTyp (Type.Var _) = error "idOfTyp: Var Unexpected"
 
-gentmp :: Type.Type -> ParserState -> (String, ParserState)
-gentmp t s = 
-  let c = getCounter s in 
-    (idOfTyp t ++ show c, setCounter (c + 1) s)
+gentmp :: Type.Type -> Integer -> (String, Integer)
+gentmp t c = (idOfTyp t ++ show c, c + 1)
