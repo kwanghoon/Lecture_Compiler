@@ -12,9 +12,14 @@ _gentyp = do
     return (fst (T.gentyp "T" n))
 
 --
-tychecker :: Exp -> TyEnv -> Either String (T.Type, Subst)
+tychecker :: Exp -> TyEnv -> Either String (Exp, T.Type, Subst, Subst)
 tychecker e extenv = 
-  _run (tyChk e extenv Map.empty)
+  do (t, subst) <- _run (tyChk e extenv Map.empty)
+     let subst1 = mkGround subst
+     let e1 = applySubstExp subst1 e 
+     let t1 = applySubstTyp subst1 t
+     let (extSubst, intSubst) = splitExternal subst1
+     return (e1, t1, extSubst, intSubst)
 
 type TyEnv = Map.Map String T.Type 
 type Subst = Map.Map String T.Type
@@ -100,7 +105,9 @@ tyChk _e@(Var x) tyenv subst =
         Nothing -> do -- _Left ("unbound variable: " ++ x)
           case Map.lookup x subst of
             Just t -> _Right (t, subst)
-            Nothing -> let t = T.Var x in _Right (t, Map.insert x t subst) -- Todo: Hack!
+            Nothing -> let x' = x       -- Todo: Hack!
+                           t = T.Var x'
+                       in _Right (t, extendSubst x' t subst) 
 tyChk e@(LetRec (Fundef {name=(x, t), args=_args, body=e1}) e2) tyenv subst = do
     let tyenv1 = Map.insert x t tyenv
     let tyenv2 = foldr (\(y, _t) env -> Map.insert y _t env) tyenv1 _args
@@ -168,10 +175,10 @@ unify' e (T.Tuple ts1) (T.Tuple ts2) subst = unifyList e ts1 ts2 subst
 unify' e (T.Array t1) (T.Array t2) subst = unify e t1 t2 subst
 unify' e (T.Var r1) t2 subst = 
     if occur r1 t2 then _Left ("occurs check fails:" ++  " in " ++ show e)
-    else _Right (Map.insert r1 t2 subst)
+    else _Right (extendSubst r1 t2 subst)
 unify' e t1 (T.Var r2) subst =
     if occur r2 t1 then _Left ("occurs check fails:" ++  " in " ++ show e)
-    else _Right (Map.insert r2 t1 subst)    
+    else _Right (extendSubst r2 t1 subst)    
 unify' e _t1 _t2 _subst = 
     _Left ("unify: type mismatch: " ++ 
              show _t1 ++ " and " ++ show _t2 ++ " in " ++ show e)
@@ -208,9 +215,93 @@ applySubst ((x, t1):subst) (T.Array t) =
 applySubst ((x, t1):subst) (T.Var y) =
     if x == y then applySubst subst t1 else applySubst subst (T.Var y)
 
+extendSubst :: String -> T.Type -> Subst -> Subst
+extendSubst x t subst = 
+    let substList = Map.toList subst 
+        t1 = applySubst substList t
+        subst1 = Map.map (applySubst [(x,t1)]) subst
+    in Map.insert x t1 subst1
+
+--
+mkGround :: Subst -> Subst
+mkGround = Map.map mkGndTyp
+
+mkGndTyp :: T.Type -> T.Type
+mkGndTyp T.Unit = T.Unit
+mkGndTyp T.Bool = T.Bool
+mkGndTyp T.Int = T.Int
+mkGndTyp T.Float = T.Float
+mkGndTyp (T.Fun ts t) = T.Fun (mkGndTyps ts) (mkGndTyp t)
+mkGndTyp (T.Tuple ts) = T.Tuple (mkGndTyps ts)
+mkGndTyp (T.Array t) = T.Array (mkGndTyp t)
+mkGndTyp (T.Var _v) = T.Int -- Instantiate type variables with Int
+
+mkGndTyps :: [T.Type] -> [T.Type]
+mkGndTyps = map mkGndTyp
+
+splitExternal :: Subst -> (Subst, Subst)
+splitExternal =
+    Map.partitionWithKey 
+        (\k _v -> head k /= 'P' && head k /= 'T')  -- Todo: Hack!
+
+applySubstTyp :: Subst -> T.Type -> T.Type
+applySubstTyp subst = applySubst (Map.toList subst)
+
+applySubstExp :: Subst -> Exp -> Exp
+applySubstExp _subst Unit = Unit
+applySubstExp _subst (Bool b) = Bool b
+applySubstExp _subst (Int i) = Int i
+applySubstExp _subst (Float f) = Float f
+applySubstExp subst (Not e) = Not (applySubstExp subst e)
+applySubstExp subst (Neg e) = Neg (applySubstExp subst e)
+applySubstExp subst (Add e1 e2) = 
+    Add (applySubstExp subst e1) (applySubstExp subst e2)
+applySubstExp subst (Sub e1 e2) = 
+    Sub (applySubstExp subst e1) (applySubstExp subst e2)
+applySubstExp subst (FNeg e) = FNeg (applySubstExp subst e)
+applySubstExp subst (FAdd e1 e2) = 
+    FAdd (applySubstExp subst e1) (applySubstExp subst e2)
+applySubstExp subst (FSub e1 e2) = 
+    FSub (applySubstExp subst e1) (applySubstExp subst e2)
+applySubstExp subst (FMul e1 e2) = 
+    FMul (applySubstExp subst e1) (applySubstExp subst e2)
+applySubstExp subst (FDiv e1 e2) = 
+    FDiv (applySubstExp subst e1) (applySubstExp subst e2)
+applySubstExp subst (Eq e1 e2) = 
+    Eq (applySubstExp subst e1) (applySubstExp subst e2)
+applySubstExp subst (LE e1 e2) = 
+    LE (applySubstExp subst e1) (applySubstExp subst e2)
+applySubstExp subst (If e1 e2 e3) = 
+    If (applySubstExp subst e1) 
+        (applySubstExp subst e2) (applySubstExp subst e3)
+applySubstExp subst (Let (x, t) e1 e2) = 
+    Let (x, applySubstTyp subst t) 
+        (applySubstExp subst e1) (applySubstExp subst e2)
+applySubstExp _subst (Var x) = Var x
+applySubstExp subst (LetRec (Fundef {name=(x, t), args=_args, body=e1}) e2) = 
+    LetRec (Fundef {name=(x, applySubstTyp subst t), args=map 
+        (\(y, t1) -> (y, applySubstTyp subst t1)) _args, 
+            body=applySubstExp subst e1}) (applySubstExp subst e2)
+applySubstExp subst (App e es) = 
+    App (applySubstExp subst e) (map (applySubstExp subst) es)
+applySubstExp subst (Tuple es) = Tuple (map (applySubstExp subst) es)
+applySubstExp subst (LetTuple xts e1 e2) = 
+    LetTuple (map (\(x, t) -> (x, applySubstTyp subst t)) xts) 
+        (applySubstExp subst e1) (applySubstExp subst e2)
+applySubstExp subst (Array e1 e2) = 
+    Array (applySubstExp subst e1) (applySubstExp subst e2)
+applySubstExp subst (Get e1 e2) = 
+    Get (applySubstExp subst e1) (applySubstExp subst e2)
+applySubstExp subst (Put e1 e2 e3) = 
+    Put (applySubstExp subst e1) 
+            (applySubstExp subst e2) 
+                (applySubstExp subst e3)
+
 --
 foldrM :: (a -> b -> Either_ String b) -> b -> [a] -> Either_ String b
 foldrM _ z []     = return z
 foldrM f z (x:xs) = do
     rest <- foldrM f z xs
     f x rest
+
+--
