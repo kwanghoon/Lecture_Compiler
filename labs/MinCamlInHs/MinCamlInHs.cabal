@@ -46,6 +46,7 @@ executable MinCamlInHs-exe
   other-modules:
       EitherState
       Id
+      KNormal
       Lexer
       MainUtil
       Parser
