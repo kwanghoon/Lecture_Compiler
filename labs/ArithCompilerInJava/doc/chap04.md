@@ -2,6 +2,28 @@
 
 지금까지 소스 프로그램과 타겟 프로그램을 각각 추상 구문 트리로 작성하는 방법을 살펴보았다. 이제 소스 프로그램을 타겟 프로그램으로 컴파일할 준비가 되었다. 
 
+먼저 Arith 컴파일러를 설계해보자.
+
+소스 언어 Arith 프로그램과 목적 언어 VM 프로그램의 추상 구문 트리를 다음과 같이 정의할 수 있다. 
+
+ Prg_Arith ::= e1 ; ... ; ek   (k >= 0)
+ e         ::= n | x | e op e | x = e     (op is in { +, -, x, / })
+
+ Prg_VM    ::= i1 ; ... ; in   (n >= 0)
+ i         ::= Push oprnd | Pop | Binop op | Store x    (oprnd is in { x, n })
+
+컴파일러 comp는 다음과 같이 설계한다. 기본 아이디어는 e를 컴파일한 명령어를 실행한 
+결과 값은 스택 맨 위에 쌓인다는 것이다. 
+
+ comp (n) = Push n
+ comp (x) = Push x 
+ comp (e1 op e2) = comp(e1) ; comp (e2) ; Binop op 
+ comp (x = e ) = comp(e) ; Store x 
+ 
+ comp_prg (e1 ; ... ; ek ) = comp(e1) ; Pop ; ... ; comp(ek) ; Pop 
+
+이 설계대로 구현해보자.
+
 Arith 컴파일러는 소스 프로그램의 추상 구문 트리를 입력으로 받아 타겟 프로그램의 추상 구문 트리를 출력하는 함수로 구현된다.
 
  - 소스 프로그램의 추상 구문 트리 : `ArrayList<Expr>`
@@ -161,3 +183,11 @@ VM.run(instrs, envVM);
 `compile` 함수를 사용하여 타겟 프로그램의 추상 구문 트리 `instrs`를 생성한 뒤, 초기 환경 `envVM`을 설정하여 `run` 함수를 통해 해당 타겟 프로그램을 실행할 수 있다.
 
 Q. 1장에서 설명한 Arith 소스 프로그램과 VM 명령어가 위 컴파일러(두 개의 `compile` 함수)를 통해 컴파일되는지를 확인하시오.
+
+Q. 다음의 컴파일러의 정확성(correctness)를 증명해보시오.
+
+  - 모든 e, env, stack에 대하여, 
+  -     만일 eval(e, env) = n, env1이라면
+  -     run( comp(e), env, stack ) = env1, n:stack 이다. 
+
+  이때, eval(e, env)는 2장에서 구현한 Arith 인터프리터이고, run은 3장에서 구현한 VM 인터프리터이다. 
