@@ -3,7 +3,7 @@ module Typing(tychecker) where
 import qualified Type as T
 import Syntax
 import qualified Data.Map as Map
-import EitherState
+import EitherState ( _Left, _Right, _fresh, _run, Either_ )
 
 --
 _gentyp :: Either_ String T.Type
@@ -108,7 +108,7 @@ tyChk _e@(Var x) tyenv subst =
             Nothing -> let x' = x       -- Todo: Hack!
                            t = T.Var x'
                        in _Right (t, extendSubst x' t subst) 
-tyChk e@(LetRec (Fundef {name=(x, t), args=_args, body=e1}) e2) tyenv subst = do
+tyChk e@(LetRec (x, t) _args e1 e2) tyenv subst = do
     let tyenv1 = Map.insert x t tyenv
     let tyenv2 = foldr (\(y, _t) env -> Map.insert y _t env) tyenv1 _args
     (t1, subst1) <- tyChk e1 tyenv2 subst
@@ -278,10 +278,10 @@ applySubstExp subst (Let (x, t) e1 e2) =
     Let (x, applySubstTyp subst t) 
         (applySubstExp subst e1) (applySubstExp subst e2)
 applySubstExp _subst (Var x) = Var x
-applySubstExp subst (LetRec (Fundef {name=(x, t), args=_args, body=e1}) e2) = 
-    LetRec (Fundef {name=(x, applySubstTyp subst t), args=map 
-        (\(y, t1) -> (y, applySubstTyp subst t1)) _args, 
-            body=applySubstExp subst e1}) (applySubstExp subst e2)
+applySubstExp subst (LetRec (x, t) _args e1 e2) = 
+    LetRec (x, applySubstTyp subst t) 
+           (map (\(y, t1) -> (y, applySubstTyp subst t1)) _args) 
+           (applySubstExp subst e1) (applySubstExp subst e2)
 applySubstExp subst (App e es) = 
     App (applySubstExp subst e) (map (applySubstExp subst) es)
 applySubstExp subst (Tuple es) = Tuple (map (applySubstExp subst) es)

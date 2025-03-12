@@ -1,3 +1,7 @@
+# Find files recursively and run a command with them
+# Example) ./findtorun.ps1 'stack run knorm' .\app\test "\.ml$"
+#
+
 param (
     [string]$cmd,
     [string]$path,

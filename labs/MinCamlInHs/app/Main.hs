@@ -1,6 +1,6 @@
 module Main (main) where
 
-import MainUtil(lexer, parser, checker)
+import MainUtil(lexer, parser, checker, knormalizer)
 import System.Environment (getArgs)
 
 main :: IO ()
@@ -12,7 +12,8 @@ dispatch :: [String] -> IO ()
 dispatch ("lex":fileNames) = mapM_ (prNameToRun lexer) fileNames
 dispatch ("parse":fileNames) = mapM_ (prNameToRun parser) fileNames
 dispatch ("check":fileNames) = mapM_ (prNameToRun checker) fileNames
-dispatch _ = putStrLn "Usage: [lex|parse|check] file1 file2 ..."
+dispatch ("knorm":fileNames) = mapM_ (prNameToRun knormalizer) fileNames
+dispatch _ = putStrLn "Usage: [lex|parse|check|knorm] file1 file2 ..."
 
 prNameToRun :: (String -> IO b) -> String -> IO b
 prNameToRun cmd fileName =

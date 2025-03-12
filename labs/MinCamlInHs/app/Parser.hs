@@ -131,8 +131,8 @@ parserSpec = ParserSpec
                             (expFrom (get rhs 4)) (expFrom (get rhs 6)))),
       ruleWithPrec "Exp -> let rec FunDef in Exp" 
         {- %prec -} "prec_let"
-        (\rhs -> return $ fromExp (LetRec (fundefFrom (get rhs 3)) 
-                            (expFrom (get rhs 5)))),
+        (\rhs -> let (idty,args,e) = fundefFrom (get rhs 3) in
+                 return $ fromExp (LetRec idty args e (expFrom (get rhs 5)))),
       ruleWithPrec "Exp -> SimpleExp ActualArgs" 
         {- %prec -} "prec_app"
         (\rhs -> return $ fromExp (App (expFrom (get rhs 1)) 
@@ -167,9 +167,9 @@ parserSpec = ParserSpec
       rule "FunDef -> ident FormalArgs = Exp" (\rhs -> 
         do t <- _gentyp
            return $ fromFundef 
-                   (Fundef (getText rhs 1, t)
-                           (formalArgsFrom (get rhs 2))
-                           (expFrom (get rhs 4)))),
+                   ((getText rhs 1, t),
+                    formalArgsFrom (get rhs 2),
+                    expFrom (get rhs 4))),
 
       -- FormalArgs :: [(Ident,Type.Type)]
       rule "FormalArgs -> ident FormalArgs" (\rhs ->
@@ -229,6 +229,8 @@ data PET =
   | PETElems { elemsFrom :: [Exp] }
   | PETPat { patFrom :: [(Ident,Type.Type)] }
   deriving (Show,Eq)
+
+type Fundef = ((Ident, Type), [(Ident, Type)], Exp)
 
 fromExp :: Exp -> PET
 fromExp = PETExp

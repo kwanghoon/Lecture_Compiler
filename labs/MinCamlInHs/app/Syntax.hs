@@ -1,4 +1,4 @@
-module Syntax(Exp(..),Fundef(..),Ident) where 
+module Syntax(Exp(..),Ident) where 
 
 -- Abstract syntax token
 import Type
@@ -24,7 +24,7 @@ data Exp
   | If Exp Exp Exp
   | Let (Ident, Type) Exp Exp
   | Var Ident
-  | LetRec Fundef Exp
+  | LetRec (Ident, Type) [(Ident, Type)] Exp Exp
   | App Exp [Exp]
   | Tuple [Exp]
   | LetTuple [(Ident, Type)] Exp Exp
@@ -32,9 +32,3 @@ data Exp
   | Get Exp Exp
   | Put Exp Exp Exp
   deriving (Show, Eq)
-
-data Fundef = Fundef
-  { name :: (Ident, Type)
-  , args :: [(Ident, Type)]
-  , body :: Exp
-  } deriving (Show, Eq)
