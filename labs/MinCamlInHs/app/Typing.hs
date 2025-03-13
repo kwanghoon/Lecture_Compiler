@@ -1,4 +1,4 @@
-module Typing(tychecker) where
+module Typing(tychecker, initextenv) where
 
 import qualified Type as T
 import Syntax
@@ -10,6 +10,37 @@ _gentyp :: Either_ String T.Type
 _gentyp = do
     n <- _fresh
     return (fst (T.gentyp "T" n))
+
+initextenv :: TyEnv
+initextenv = Map.fromList
+    [ 
+      ("print_int", T.Fun [T.Int] T.Unit)
+    -- , ("print_float", T.Fun [T.Float] T.Unit)
+    -- , ("print_newline", T.Fun [] T.Unit)
+    -- , ("read_int", T.Fun [] T.Int)
+    -- , ("read_float", T.Fun [] T.Float)
+       , ("int_of_float", T.Fun [T.Float] T.Int)
+       , ("float_of_int", T.Fun [T.Int] T.Float)
+    -- , ("truncate", T.Fun [T.Float] T.Int)
+    -- , ("floor", T.Fun [T.Float] T.Int)
+       , ("sqrt", T.Fun [T.Float] T.Float)
+       , ("sin", T.Fun [T.Float] T.Float)
+       , ("cos", T.Fun [T.Float] T.Float)
+    -- , ("atan", T.Fun [T.Float] T.Float)
+    -- , ("exp", T.Fun [T.Float] T.Float)
+    -- , ("log", T.Fun [T.Float] T.Float)
+       , ("abs_float", T.Fun [T.Float] T.Float)
+    -- , ("fabs", T.Fun [T.Float] T.Float)
+    -- , ("min", T.Fun [T.Float, T.Float] T.Float)
+    -- , ("max", T.Fun [T.Float, T.Float] T.Float)
+    -- , ("atan2", T.Fun [T.Float, T.Float] T.Float)
+    -- , ("power", T.Fun [T.Float, T.Float] T.Float)
+    -- , ("float_of_string", T.Fun [T.Unit] T.Float)
+    -- , ("string_of_float", T.Fun [T.Float] T.Unit)
+    -- , ("string_of_int", T.Fun [T.Int] T.Unit)
+    -- , ("read_line", T.Fun [] T.Unit)
+    -- , ("print_string", T.Fun [T.Unit])
+    ]
 
 --
 tychecker :: Exp -> TyEnv -> Either String (Exp, T.Type, Subst, Subst)

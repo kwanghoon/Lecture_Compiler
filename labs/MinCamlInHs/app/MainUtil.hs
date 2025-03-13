@@ -8,7 +8,7 @@ import Prelude hiding (lex)
 
 import Lexer (lexerSpec)
 import Parser (parserSpec, expFrom)
-import Typing (tychecker)
+import Typing (tychecker,initextenv)
 import KNormal (knormal)
 
 import TokenInterface(fromToken)
@@ -17,7 +17,7 @@ import CommonParserUtil (lexing, parsing, aLexer, endOfToken)
 import ParserState (initParserState)
 import System.Exit (exitFailure)
 
-import qualified Data.Map as Map
+import qualified Data.Map as Map(union)
 
 --  Example usage:
 --
@@ -63,7 +63,7 @@ check text =
          (aLexer lexerSpec)
          (fromToken (endOfToken lexerSpec))
      let e = expFrom ast
-     case tychecker e Map.empty of
+     case tychecker e initextenv of
         Right (typede,ty,extenv,subst) -> putStrLn (show (typede,ty,extenv,subst))
         Left err -> putStrLn err
 
@@ -81,8 +81,9 @@ knorm text =
          (fromToken (endOfToken lexerSpec))
      let e = expFrom ast
      (typede,extenv) <-
-       case tychecker e Map.empty of
+       case tychecker e initextenv of
          Right (te,_,extenv,_) -> return (te,extenv)
          Left err -> do putStrLn err; exitFailure
-     k <- knormal typede extenv
+     let extenv1 = Map.union extenv initextenv
+     k <- knormal typede extenv1
      putStrLn (show k)

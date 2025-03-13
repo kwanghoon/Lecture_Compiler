@@ -91,7 +91,10 @@ parserSpec = ParserSpec
         (\rhs -> return $ fromExp (Not (expFrom (get rhs 2)))),
       ruleWithPrec "Exp -> - Exp" 
         {- %prec -} "prec_unary_minus" (\rhs -> 
-          return $ fromExp (Neg (expFrom (get rhs 2)))),
+          let e = expFrom (get rhs 2) in
+            case e of
+              Syntax.Float _ -> return $ fromExp (FNeg e)  -- Todo: hack!
+              _       -> return $ fromExp (Neg e)),
       rule "Exp -> Exp + Exp" (\rhs -> 
           return $ fromExp (Add (expFrom (get rhs 1)) (expFrom (get rhs 3)))),
       rule "Exp -> Exp - Exp" (\rhs -> 

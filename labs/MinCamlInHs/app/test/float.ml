@@ -1,7 +1,8 @@
-(* このテストを実行する場合は、Main.file等を呼び出す前に
-   Typing.extenvを:=等で書き換えて、あらかじめsinやcosなど
-   外部関数の型を陽に指定する必要があります（そうしないと
-   MinCamlでは勝手にint -> intと推論されるため）。 *)
+(* When running this test, before calling Main.file, 
+  you need to modify Typing.extenv using :=, etc., 
+  and explicitly specify the types of external functions 
+  such as sin and cos in advance. 
+  (Otherwise, MinCaml will automatically infer them as int -> int.) *)
 print_int
   (int_of_float
      ((sin (cos (sqrt (abs_float (-12.3))))

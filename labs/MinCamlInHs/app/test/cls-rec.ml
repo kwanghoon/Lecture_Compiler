@@ -1,4 +1,4 @@
-(* 自由変数のある再帰関数 *)
+(* A recursive function with free variables. *)
 let x = 10 in
 let rec f y =
   if y = 0 then 0 else

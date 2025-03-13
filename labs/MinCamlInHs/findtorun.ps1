@@ -13,9 +13,10 @@ if (-not $path -or -not $pattern) {
     exit 1
 }
 
-# Get matching files recursively and join them with spaces
-$fileNames = (Get-ChildItem -Path $path -Recurse -File | 
-     Where-Object { $_.Name -match $pattern } | 
-     Select-Object -ExpandProperty FullName) -join " "
+# Get matching files recursively
+$fileNames = Get-ChildItem -Path $path -Recurse -File | Where-Object { $_.Name -match $pattern } | Select-Object -ExpandProperty FullName
 
-Invoke-Expression "$cmd $fileNames"
+# Iterate over each file and execute the command
+foreach ($file in $fileNames) {
+    Invoke-Expression "$cmd `"$file`""
+}
