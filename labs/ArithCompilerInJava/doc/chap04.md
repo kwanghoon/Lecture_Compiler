@@ -6,21 +6,21 @@
 
 소스 언어 Arith 프로그램과 목적 언어 VM 프로그램의 추상 구문 트리를 다음과 같이 정의할 수 있다. 
 
- Prg_Arith ::= e1 ; ... ; ek   (k >= 0)
- e         ::= n | x | e op e | x = e     (op is in { +, -, x, / })
-
- Prg_VM    ::= i1 ; ... ; in   (n >= 0)
- i         ::= Push oprnd | Pop | Binop op | Store x    (oprnd is in { x, n })
+ - Prg_Arith ::= e1 ; ... ; ek   (k >= 0)
+ - e         ::= n | x | e op e | x = e     (op is in { +, -, x, / })
+ - 
+ - Prg_VM    ::= i1 ; ... ; in   (n >= 0)
+ - i         ::= Push oprnd | Pop | Binop op | Store x    (oprnd is in { x, n })
 
 컴파일러 comp는 다음과 같이 설계한다. 기본 아이디어는 e를 컴파일한 명령어를 실행한 
 결과 값은 스택 맨 위에 쌓인다는 것이다. 
 
- comp (n) = Push n
- comp (x) = Push x 
- comp (e1 op e2) = comp(e1) ; comp (e2) ; Binop op 
- comp (x = e ) = comp(e) ; Store x 
- 
- comp_prg (e1 ; ... ; ek ) = comp(e1) ; Pop ; ... ; comp(ek) ; Pop 
+ - comp (n) = Push n
+ - comp (x) = Push x 
+ - comp (e1 op e2) = comp(e1) ; comp (e2) ; Binop op 
+ - comp (x = e ) = comp(e) ; Store x 
+ - 
+ - comp_prg (e1 ; ... ; ek ) = comp(e1) ; Pop ; ... ; comp(ek) ; Pop 
 
 이 설계대로 구현해보자.
 
