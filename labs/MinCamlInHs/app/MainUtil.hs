@@ -2,7 +2,8 @@ module MainUtil(
   lexer, lex, 
   parser, parse, 
   checker, check, 
-  knormalizer, knorm) where
+  knormalizer, knorm,
+  alphaconverter, alphaconvert) where
 
 import Prelude hiding (lex)
 
@@ -10,6 +11,7 @@ import Lexer (lexerSpec)
 import Parser (parserSpec, expFrom)
 import Typing (tychecker,initextenv)
 import KNormal (knormal)
+import Alpha (alpha)
 
 import TokenInterface(fromToken)
 import Terminal (terminalToString)
@@ -87,3 +89,25 @@ knorm text =
      let extenv1 = Map.union extenv initextenv
      k <- knormal typede extenv1
      putStrLn (show k)
+
+alphaconverter :: String -> IO ()
+alphaconverter fileName =
+  do text <- readFile fileName
+     alphaconvert text     
+
+alphaconvert :: String -> IO ()
+alphaconvert text =
+  do ast <- 
+       parsing False 
+         parserSpec (initParserState,1,1,text)
+         (aLexer lexerSpec)
+         (fromToken (endOfToken lexerSpec))
+     let e = expFrom ast
+     (typede,extenv) <-
+       case tychecker e initextenv of
+         Right (te,_,extenv,_) -> return (te,extenv)
+         Left err -> do putStrLn err; exitFailure
+     let extenv1 = Map.union extenv initextenv
+     k <- knormal typede extenv1
+     let k1 = alpha k
+     putStrLn (show k1)

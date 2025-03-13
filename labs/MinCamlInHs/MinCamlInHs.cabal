@@ -44,6 +44,7 @@ library
 executable MinCamlInHs-exe
   main-is: Main.hs
   other-modules:
+      Alpha
       EitherState
       Id
       KNormal
