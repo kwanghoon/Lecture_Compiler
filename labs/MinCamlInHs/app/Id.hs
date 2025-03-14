@@ -1,6 +1,9 @@
-module Id(idOfTyp, gentmp) where
+module Id(idOfTyp, gentmp, TlvId(..)) where
 
 import Type
+
+newtype TlvId = TlvId String
+    deriving (Show)
 
 idOfTyp :: Type.Type -> String
 idOfTyp Type.Unit = "u"
