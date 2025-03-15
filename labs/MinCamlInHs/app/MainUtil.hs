@@ -3,7 +3,8 @@ module MainUtil(
   parser, parse, 
   checker, check, 
   knormalizer, knorm,
-  alphaconverter, alphaconvert) where
+  alphaconverter, alphaconvert,
+  closureconverter, closureconvert) where
 
 import Prelude hiding (lex)
 
@@ -12,6 +13,7 @@ import Parser (parserSpec, expFrom)
 import Typing (tychecker,initextenv)
 import KNormal (knormal)
 import Alpha (alpha)
+import Closure (cloconv)
 
 import TokenInterface(fromToken)
 import Terminal (terminalToString)
@@ -111,3 +113,26 @@ alphaconvert text =
      k <- knormal typede extenv1
      let k1 = alpha k
      putStrLn (show k1)
+
+closureconverter :: String -> IO ()
+closureconverter fileName =
+  do text <- readFile fileName
+     closureconvert text
+
+closureconvert :: String -> IO ()
+closureconvert text =
+  do ast <- 
+       parsing False 
+         parserSpec (initParserState,1,1,text)
+         (aLexer lexerSpec)
+         (fromToken (endOfToken lexerSpec))
+     let e = expFrom ast
+     (typede,extenv) <-
+       case tychecker e initextenv of
+         Right (te,_,extenv,_) -> return (te,extenv)
+         Left err -> do putStrLn err; exitFailure
+     let extenv1 = Map.union extenv initextenv
+     k <- knormal typede extenv1
+     let k1 = alpha k
+     p <- cloconv k1
+     putStrLn (show p)     
