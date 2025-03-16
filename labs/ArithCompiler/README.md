@@ -14,3 +14,11 @@
 ### 참고
  - Java로 작성된 Arith 컴파일러
  - 관련 설명이 담긴 메모
+
+### 버전
+ - 공통 깃 명령어 : git clone -b 버전 https://github.com/kwanghoon/Lecture_Compiler
+ - v0.1 : 시작 템플릿
+ - v0.2 : 렉서와 파서
+ - v0.3 : Arith 인터프리터
+ - v0.5 : Arith 컴파일러
+ - v0.6 : VM 인터프리터
