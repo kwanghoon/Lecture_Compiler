@@ -114,20 +114,8 @@
             new Lexer(pu);
             
             pu.ruleStartSymbol("SeqExpr'");
-            pu.rule("SeqExpr' -> SeqExpr", () -> { return pu.get(1); });
-            
-            pu.rule("SeqExpr -> SeqExpr ; AssignExpr", () -> { 
-               ArrayList<Expr> seqexpr = (ArrayList<Expr>)pu.get(1);
-               Expr assignexpr = (Expr)pu.get(3);
-               seqexpr.add(assignexpr);
-               return seqexpr; 
-            });
-            pu.rule("SeqExpr -> AssignExpr", () -> {
-               ArrayList<Expr> seqexpr = new ArrayList<Expr>();
-               Expr assignexpr = (Expr)pu.get(1);
-               seqexpr.add(assignexpr);
-               return seqexpr; 
-            });
+
+            ...
             
             pu.rule("AssignExpr -> identifier = AssignExpr", () -> { 
                String identifier = pu.getText(1);
@@ -141,6 +129,8 @@
                Expr multiplicativeexpr = (Expr)pu.get(3);
                return new BinOp(BinOp.ADD, additiveexpr, multiplicativeexpr); 
             });
+
+            ...
 
             pu.rule("PrimaryExpr -> identifier", () -> { return new Var(pu.getText(1)); });
 
