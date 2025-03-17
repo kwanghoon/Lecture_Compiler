@@ -80,28 +80,21 @@
 
     * 시작 심볼 (Start symbol)
 
-    ```
+   ```
       pu.ruleStartSymbol("SeqExpr'");
-    ```
+   ```
 
     * [ (생산규칙, ()를 받아서 AST를 리턴하는 함수) ]
 
-    ```
+   ```
       pu.rule("PrimaryExpr -> integer_number", () -> {
 			String integer_number_str = pu.getText(1);
 			Integer integer_number = Integer.parseInt(integer_number_str);
 			return new Lit(integer_number); 
 		});
-    ```
+   ```
 
-    * 기타) 각종 설정 지정
-
-      * Base Dir 각종 파일을 저장할 디렉토리 기준
-      * action table file name (e.g., action_table.txt)
-      * goto table file name (e.g., goto_table.txt)
-      * grammar file name (e.g., grammar.txt)
-      * parser spec file name (e.g., mygrammar.grm)
-      * 오토마톤을 생성하는 도구 프로그램 이름 (e.g., genlrparser-exe)
+      * 렉서가 생성한 토큰 리스트는 터미널(토큰, 컬럼, 줄, lexeme 텍스트)로 변환하여, CommonParserUtil 내부에 선언된 터미널 리스트에 저장되고, 이 터미널 리스트를 파서가 입력을 받아 추상 구문 트리를 만듬
 
    ```
       public class Parser {
@@ -154,7 +147,14 @@
          }   
    ```
 
-   * 렉서가 생성한 토큰 리스트는 터미널(토큰, 컬럼, 줄, lexeme 텍스트)로 변환하여, CommonParserUtil 내부에 선언된 터미널 리스트에 저장되고, 이 터미널 리스트를 파서가 입력을 받아 추상 구문 트리를 만듬
+   * 기타) 각종 설정 지정
+
+      * Base Dir 각종 파일을 저장할 디렉토리 기준
+      * action table file name (e.g., action_table.txt)
+      * goto table file name (e.g., goto_table.txt)
+      * grammar file name (e.g., grammar.txt)
+      * parser spec file name (e.g., mygrammar.grm)
+      * 오토마톤을 생성하는 도구 프로그램 이름 (e.g., genlrparser-exe)   
 
 ### 파서 라이브러리
 
