@@ -37,223 +37,258 @@ genlrparser.exe는  공유할  수  있기 때문에  파서를  작성하는데
 
 ### 6.2 파서 라이브러리 구조
 
-### 전체 구조
+### 목차
 
- - 파서 프로그래머가 작성하는 모듈 
- - 파서 라이브러리에서 제공하는 모듈
+ - 프로그래머가 작성하는 파서 모듈 
+ - 파서 라이브러리
 
-### 파서 프로그래머가 작성해야할 모듈
+### 프로그래머가 작성하는 파서 모듈
 
- - Token.*
+ - Token.java
 
-    1) 토큰 상수들
-    2) 각 토큰 상수를 문자열로 변환하는 함수
+    1) 토큰 상수들 정의 (enum Token implements TokenInterface<Token>)
+    2) 각 토큰 상수에 대응하는 문자열 정의 (Token.toString())
 
- - Lexer.*
+    ```
+    public enum Token implements TokenInterface<Token> {
+         END_OF_TOKEN("$"),
+         
+         OPEN_PAREN("("), CLOSE_PAREN(")"),
+         IDENTIFIER("identifier"),
+         INTEGER_NUMBER("integer_number"),
+         ADD("+"), SUB("-"), MUL("*"), DIV("/"),
+         EQUAL("="), SEMICOLON(";");
 
-    1) End Of Token에 해당하는 토큰 상수를 지정하기
+         private String strToken;
+         
+         ...
+
+         @Override
+         public String toString(Token tok) {
+            return tok.strToken;
+         }
+
+    }
+    ```
+
+ - Lexer.java
+
+    * 토큰 리스트의 끝을 표시하는(End Of Token) 토큰 상수를 지정하기 
+    ```
+       (Token.END_OF_TOKEN)
+    ```
+
+    * [ (정규식, 액션 함수) ]를 지정하기. 액션 함수는 짝이 되는 정규식이 
+         매칭된 텍스트를 인자로 받아 해당 토큰을 반환함
     
-    2) [ (정규식, 정규식에 매칭된 텍스트를 인자로 받고 토큰을 반환하는
-                  함수) ]를 지정하기
+    ```
+      public class Lexer {
+         public Lexer(CommonParserUtil<Token> pu) {
+            pu.lexEndToken(Token.END_OF_TOKEN);
+            
+            // Remove all white spaces
+            pu.lex("[ \t\n]", text -> { return null; });
+            
+            pu.lex("[0-9]+",  text -> { return Token.INTEGER_NUMBER; } );
+            pu.lex("\\(", text -> { return Token.OPEN_PAREN; });
+            pu.lex("\\)", text -> { return Token.CLOSE_PAREN; });
+            
+            pu.lex("\\+", text -> { return Token.ADD; });
+            pu.lex("\\-", text -> { return Token.SUB; });
+            pu.lex("\\*", text -> { return Token.MUL; });
+            pu.lex("\\/", text -> { return Token.DIV; });
+            
+            pu.lex("\\=", text -> { return Token.EQUAL; });
+            pu.lex("\\;", text -> { return Token.SEMICOLON; });
+            
+            pu.lex("[a-zA-Z]+[a-zA-Z0-9]*", text -> {
+               return Token.IDENTIFIER;
+            } );
+            
+         }
+      }    
+    ```
 
- - Parser.*
+ - Parser.java
 
-    1) 시작 심볼 (Start symbol)
-    2) [ (생산규칙, ()를 받아서 AST를 리턴하는 함수) ]
-    
-    3) Base Dir 각종 파일을 저장할 디렉토리 기준
-    4) action table file name (e.g., action_table.txt)
-    5) goto table file name (e.g., goto_table.txt)
-    6) grammar file name (e.g., grammar.txt)
-    7) parser spec file name (e.g., mygrammar.grm)
+    * 시작 심볼 (Start symbol)
 
-       2)의 생산규칙을 모아서 텍스트 파일로 만든 것
-       오토마톤 생성 도구에 이 텍스트 파일을 입력으로 전달
+    ```
+      pu.ruleStartSymbol("SeqExpr'");
+    ```
 
-          : 7) ==> 4),5),6)
+    * [ (생산규칙, ()를 받아서 AST를 리턴하는 함수) ]
 
-    8) 오토마톤을 생성하는 도구 프로그램 이름 (e.g., genlrparser-exe)
+    ```
+      pu.rule("PrimaryExpr -> integer_number", () -> {
+			String integer_number_str = pu.getText(1);
+			Integer integer_number = Integer.parseInt(integer_number_str);
+			return new Lit(integer_number); 
+		});
+    ```
 
+    * 기타) 각종 설정 지정
 
-### 파서 라이브러리에서 제공해야할 모듈
+      * Base Dir 각종 파일을 저장할 디렉토리 기준
+      * action table file name (e.g., action_table.txt)
+      * goto table file name (e.g., goto_table.txt)
+      * grammar file name (e.g., grammar.txt)
+      * parser spec file name (e.g., mygrammar.grm)
+      * 오토마톤을 생성하는 도구 프로그램 이름 (e.g., genlrparser-exe)
 
- - Token을 받아 String으로 변환하는 함수
+   ```
+      public class Parser {
+         private CommonParserUtil<Token> pu;
+         
+         public Parser() throws IOException {
+            pu = new CommonParserUtil<Token>();
+            
+            new Lexer(pu);
+            
+            pu.ruleStartSymbol("SeqExpr'");
+            pu.rule("SeqExpr' -> SeqExpr", () -> { return pu.get(1); });
+            
+            pu.rule("SeqExpr -> SeqExpr ; AssignExpr", () -> { 
+               ArrayList<Expr> seqexpr = (ArrayList<Expr>)pu.get(1);
+               Expr assignexpr = (Expr)pu.get(3);
+               seqexpr.add(assignexpr);
+               return seqexpr; 
+            });
+            pu.rule("SeqExpr -> AssignExpr", () -> {
+               ArrayList<Expr> seqexpr = new ArrayList<Expr>();
+               Expr assignexpr = (Expr)pu.get(1);
+               seqexpr.add(assignexpr);
+               return seqexpr; 
+            });
+            
+            pu.rule("AssignExpr -> identifier = AssignExpr", () -> { 
+               String identifier = pu.getText(1);
+               Expr assignexpr = (Expr)pu.get(3);
+               return new Assign(identifier, assignexpr); 
+            });
+            pu.rule("AssignExpr -> AdditiveExpr", () -> { return pu.get(1); });
+            
+            pu.rule("AdditiveExpr -> AdditiveExpr + MultiplicativeExpr", () -> { 
+               Expr additiveexpr = (Expr)pu.get(1);
+               Expr multiplicativeexpr = (Expr)pu.get(3);
+               return new BinOp(BinOp.ADD, additiveexpr, multiplicativeexpr); 
+            });
 
-   E.g., TokenInterface.java
+            pu.rule("PrimaryExpr -> identifier", () -> { return new Var(pu.getText(1)); });
 
-         interface TokenInterface<Token> {
-	    String toString(Token tok);
-	 }
+            pu.rule("PrimaryExpr -> integer_number", () -> {
+               String integer_number_str = pu.getText(1);
+               Integer integer_number = Integer.parseInt(integer_number_str);
+               return new Lit(integer_number); 
+            });
 
-        
-         TokenInterface.hs
+            ...
+            
+         }   
+   ```
 
-         class TokenInterface token where
-            fromToken  :: token -> String
+   * 렉서가 생성한 토큰 리스트는 터미널(토큰, 컬럼, 줄, lexeme 텍스트)로 변환하여, CommonParserUtil 내부에 선언된 터미널 리스트에 저장되고, 이 터미널 리스트를 파서가 입력을 받아 추상 구문 트리를 만듬
 
- - CommonParserUtil
+### 파서 라이브러리
 
-   : Lexer 스펙과 Parser 스펙을 받아서
-     오토마톤 테이블을 생성하고
-     이 테이블을 참조하여
-     입력 파일로부터 읽은 텍스트를
-     lexical/syntactic analysis 수행해서
-     추상구문트리를 만든다.
+ - TokenInterface 
 
-   1) Lexer 파트
+   * 렉서와 파서가 인식하는 토큰 타입을 정의
+   * 모든 토큰 정의는 이 인터페이스를 따르도록.
 
-      (알고리즘)
-      입력: lexer 스펙, lexing 대상 텍스트 
-      출력: 터미널 리스트
+   ```
+   public interface TokenInterface<Token> {
+  	   Token toToken(String s) throws ParserException;
+	   String toString(Token tok);
+   }
+   ```
 
-      while (전체 텍스트 끝에 도달하지 않은 동안)
+ - CommonParserUtil을 사용하여 파서 정의하고 파싱하기
+
+   * Lexer 스펙과 Parser 스펙을 정의
+
+   ```
+   class CommonParserUtil
+
+   공통
+   - private ArrayList<Terminal<Token>> terminalList;
+
+   렉서
+   - public void lexEndToken(Token token);
+   - public void lex(String regExp, TokenBuilder<Token> tb);
+
+   파서
+   - public void ruleStartSymbol(String startSymbol);
+   - public void rule(String productionRule, TreeBuilder tb);
+
+   - public Object get(int i)
+   - public Object getText(int i)
+   ```
       
-      1.  Lexer  스펙에서  현재 col/line  위치에서  시작하는  prefix와
-         매치되는 정규식을 찾는다.
+   *  입력 파일 텍스트를 Lexing(렉싱)하여 terminalList에 토큰 리스트 출력하고,
+       이 리스트를 입력 받아 Parsing(파싱)하여 추상 구문 트리를 출력
+   ```
+   렉서
+   - public void Lexing(Reader r) throws IOException, LexerException;
+   파서
+   - public Object Parsing (Reader r) throws ParserException, IOException, LexerException;
+   ```
+      
+ - CommonParserUtil의 Lexing에서 하는 일
 
-      2.  해당 정규식의  쌍으로 주어진  lexer 함수를  호출한다.  이때
-          정규식에 매칭된  텍스트를 이  함수의 인자로  전달한다.  함수
-          호출 결과 토큰을 반환한다.
+    * 알고리즘
+      * 입력: lexer 스펙, lexing 대상 텍스트 
+      * 출력: 터미널 리스트 (terminalList)
 
-      3. 현재 col/line/반환된 토큰/매칭된 텍스트 4가지 정보를 가지고
-         terminal을 한 개 만든다.
+      * 절차: while (전체 텍스트 끝에 도달하지 않은 동안) 반복
 
-      4. 이 terminal을 터미널 리스트 맨 뒤에 추가한다.
+        * 1.  Lexer  스펙으로 부터, 현재 분석 중인 컬럼과 줄(col/line)에서  시작하는  prefix와
+           매치되는 정규식을 찾는다.
 
-      5. 이 정규식에 매칭된 텍스트에 대해 col/line을 조정한다.
+        * 2.  해당 정규식의  쌍으로 주어진  액션 함수를  호출한다.  이때
+          정규식에 매칭된  텍스트를 이  함수의 인자로  전달한다. 이 액션 함수
+          가 이 텍스트에 대한 토큰을 반환한다.
 
-         while (매칭된 텍스트 끝에 도달하지 않은 동안)
-	    - 현재 문자가 '\n' => line++; col=1;
-	    - 그 이외 문자     => col++;
+        * 3. 현재 컬럼, 현재 줄, 토큰, 매칭된 텍스트, 4가지 정보를 터미널(Terminal)이라고 한다. 
+         매칭된 터미널을 한 개 만든다.
 
-      참고) 순차적으로 찾는 과정을 최적화가 필요함.
+        * 4. 이 terminal을 터미널 리스트(terminalList)에 추가한다.
 
-   2) Parser 파트
+        * 5. 이 정규식에 매칭된 텍스트 길이 만큼 컬럼을 조정하고, 개행 문자를 만나면 줄을 조정하고, 컬럼을 1로 리셋한다.
 
-      (알고리즘)
-      입력: parser 스펙, 터미널 리스트 
-      출력: AST
+      * 참고) 렉서 규칙을 순차적으로 적용하여 매칭하는 토큰을 찾는 과정을 최적화 해야 함
 
-      1. paser 스펙으로부터 오토마톤을 생성한다.
+  - CommonParserUtil의 Parsing에서 하는 일
 
-       1-1. 파서 스펙이 변경되었는지 검사한다.
-       1-2. 변경되었으면 오토마톤을 새로 생성한다.
-       1-3. 변경되지 않았으면 이전에 생성한 오토마톤을 이용한다.
+    * 알고리즘
+      * 입력: parser 스펙, 터미널 리스트 
+      * 출력: AST
 
-       참고) 파서 스펙의 변경 유무를 검사하는 방법
+      * 절차 : 
+        * paser 스펙으로부터 오토마톤을 생성한다. (파일: (prod_rules/action_table/goto_table.txt))
 
-         Cond1 && Conde2 ==> 이전 오토마톤을 이용
-	 otherwise       ==> 새로 오토마톤을 생성
+          *  새로운 파서 스펙을 지정하면 오토마톤을 생성한다. (문법에서 오토마타를 만드는 방법은 나중에 설명)
+          *  기존에 지정한 파서 스펙으로 파싱한다면, 기 생성해놓은 오토마톤을 다시 이용한다.
 
-         Cond1: action_table.txt, goto_table.txt, grammar.txt이 이 있는지 확인
-	 
-	 Cond2: 기존 mygrammar.grm의 내용과 주어진 파서 스펙으로 만들 새로운
-	        mygrammar.grm의 내용이 같은지 확인.
-		mygrammar.grm.hash 파일을 mygrammar.grm과 함께 생성해둔다.
+        * 3개의오토마톤 파일을 읽어들여 파싱을 진행
 
-      2. 생성된 3개의오토마톤 파일을 읽어들인다.
-         prod_rules/action_table/goto_table.txt
+          * 생산 규칙의 오른편(rhs)에 매칭되는 토큰들을 발견할 때 해당하는 액션을 호출하여 생산 규칙의 왼편(넌터미널, Nonterminal)에 대한 추상 구문 트리를 만듬
+          * 예) AssignExpr -> identifier = AssignExpr
+             * 이 생산 규칙에 매칭되는 것을 오토마톤을 통해 찾을 때마다,
+               (오토마타를 통해 어떻게 찾는지는 나중에 설명)
+             * 액션으로 지정한 람다를 호출하여 해당 추상 구문 트리를 만들어 리턴한다. 
+             * 이 추상 구문 트리를 만들기 위해서
+               * identifier에 매칭되는 텍스트를 pu.getText(1)로 문자열을 가져오고,
+               * AssignExpr에 매팅되는 서브 추상 구문 트리를 pu.get(3)로 가져온다.
+               * 주의할 점은 pu.get(3)의 리턴 타입은 Object. 추상 구문 트리의 타입 Expr로 타입으로 캐스팅 변환.
+               * 최종적으로 리턴할 Assign 추상 구문 트리의 오른쪽 식이 Expr 타입임.
+          
+   ```
+             pu.rule("AssignExpr -> identifier = AssignExpr", () -> { 
+               String identifier = pu.getText(1);
+               Expr assignexpr = (Expr)pu.get(3);
+               return new Assign(identifier, assignexpr); 
+             });
+   ```
 
-         action_table ==>
-	    hash_map { key : (state_string, token_string)
-	               value : next_state_string }
-
-            참고) token을 받아 string으로 받아주는 함수가 있었다!!
-	    
-         prod_rules ==>
-	    [ lhs_string, [rhs_symbol_string] ]
-
-            참고) 0: S' -> S
-	          1: S -> C C
-		  2: C -> c C
-		  3: C -> d
-
-             [ ("S'", ["S"])       <-- 0번 생산 규칙
-	     , ("S",  ["C", "C"]   <-- 1번 생산 규칙
-	     , ("C",  ["c", "C"]   <-- 2번 생산 규칙
-	     , ("C",  ["d"]        <-- 3번 생산 규칙
-	     ]
-
-      3. 오토마톤을 이용해서 파싱을 진행
-
-         참고) Stack의 원소
-	         - Nonterminal :  ast를 갖고  있음 (디버깅  용으로 lhs
-                   string을 갖고 있을 수도 있음)
-		 - State : 상태를 문자열로 갖고 있음
-		 - Terminal : 앞에서 설명한 4개 원소
-
-         비어있는 스택 stack
-	 
-	 push "0" stack
-       
-         while ( end of token/terminal이 아닌 동안 반복 )
-
-          현재 terminal과 스택 top에 있는 상태 state_top을
-	  action table에서 찾는다.
-
-          1) Shift state i :
-
-               action table을 lookup해서 next state를 찾는다.
-	       push next_state stack
-	  
-	  2) Reduce j prod_rule :
-
-               production rule list를 looku해서 j번째 원소
-	        (lhs_string, rhs_symbol_string_list)
-	       를 찾으면
-
-               rhs_symbol_string_list 길이의 2배 만큼 stack에서 pop
-
-               현재 stack top의 상태와 lhs_string을 가지고
-	       goto table을 lookup해서 그 다음 상태 next_state를 찾기
-
-               j번째 생산규칙에 해당하는 parsing 함수를 호출한다.
-	       이때 인자로, 앞에서 pop한 stack원소들 중 state들을 제외한
-	       stack 원소들을 모으고 (스택이므로) 그 순서를 뒤집어서 리스트로
-	       만든다. 이 리스트를 paring 함수에 전달한다.
-
-               참고) 인자로 전달된 stack 원소들은 terminal 또는 nonterminal이다
-	             nonterminal에 ast가 들어 있다.
-
-               paring 함수 호출한 결과 ast를 반환 받는다.
-
-               pop한 다음의 스택 top에 있는 state와 lhs_string을 가지고
-	       goto table을 lookup해서 next_state를 찾는다.
-
-               반환받은 ast를 stack에   push하고, next_state를 stack에 push한다.
-	       (디버깅을 위해서 Nonterminal ast lhs_string을 고려할 수 있음)
-
-	  3) Accept :
-	       stack top에는 state가 있고, 그 바로 아래에 최종 ast를 갖고 있는
-	       nonterminal이 있다.
-	  
-	  4) otherwise : 에러
-
---
-
- Java
-   - Token.java
-     Lexer.java
-     Parser.java
-     
-   - TokenInterface.java
-   
-     CommonParserUtil.java
-     
-     StkElem.java
-     Terminal.java
-     Nonterminal.java
-     ParseState.java
-
-     TokenBuilder.java
-     TreeBuilder.java
-     
- Haskell
-   - Token.hs
-     Lexer.ha
-     Parser.hs
-
-
-   - TokenInterface.hs
-
-     CommonParserutil.hs
+          
