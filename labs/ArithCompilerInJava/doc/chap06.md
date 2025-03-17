@@ -40,6 +40,10 @@
 
  - Lexer.java
 
+    * 렉서 명세: 
+       * 원하는서브 텍스트(lexeme)를 정규식으로 찾고
+       * 지정한 이름의 해당 토큰을 리턴
+
     * 토큰 리스트의 끝을 표시하는(End Of Token) 토큰 상수를 지정하기 
     ```
        (Token.END_OF_TOKEN)
@@ -77,6 +81,10 @@
     ```
 
  - Parser.java
+
+    * 파서 명세: 
+       * 생산 규칙 (예: AssignExpr -> identifier = AssignExpr)의 오른편에 매칭되는 '토큰 리스트(서브 추상 구문 트리 리스트)'를 찾아
+       * 왼편 심볼(넌터미널)에 해당하는 추상 구문 트리를 만들어 리턴
 
     * 시작 심볼 (Start symbol)
 
