@@ -92,8 +92,12 @@
       pu.ruleStartSymbol("SeqExpr'");
    ```
 
-    * [ (생산규칙, ()를 받아서 AST를 리턴하는 함수) ]
+   * 파서 명세: 생산규칙과 AST를 리턴하는 액션 함수의 쌍의 리스트
 
+      * PrimaryExpr -> integer_number 명세 예시
+        - integer_number 매칭되는 텍스트를 pu.getText(1)로 문자열을 가져오고,
+        - 이 문자열을 integer로 변환하고
+        - Lit 추상 구문 트리를 만들어 리턴
    ```
       pu.rule("PrimaryExpr -> integer_number", () -> {
 			String integer_number_str = pu.getText(1);
@@ -101,6 +105,18 @@
 			return new Lit(integer_number); 
 		});
    ```
+      * AssignExpr -> identifier = AssignExpr 명세 예시
+        - identifier에 매칭되는 텍스트를 pu.getText(1)로 문자열을 가져오고,
+        - AssignExpr에 매팅되는 서브 추상 구문 트리를 pu.get(3)로 가져온다.
+        - 주의할 점은 pu.get(3)의 리턴 타입은 Object. 추상 구문 트리의 타입 Expr로 타입으로 캐스팅 변환.
+        - 최종적으로 리턴할 Assign 추상 구문 트리의 오른쪽 식이 Expr 타입임.
+   ```
+      pu.rule("AssignExpr -> identifier = AssignExpr", () -> { 
+          String identifier = pu.getText(1);
+          Expr assignexpr = (Expr)pu.get(3);
+          return new Assign(identifier, assignexpr); 
+      });
+   ```             
 
       * 렉서가 생성한 토큰 리스트는 터미널(토큰, 컬럼, 줄, lexeme 텍스트)로 변환하여, CommonParserUtil 내부에 선언된 터미널 리스트에 저장되고, 이 터미널 리스트를 파서가 입력을 받아 추상 구문 트리를 만듬
 
