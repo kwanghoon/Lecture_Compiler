@@ -1,4 +1,4 @@
-module Instr where 
+module Instr(Operand(..), Instr(..)) where 
 
 import Expr (OpKind)
 
