@@ -10,6 +10,7 @@ import ParserState
 import ParserTime
 
 -- | Utility
+rule :: String -> b -> (String, b, Maybe a2)
 rule prodRule action = (prodRule, action, Nothing)
 
 --
@@ -40,6 +41,12 @@ parserSpec = ParserSpec
       rule "AssignExpr -> identifier = AssignExpr" 
         (\rhs -> return $ fromExpr 
                             ( Assign (getText rhs 1) (exprFrom (get rhs 3)) )),
+
+      rule "AssignExpr -> ifzero AssignExpr then AssignExpr else AssignExpr" 
+        (\rhs -> return $ fromExpr 
+                            ( IfZero (exprFrom (get rhs 2)) 
+                                     (exprFrom (get rhs 4)) 
+                                     (exprFrom (get rhs 6)) )),
 
       rule "AssignExpr -> AdditiveExpr" (\rhs -> return $ get rhs 1),
 

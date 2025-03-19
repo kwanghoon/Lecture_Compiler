@@ -2,13 +2,14 @@
 1: SeqExpr -> SeqExpr ; AssignExpr
 2: SeqExpr -> AssignExpr
 3: AssignExpr -> identifier = AssignExpr
-4: AssignExpr -> AdditiveExpr
-5: AdditiveExpr -> AdditiveExpr + MultiplicativeExpr
-6: AdditiveExpr -> AdditiveExpr - MultiplicativeExpr
-7: AdditiveExpr -> MultiplicativeExpr
-8: MultiplicativeExpr -> MultiplicativeExpr * PrimaryExpr
-9: MultiplicativeExpr -> MultiplicativeExpr / PrimaryExpr
-10: MultiplicativeExpr -> PrimaryExpr
-11: PrimaryExpr -> identifier
-12: PrimaryExpr -> integer_number
-13: PrimaryExpr -> ( AssignExpr )
+4: AssignExpr -> ifzero AssignExpr then AssignExpr else AssignExpr
+5: AssignExpr -> AdditiveExpr
+6: AdditiveExpr -> AdditiveExpr + MultiplicativeExpr
+7: AdditiveExpr -> AdditiveExpr - MultiplicativeExpr
+8: AdditiveExpr -> MultiplicativeExpr
+9: MultiplicativeExpr -> MultiplicativeExpr * PrimaryExpr
+10: MultiplicativeExpr -> MultiplicativeExpr / PrimaryExpr
+11: MultiplicativeExpr -> PrimaryExpr
+12: PrimaryExpr -> identifier
+13: PrimaryExpr -> integer_number
+14: PrimaryExpr -> ( AssignExpr )

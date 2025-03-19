@@ -14,6 +14,9 @@ data Token =
   | DIV 
   | EQUAL
   | SEMICOLON
+  | IFZERO
+  | THEN 
+  | ELSE
   deriving (Eq, Show)
 
 tokenStrList :: [(Token,String)]
@@ -29,11 +32,17 @@ tokenStrList =
   , (DIV,           "/")
   , (EQUAL,         "=")
   , (SEMICOLON,     ";")
+  , (IFZERO,        "ifzero")
+  , (THEN,          "then")
+  , (ELSE,          "else")
   ]
 
 keywords :: [(Token, String)]
 keywords =
   [ 
+    (IFZERO, "ifzero"),
+    (THEN,   "then"),
+    (ELSE,   "else")
   ]  
 
 findTok :: Token -> [(Token, String)] -> Maybe String

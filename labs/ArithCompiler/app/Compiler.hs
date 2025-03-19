@@ -15,3 +15,5 @@ comp (Assign x expr) =
   comp expr ++ [Store x] ++ [Push (VarOp x)]
 comp (BinOp opkind expr1 expr2) =
   comp expr1 ++ comp expr2 ++ [InstrOp opkind]
+comp (IfZero expr1 expr2 expr3) =
+  comp expr1 ++ [IfZ (comp expr2) (comp expr3)]

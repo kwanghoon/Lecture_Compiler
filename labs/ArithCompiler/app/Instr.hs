@@ -1,4 +1,4 @@
-module Instr where 
+module Instr(Operand(..), Instr(..)) where 
 
 import Expr (OpKind)
 
@@ -12,4 +12,5 @@ data Instr =
   | Pop 
   | Store String 
   | InstrOp OpKind 
+  | IfZ [Instr] [Instr]
   deriving (Show,Eq)

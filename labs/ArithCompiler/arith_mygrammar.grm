@@ -3,6 +3,7 @@
  ProductionRule "SeqExpr" [Nonterminal "SeqExpr", Terminal ";", Nonterminal "AssignExpr"],
  ProductionRule "SeqExpr" [Nonterminal "AssignExpr"],
  ProductionRule "AssignExpr" [Terminal "identifier", Terminal "=", Nonterminal "AssignExpr"],
+ ProductionRule "AssignExpr" [Terminal "ifzero", Nonterminal "AssignExpr", Terminal "then", Nonterminal "AssignExpr", Terminal "else", Nonterminal "AssignExpr"],
  ProductionRule "AssignExpr" [Nonterminal "AdditiveExpr"],
  ProductionRule "AdditiveExpr" [Nonterminal "AdditiveExpr", Terminal "+", Nonterminal "MultiplicativeExpr"],
  ProductionRule "AdditiveExpr" [Nonterminal "AdditiveExpr", Terminal "-", Nonterminal "MultiplicativeExpr"],
