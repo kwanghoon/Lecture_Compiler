@@ -10,9 +10,10 @@
 
 ### 내려받기
  - git clone https://github.com/kwanghoon/Lecture_Compiler
- - git clone https://github.com/kwanghoon/yapb
  - cd Lecture_Compiler
  - cd labs
+ - git clone https://github.com/kwanghoon/yapb
+ - cd ArithCompiler
  - stack run 
 
 ### 버전
