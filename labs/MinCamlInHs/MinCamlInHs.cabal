@@ -57,11 +57,13 @@ executable MinCamlInHs-exe
       Token
       Type
       Typing
+      Asm
       Paths_MinCamlInHs
   autogen-modules:
       Paths_MinCamlInHs
   hs-source-dirs:
       app
+      app/x86
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       MinCamlInHs

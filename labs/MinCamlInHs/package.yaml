@@ -43,7 +43,9 @@ library:
 executables:
   MinCamlInHs-exe:
     main:                Main.hs
-    source-dirs:         app
+    source-dirs:         
+    - app
+    - app/x86
     ghc-options:
     - -threaded
     - -rtsopts
