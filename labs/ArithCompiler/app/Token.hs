@@ -29,7 +29,7 @@ tokenStrList =
   , (DIV,           "/")
   , (EQUAL,         "=")
   , (SEMICOLON,     ";")
-  ]
+  ] ++ keywords
 
 keywords :: [(Token, String)]
 keywords =
