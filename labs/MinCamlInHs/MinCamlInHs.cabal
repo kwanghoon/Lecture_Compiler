@@ -58,6 +58,7 @@ executable MinCamlInHs-exe
       Type
       Typing
       Asm
+      Virtual
       Paths_MinCamlInHs
   autogen-modules:
       Paths_MinCamlInHs
