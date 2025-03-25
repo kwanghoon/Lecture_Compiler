@@ -1,0 +1,361 @@
+% SASYR 2025 - Template based on:
+% samplepaper.tex, a sample chapter demonstrating the
+% LLNCS macro package for Springer Computer Science proceedings;
+% Version 2.20 of 2017/10/04
+%
+\documentclass[runningheads]{llncs}
+%
+\usepackage{graphicx}
+\usepackage{lipsum}
+\usepackage{url}
+
+\usepackage{kotex}
+\usepackage{amsmath,amssymb}
+\usepackage{tikz}
+\newcommand{\circledop}[1]{%
+    \tikz[baseline=(X.base)] \node[draw, shape=circle, inner sep=1pt] (X) {\ensuremath{#1}};%
+}
+
+% Used for displaying a sample figure. If possible, figure files should
+% be included in EPS format.
+%
+% If you use the hyperref package, please uncomment the following line
+% to display URLs in blue roman font according to Springer's eBook style:
+% \renewcommand\UrlFont{\color{blue}\rmfamily}
+
+\begin{document}
+%
+\title{ARITH 컴파일러 정확성에 관하여}
+%
+%\titlerunning{Abbreviated paper title}
+% If the paper title is too long for the running head, you can set
+% an abbreviated paper title here
+%
+\author{최광훈}
+%
+\authorrunning{최광훈, 전남대학교}
+% First names are abbreviated in the running head.
+% If there are more than two authors, 'et al.' is used.
+%
+\institute{전남대학교\\
+\email{kwanghoon.choi@jnu.ac.kr}
+}
+%
+\maketitle              % typeset the header of the contribution
+%
+% \begin{abstract}
+% The authors can submit a Short Paper or a Full Paper in English.\\
+% The Short Paper must have between 2 and 3 pages.\\
+% The Full Paper must have between 4 and 8 pages.\\
+% The abstract should summarize the contents of the paper in
+% 15--250 words.\\
+% Submissions must be original and human-authored. Detected AI-generated submissions will be rejected. Further info is available on the SASYR Website at \url{http://sasyr.ipb.pt/}
+
+
+% \keywords{First keyword  \and Second keyword \and Another keyword.}
+% \end{abstract}
+%
+%
+%
+\section{ARITH 프로그래밍 언어}
+
+\paragraph{\underline{ARITH 프로그래밍 언어의 식 $e$}}:
+
+\[
+e ::= n \ \mid x \ \mid e \; op \; e \ \mid \  x = e
+\]
+
+\paragraph{\underline{환경 $env$}}:
+
+환경 $env = \{ x_1\mapsto n_1, \cdots, x_k\mapsto n_k \} $은 각 변수에 대응하는 숫자를 나타내는 매핑이다.
+환경에서 변수 $x$에 해당하는 숫자를 찾는 연산 $env(x)$는, 만약 환경에 $x$의 매핑이 존재하면 해당 숫자를 반환하고, 
+존재하지 않으면 오류를 발생시킨다. 
+%
+환경을 새로운 매핑으로 확장하는 연산 $env\{x\mapsto n\}$은 다음과 같이 동작한다. 만약 $env$에 $x$에 대한 매핑이 
+없으면 새로운 매핑을 추가하고, 이미 존재하면 해당 매핑을 $n$으로 업데이트한다. 
+
+\paragraph{\underline{ARITH 프로그래밍 언어의 의미 $eval(e, env)$}}:
+
+\[
+\begin{array}{l l}
+    \text{eval}(n, env) &\ = \ n, env \\
+    \text{eval}(x, env) &\ = \  env(x), env \\
+    \text{eval}(e_1 \; op \; e_2, env) &\ = \  
+    \begin{array}[t]{l}
+        \text{let } n_1, env_1 = \text{eval}(e_1, env) \\
+        \quad \;\; n_2, env_2 = \text{eval}(e_2, env_1) \\
+        \text{in } n_1 \; \circledop{op} \; n_2, env_2
+    \end{array} \\
+    \text{eval}(x = e, env) &\ = \  
+    \begin{array}[t]{l}
+        \text{let } n, env_1 = \text{eval}(e, env) \\
+        \text{in } n, env_1
+    \end{array}
+\end{array}
+\]
+
+식의 크기 $|e|$는 다음과 같이 정의할 수 있다.
+
+\[
+\begin{aligned}
+    |n| &= 1 \\
+    |x| &= 1 \\
+    |e_1 \; op \; e_2| &= |e_1| + |e_2| + 1 \\
+    |x = e| &= |e| + 1
+\end{aligned}
+\]
+
+\section{스택 기반 VM 명령어}
+
+\paragraph{\underline{VM 명령어 $instr$}}:
+
+\[
+\text{instr} ::= \emptyset\mid \iota; \text{instr}
+\]
+\[
+ \iota ::= \text{push } n\mid \text{push } x \mid \text{pop} \mid \text{store } x \mid \text{binop } op
+\]
+
+\paragraph{\underline{스택 $stack$}}:
+
+스택은 다음과 같이 정의한다.
+\[
+stack = \ \emptyset \mid \ n : stack
+\]
+
+원소를 포함하는 스택  $n_1 : n_2 : \cdots : n_k : \emptyset $은 간단히  $n_1 : n_2 : \cdots : n_k $로 표기한다.
+
+\paragraph{\underline{VM 명령어 실행 의미 $run(instr, env, stack)$}}:
+
+\[
+\begin{array}{l l}
+    \text{run}(\emptyset, \ env, \ stack) &= env, stack \\
+    \text{run}(\text{push } n; instr, \ env, \ stack) &= \text{run}(instr, \ env, \ stack) \\
+    \text{run}(\text{push } x; instr, \ env, \ stack) &= \text{run}(instr, \ env, \ env(x) : stack) \\
+    \text{run}(\text{pop}; instr, \ env, \ n : stack) &= \text{run}(instr, \ env, \ stack) \\
+    \text{run}(\text{store } x; instr, \ env, \ n : stack) &= \text{run}(instr, \ env \{ x \mapsto n \}, stack) \\
+    \text{run}(\text{binop } op; instr, \ env, \ n_1 : n_2 : stack) &= \text{run}(instr, \ env, \ n_2 \circledop{op} n_1 : stack)
+\end{array}
+\]
+
+\section{ARITH-to-VM 컴파일러}
+
+\paragraph{\underline{ARITH 프로그래밍 언어 컴파일러 $comp{(e)}$}}:
+
+컴파일러의 기본 아이디어는 식 $e$를 컴파일한 명령어들을 주어진 환경과 스택에서 실행하면, 그 결과로 식의 값이 스택의 맨위에 놓이도록 하는 것이다.
+
+\[
+\begin{array}{l l}
+    \text{comp}(n) &= \text{push } n \\
+    \text{comp}(x) &= \text{push } x \\
+    \text{comp}(e_1 \; op \; e_2) &= \text{comp}(e_1); \text{comp}(e_2); \text{binop } op \\
+    \text{comp}(x = e) &= \text{comp}(e); \text{store } x; \text{push } x
+\end{array}
+\]
+
+\section{ARITH-to-VM 컴파일러의 정확성}
+
+\begin{theorem}
+\label{thm:compcorrect}
+모든 \( e, env, stack \)에 대하여,  
+만일 \( \text{eval}(e, env) = n, env_1 \)이라면  
+\[
+    \text{run}(\text{comp}(e), env, stack) = env_1, n : stack
+\]
+이다.
+\end{theorem}
+\begin{proof}
+이 정리는 보조 정리 \ref{lem:compcorrect}의 특수한 경우로, $comp(e)$ 다음에 오는 명령어 $instr$가 비어 있는 경우에 해당한다. 
+따라서 보조 정리를 증명하면 이 정리도 자동으로 증명된다.
+\[
+\begin{tabular}{l l l}
+       & $\text{run}(\text{comp}(e); \emptyset, env, stack)$  & by Lemma \ref{lem:compcorrect}\\
+   $=$ & $\text{run}(\emptyset, env_1, n : stack)$ & by Def. of $run$\\
+   $=$ & $ env_1, n : stack$
+\end{tabular}
+\]
+\end{proof}
+
+\begin{lemma}
+\label{lem:compcorrect}
+    모든 \( e, env, stack, instr \)에 대하여,  
+    만일 \( \text{eval}(e, env) = n, env_1 \)이라면  
+    \[
+    \text{run}(\text{comp}(e); instr, env, stack) = \text{run}(instr, env_1, n : stack)
+    \]
+    이다.
+\end{lemma}
+\begin{proof}
+식 $e$의 크기에 대한 귀납 증명을 통해 이 보조 정리를 증명한다. 
+
+$|e| = 1 \quad \text{(e가 } n \text{ 또는 } x \text{인 경우)}$.
+
+\ \\
+
+\underline{Case $e=n$}: 정의에 따라, $eval(n,env)=n,env$과 $comp(e)=\text{push } n$.
+\[
+\begin{tabular}{l l l}
+       & $\text{run}(\text{comp}(e); instr, env, stack)$  & by Def. of $comp$\\
+   $=$ & $\text{run}(\text{push } n; instr, env, stack)$ & by Def. of $run$\\
+   $=$ & $\text{run}(instr, env, n : stack)$ & \\
+\end{tabular}
+\]
+
+\underline{Case $e=x$}: 
+정의에 따라, $eval(x,env)=env(x),env$과 $comp(e)=\text{push } x$.
+보조 정리의 조건에 따라 에러가 발생하지 않으므로, $env(x)$는 항상 숫자를 반환한다.
+\[
+\begin{tabular}{l l l}
+       & $\text{run}(\text{comp}(e); instr, env, stack)$  & by Def. of $comp$\\
+   $=$ & $\text{run}(\text{push } x; instr, env, stack)$ & by Def. of $run$\\
+   $=$ & $\text{run}(instr, env, env(x) : stack)$ & \\
+\end{tabular}
+\]
+
+\ \\
+
+조건 $|e| = k $을 만족하는 모든 식에 대하여 보조 정리가 참이라고 가정하자.
+
+\ \\
+
+$|e| = k+1 \quad \text{(e가 } e1 \; op \; e2 \text{ 또는 } x=e1 \text{인 경우)}$.
+
+\ \\
+
+\underline{Case $e\; = \; e1 \; op \; e2$}: 
+정의에 따라, $comp(e1 \; op \; e2)=comp(e_1); comp(e_2); \text{binop} \; op$이 성립하고,
+다음이 성립한다.
+\begin{eqnarray}
+    eval(e1 \; op \; e2,env)  & = & n_1 \circledop{op} n_2,env_2 \\
+    eval(e1,env) & = & n_1,env_1 \label{lab:opee1env1} \\
+    eval(e2,env_1) & = & n_2,env_2, \label{lab:opee2env2}
+\end{eqnarray}
+
+\[
+\begin{tabular}{l l l}
+       & $\text{run}(\text{comp}(e); instr, env, stack)$  & by Def. of $comp$\\
+   $=$ & $\text{run}(comp(e_1); comp(e_2); \text{binop} \; op; instr, env, stack)$ & % by I.H. with (\ref{lab:opee1env1})\\
+   % $=$ & $\cdots$ & \\
+   % $=$ & $\text{run}(comp(e_2); \text{binop} \; op; instr, env_1, n_1:stack)$ & by I.H. with (\ref{lab:opee2env2})\\
+   % $=$ & $\cdots$ & \\
+   % $=$ & $\text{run}(\text{binop} \; op; instr, env_2, n_2:n_1:stack)$ & by I.H. with (\ref{lab:opee2env2}), $env_1$, and $n_1:stack$\\
+   % $=$ & $\text{run}(instr, env, env(x) : stack)$ & \\
+\end{tabular}
+\]
+
+\ \\
+
+귀납 가정을 사용하면 ($|e_1| \leq k$) $e_1$, $env$에 대하여 (\ref{lab:opee1env1})이 성립하므로, $stack$, $comp(e_2); \text{binop} \; op; instr$에 대하여 다음이 성립한다.
+
+\ \\ 
+
+\begin{tabular}{l l l}
+      & $\text{run}(comp(e_1); comp(e_2); \text{binop} \; op; instr, env, stack)$ & by I.H. with (\ref{lab:opee1env1})\\
+   $=$ & $\cdots$ & \\
+   $=$ & $\text{run}(comp(e_2); \text{binop} \; op; instr, env_1, n_1:stack)$ & %by I.H. with (\ref{lab:opee2env2})\\
+   % $=$ & $\cdots$ & \\
+   % $=$ & $\text{run}(\text{binop} \; op; instr, env_2, n_2:n_1:stack)$ & by I.H. with (\ref{lab:opee2env2}), $env_1$, and $n_1:stack$\\
+   % $=$ & $\text{run}(instr, env, env(x) : stack)$ & \\
+\end{tabular}
+
+\ \\
+
+다시 한번 귀납 가정을 사용하면($|e_2| \leq k$) $e_2$, $env1$에 대하여 (\ref{lab:opee2env2})이 성립하므로, $n_1:stack$, $\text{binop} \; op; instr$에 대하여 다음이 성립한다. 
+
+\ \\ 
+
+\begin{tabular}{l l l}
+   $=$ & $\text{run}(comp(e_2); \text{binop} \; op; instr, env_1, n_1:stack)$ & by I.H. with (\ref{lab:opee2env2})\\
+   $=$ & $\cdots$ & \\
+   $=$ & $\text{run}(\text{binop} \; op; instr, env_2, n_2:n_1:stack)$ & % by I.H. with (\ref{lab:opee2env2}), $env_1$, and $n_1:stack$\\
+   % $=$ & $\text{run}(instr, env, env(x) : stack)$ & \\
+\end{tabular}
+
+\ \\ 
+
+VM 실행 $run$에 의하여 한 단계 진행시킬 수 있다. 그 결과 보조 정리에서 증명하고자 하는 형태에 도달한다.
+
+\begin{tabular}{l l l}
+   $=$ & $\text{run}(\text{binop} \; op; instr, env_2, n_2:n_1:stack)$ & by Def. of $run$\\
+   $=$ & $\text{run}(instr, env_2, n_1 \circledop{op} n_2 : stack)$ & \\
+\end{tabular}
+
+\ \\ 
+
+\underline{Case $e\; = \; x=e1$}: 
+
+\ \\
+
+이 경우에 대한 증명을 연습문제로 남긴다.
+
+\end{proof}
+
+\ \\
+
+\begin{exercise}
+    보조 정리 \ref{lem:compcorrect}의 $x=e$ 경우를 증명하시오.
+\end{exercise}
+
+\begin{exercise}
+    정리 \ref{thm:compcorrect}은 단일 식을 대상으로 하는 컴파일러 정확성을 기술하는 명제이다. 
+    ARITH 언어 프로그램 ($e_1; \ \cdots \ ; e_k)$)에 대한 컴파일러 정확성을 기술하는 명제를 작성하고 증명하시오.
+\end{exercise}
+
+% \paragraph{Sample Heading (Fourth Level)}
+% The contribution should contain no more than four levels of
+% headings. Table~\ref{tab1} gives a summary of all heading levels.
+
+% \begin{table}
+% \caption{Table captions should be placed above the
+% tables.}\label{tab1}
+% \begin{tabular}{|l|l|l|}
+% \hline
+% Heading level &  Example & Font size and style\\
+% \hline
+% Title (centered) &  {\Large\bfseries Lecture Notes} & 14 point, bold\\
+% 1st-level heading &  {\large\bfseries 1 Introduction} & 12 point, bold\\
+% 2nd-level heading & {\bfseries 2.1 Printing Area} & 10 point, bold\\
+% 3rd-level heading & {\bfseries Run-in Heading in Bold.} Text follows & 10 point, bold\\
+% 4th-level heading & {\itshape Lowest Level Heading.} Text follows & 10 point, italic\\
+% \hline
+% \end{tabular}
+% \end{table}
+
+
+% \noindent Displayed equations are centered and set on a separate
+% line.
+% \begin{equation}
+% x + y = z
+% \end{equation}
+% Please try to avoid rasterized images for line-art diagrams and
+% schemas. Whenever possible, use vector graphics instead (see
+% Fig.~\ref{fig1}).
+
+% \begin{figure}
+% \includegraphics[width=\textwidth]{fig1.eps}
+% \caption{A figure caption is always placed below the illustration.
+% Please note that short captions are centered, while long ones are
+% justified by the macro package automatically.} \label{fig1}
+% \end{figure}
+
+% %
+% % the environments 'definition', 'lemma', 'proposition', 'corollary',
+% % 'remark', and 'example' are defined in the LLNCS documentclass as well.
+% %
+
+% For citations of references, use:
+% In \cite{einstein} Einstein....
+
+% In \cite{knuthwebsite} the authors
+
+% This \cite{latexcompanion} is Latex. 
+% %
+% % ---- Bibliography ----
+% %
+% % BibTeX users should specify bibliography style 'splncs04'.
+% % References will then be sorted and formatted in the correct style.
+% %
+% \bibliographystyle{refs-style}
+% \bibliography{refs}
+% %
+\end{document}
