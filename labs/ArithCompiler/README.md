@@ -1,5 +1,7 @@
 # 개념 이해 목적의 장난감 컴파일러: ArithCompiler
 
+## [발표 자료](https://docs.google.com/presentation/d/1hHkPlbf7fio9SIlInbcOTKMrwUudob1GUL5dxmeorXc/edit?usp=sharing)
+
 ## 연습용 템플릿 (tag: v0.1)
 
 ### 내용
