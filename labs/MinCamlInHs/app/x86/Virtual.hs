@@ -27,3 +27,4 @@ toVirtual (C.Float d) = do
     return (Let (x, T.Int) (SetL l) (Ans (LdDF x (C 0) 1)))
 toVirtual (C.Neg x) = return (Ans (Neg x))
 toVirtual (C.Add x y) = return (Ans (Add x (V y)))
+toVirtual (C.Sub x y) = return (Ans (Sub x (V y)))
