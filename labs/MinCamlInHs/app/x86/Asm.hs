@@ -1,5 +1,7 @@
-module Asm(Exp(..),IdOrImm(..),Seq(..)) where
+module Asm(Exp(..),IdOrImm(..),Seq(..), concatSeq, seq,
+            reghp, Id, align) where
 
+import Prelude hiding (seq)
 import qualified Type as T 
 import Id
 import qualified Data.Map as Map
