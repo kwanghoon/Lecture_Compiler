@@ -7,6 +7,7 @@ import qualified Closure as C
 import qualified Data.Map as Map
 import qualified Data.List as List
 
+import Control.Monad(foldM)
 import Control.Monad.State 
 
 type FloatTble = [(TlvId, Double)]
@@ -16,26 +17,35 @@ type Id = String
 type Env = Map.Map Id T.Type
 
 --
+classify :: [(Id, T.Type)] -> b -> (b -> Id -> State CompState b) 
+                -> (b -> Id -> T.Type -> State CompState b) 
+                -> State CompState b
 classify xts init addf addi = 
-    List.foldl f init xts
-    where f acc (x, T.Unit) = acc 
+    foldM f init xts
+    where f acc (x, T.Unit) = return acc 
           f acc (x, T.Float) = addf acc x
           f acc (x, t) = addi acc x t
 
-separate :: [(a, T.Type)] -> ([a], [a])
+separate :: [(Id, T.Type)] -> State CompState ([Id], [Id])
 separate xts =
     classify 
         xts
         ([], [])
-        (\(is, fs) x -> (is, fs++[x]))
-        (\(is, fs) x _ -> (is++[x], fs))
+        (\(is, fs) x -> return (is, fs++[x]))
+        (\(is, fs) x _ -> return (is++[x], fs))
 
+expand :: [(Id, T.Type)] -> (Int, a) 
+            -> (Id -> Int -> a -> State CompState a) 
+            -> (Id -> T.Type -> Int -> a -> State CompState a) 
+            -> State CompState (Int, a)
 expand xts ini addf addi = 
     classify 
         xts
         ini
-        (\(offset, acc) x -> (offset+8, addf x offset acc))
-        (\(offset, acc) x t -> (offset+4, addi x t offset acc))
+        (\(offset, acc) x -> 
+            do y <- addf x offset acc; return (offset+8, y))
+        (\(offset, acc) x t -> 
+            do y <- addi x t offset acc; return (offset+4, y))
 
 --
 toVirtual :: C.C -> Env -> State CompState Seq
