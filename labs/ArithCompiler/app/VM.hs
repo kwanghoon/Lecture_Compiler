@@ -46,4 +46,4 @@ runInstr (InstrOp op) env stack =
       OPADD -> (env, push (n2 + n1) stack2) 
       OPSUB -> (env, push (n2 - n1) stack2) 
       OPMUL -> (env, push (n2 * n1) stack2) 
-      OPDIV -> (env, push (n2 `div` n1) stack)
+      OPDIV -> (env, push (n2 `div` n1) stack2)
