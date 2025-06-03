@@ -1,0 +1,97 @@
+0: mini_c -> translation_unit
+1: translation_unit -> external_dcl
+2: translation_unit -> translation_unit external_dcl
+3: external_dcl -> function_def
+4: external_dcl -> declaration
+5: function_def -> function_header compound_st
+6: function_header -> dcl_spec function_name formal_param
+7: dcl_spec -> dcl_specifiers
+8: dcl_specifiers -> dcl_specifier
+9: dcl_specifiers -> dcl_specifiers dcl_specifier
+10: dcl_specifier -> type_qualifier
+11: dcl_specifier -> type_specifier
+12: type_qualifier -> const
+13: type_specifier -> int
+14: type_specifier -> void
+15: function_name -> IDENTIFIER
+16: formal_param -> ( opt_formal_param )
+17: opt_formal_param -> formal_param_list
+18: opt_formal_param -> 
+19: formal_param_list -> param_dcl
+20: formal_param_list -> formal_param_list , param_dcl
+21: param_dcl -> dcl_spec declarator
+22: compound_st -> { opt_dcl_list opt_stat_list }
+23: opt_dcl_list -> declaration_list
+24: opt_dcl_list -> 
+25: declaration_list -> declaration
+26: declaration_list -> declaration_list declaration
+27: declaration -> dcl_spec init_dcl_list ;
+28: init_dcl_list -> init_declarator
+29: init_dcl_list -> init_dcl_list , init_declarator
+30: init_declarator -> declarator
+31: init_declarator -> declarator = NUMBER
+32: declarator -> IDENTIFIER
+33: declarator -> IDENTIFIER [ opt_number ]
+34: opt_number -> NUMBER
+35: opt_number -> 
+36: opt_stat_list -> statement_list
+37: opt_stat_list -> 
+38: statement_list -> statement
+39: statement_list -> statement_list statement
+40: statement -> compound_st
+41: statement -> expression_st
+42: statement -> if_st
+43: statement -> while_st
+44: statement -> return_st
+45: expression_st -> opt_expression ;
+46: opt_expression -> expression
+47: opt_expression -> 
+48: if_st -> if ( expression ) statement
+49: if_st -> if ( expression ) statement TELSE statement
+50: while_st -> while ( expression ) statement
+51: return_st -> return opt_expression ;
+52: expression -> assignment_exp
+53: assignment_exp -> logical_or_exp
+54: assignment_exp -> unary_exp = assignment_exp
+55: assignment_exp -> unary_exp += assignment_exp
+56: assignment_exp -> unary_exp -= assignment_exp
+57: assignment_exp -> unary_exp *= assignment_exp
+58: assignment_exp -> unary_exp /= assignment_exp
+59: assignment_exp -> unary_exp %= assignment_exp
+60: logical_or_exp -> logical_and_exp
+61: logical_or_exp -> logical_or_exp || logical_and_exp
+62: logical_and_exp -> equality_exp
+63: logical_and_exp -> logical_and_exp && equality_exp
+64: equality_exp -> relational_exp
+65: equality_exp -> equality_exp == relational_exp
+66: equality_exp -> equality_exp != relational_exp
+67: relational_exp -> additive_exp
+68: relational_exp -> relational_exp > additive_exp
+69: relational_exp -> relational_exp < additive_exp
+70: relational_exp -> relational_exp >= additive_exp
+71: relational_exp -> relational_exp <= additive_exp
+72: additive_exp -> multiplicative_exp
+73: additive_exp -> additive_exp + multiplicative_exp
+74: additive_exp -> additive_exp - multiplicative_exp
+75: multiplicative_exp -> unary_exp
+76: multiplicative_exp -> multiplicative_exp * unary_exp
+77: multiplicative_exp -> multiplicative_exp / unary_exp
+78: multiplicative_exp -> multiplicative_exp % unary_exp
+79: unary_exp -> postfix_exp
+80: unary_exp -> - unary_exp
+81: unary_exp -> ! unary_exp
+82: unary_exp -> ++ unary_exp
+83: unary_exp -> -- unary_exp
+84: postfix_exp -> primary_exp
+85: postfix_exp -> postfix_exp [ expression ]
+86: postfix_exp -> postfix_exp ( opt_actual_param )
+87: postfix_exp -> postfix_exp TINC
+88: postfix_exp -> postfix_exp TDEC
+89: opt_actual_param -> actual_param
+90: opt_actual_param -> 
+91: actual_param -> actual_param_list
+92: actual_param_list -> assignment_exp
+93: actual_param_list -> actual_param_list , assignment_exp
+94: primary_exp -> IDENTIFIER
+95: primary_exp -> NUMBER
+96: primary_exp -> ( expression )

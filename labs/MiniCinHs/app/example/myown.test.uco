@@ -1,0 +1,31 @@
+main       proc    2       2       2
+           sym     2       1       1
+           sym     2       2       1
+           ldp
+           lda     2       1
+           call    read
+           ldp
+           lda     2       2
+           call    read
+           ldp
+           ldp
+           lod     2       1
+           lod     2       2
+           call    add
+           call    write
+           ret
+           end
+add        proc    2       3       2
+           sym     3       1       1
+           sym     3       2       1
+           lod     3       1
+           lod     3       2
+           add
+           ldc     1
+           add
+           retv
+           end
+           bgn     1
+           ldp
+           call    main
+           end

@@ -1,0 +1,141 @@
+mini_c -> translation_unit
+
+translation_unit -> external_dcl
+translation_unit -> translation_unit external_dcl
+
+external_dcl -> function_def
+external_dcl -> declaration
+
+function_def -> function_header compound_st
+
+function_header -> dcl_spec function_name formal_param
+
+dcl_spec -> dcl_specifiers
+
+dcl_specifiers -> dcl_specifier
+dcl_specifiers -> dcl_specifiers dcl_specifier
+
+dcl_specifier -> type_qualifier
+dcl_specifier -> type_specifier
+
+type_qualifier -> const
+
+type_specifier -> int
+type_specifier -> void
+
+function_name -> IDENTIFIER
+
+formal_param -> ( opt_formal_param )
+
+opt_formal_param -> formal_param_list
+opt_formal_param -> 
+
+formal_param_list -> param_dcl
+formal_param_list -> formal_param_list , param_dcl
+
+param_dcl -> dcl_spec declarator
+
+compound_st -> { opt_dcl_list opt_stat_list }
+
+opt_dcl_list -> declaration_list
+opt_dcl_list -> 
+
+declaration_list -> declaration
+declaration_list -> declaration_list declaration
+
+declaration -> dcl_spec init_dcl_list ;
+
+init_dcl_list -> init_declarator
+init_dcl_list -> init_dcl_list , init_declarator
+
+init_declarator -> declarator
+init_declarator -> declarator = NUMBER
+
+declarator -> IDENTIFIER
+declarator -> IDENTIFIER [ opt_number ]
+
+opt_number -> NUMBER
+opt_number -> 
+
+opt_stat_list -> statement_list
+opt_stat_list -> 
+
+statement_list -> statement
+statement_list -> statement_list statement
+
+statement -> compound_st
+statement -> expression_st
+statement -> if_st
+statement -> while_st
+statement -> return_st
+
+expression_st -> opt_expression ;
+
+opt_expression -> expression
+opt_expression -> 
+
+if_st -> if ( expression ) statement %prec LOWER_THAN_TELSE
+if_st -> if ( expression ) statement TELSE statement
+
+while_st -> while ( expression ) statement
+
+return_st -> return opt_expression ;
+
+expression -> assignment_exp
+
+assignment_exp -> logical_or_exp
+assignment_exp -> unary_exp = assignment_exp
+assignment_exp -> unary_exp += assignment_exp
+assignment_exp -> unary_exp -= assignment_exp
+assignment_exp -> unary_exp *= assignment_exp
+assignment_exp -> unary_exp /= assignment_exp
+assignment_exp -> unary_exp %= assignment_exp
+
+logical_or_exp -> logical_and_exp
+logical_or_exp -> logical_or_exp || logical_and_exp
+
+logical_and_exp -> equality_exp
+logical_and_exp -> logical_and_exp && equality_exp
+
+equality_exp -> relational_exp
+equality_exp -> equality_exp == relational_exp
+equality_exp -> equality_exp != relational_exp
+
+relational_exp -> additive_exp
+relational_exp -> relational_exp > additive_exp
+relational_exp -> relational_exp < additive_exp
+relational_exp -> relational_exp >= additive_exp
+relational_exp -> relational_exp <= additive_exp
+
+additive_exp -> multiplicative_exp
+additive_exp -> additive_exp + multiplicative_exp
+additive_exp -> additive_exp - multiplicative_exp
+
+multiplicative_exp -> unary_exp
+multiplicative_exp -> multiplicative_exp * unary_exp
+multiplicative_exp -> multiplicative_exp / unary_exp
+multiplicative_exp -> multiplicative_exp % unary_exp
+
+unary_exp -> postfix_exp
+unary_exp -> - unary_exp
+unary_exp -> ! unary_exp
+unary_exp -> ++ unary_exp
+unary_exp -> -- unary_exp
+
+postfix_exp -> primary_exp
+postfix_exp -> postfix_exp [ expression ]
+postfix_exp -> postfix_exp ( opt_actual_param )
+postfix_exp -> postfix_exp TINC
+postfix_exp -> postfix_exp TDEC
+
+opt_actual_param -> actual_param
+opt_actual_param -> 
+
+actual_param -> actual_param_list
+
+actual_param_list -> assignment_exp
+actual_param_list -> actual_param_list , assignment_exp
+
+primary_exp -> IDENTIFIER
+primary_exp -> NUMBER
+primary_exp -> ( expression )
