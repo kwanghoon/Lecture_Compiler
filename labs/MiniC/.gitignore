@@ -1,0 +1,20 @@
+lex.yy.c
+./minic
+minic.tab.*
+
+# auto created
+
+out.lst
+
+# execute files
+
+minic
+ucodei
+
+# test files
+
+tests/*.ast
+!tests/*.test.ast
+
+tests/*.uco
+!tests/*.test.uco
