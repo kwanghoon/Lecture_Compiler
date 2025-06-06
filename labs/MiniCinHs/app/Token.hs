@@ -49,13 +49,6 @@ data Token =
 tokenStrList :: [(Token,String)]
 tokenStrList =
   [ (END_OF_TOKEN, "$")
-  , (CONSTR, "const")
-  , (ELSE, "else")
-  , (IF, "if")
-  , (INT, "int")
-  , (RETURN, "return")
-  , (VOID, "void")
-  , (WHILE, "while")
   , (EQUAL, "==")
   , (NOTEQUAL, "!=")
   , (LESSTHANOREQUAL, "<=")
@@ -97,6 +90,8 @@ keywords =
   , (RETURN, "return")
   , (VOID, "void")
   , (WHILE, "while")
+  , (CONSTR, "const")
+  , (ELSE, "else")
   ]
 
 findTok tok [] = Nothing
