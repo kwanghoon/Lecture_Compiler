@@ -23,3 +23,6 @@ doProcess verbose fileName = do
   when (verbose) $ putStrLn "Pretty Printing..."
   when (verbose) $ putStrLn (pprintParse exprSeqAst)
   return (pprintParse exprSeqAst)
+
+pprintParse :: ParseTree -> String 
+pprintParse = show

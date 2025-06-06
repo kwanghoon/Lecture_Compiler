@@ -15,7 +15,7 @@ rule prodRule action              = (prodRule, action, Nothing  )
 ruleWithPrec prodRule prec action = (prodRule, action, Just prec)
 
 --
-parserSpec :: ParserSpec Token Parse IO ()
+parserSpec :: ParserSpec Token ParseTree IO ()
 parserSpec = ParserSpec
   {
     startSymbol = "mini_c",
@@ -27,67 +27,187 @@ parserSpec = ParserSpec
 
     parserSpecList =
     [
-      rule "mini_c -> translation_unit" undefined,
+      rule "mini_c -> translation_unit"
+        (\rhs -> return (get rhs 1)),
 
-      rule "translation_unit -> external_dcl" undefined,
-      rule "translation_unit -> translation_unit external_dcl" undefined,
+      -- translation_unit :: TranslationUnit -- [ExternDecl]
+      rule "translation_unit -> external_dcl" 
+        (\rhs -> return $ 
+          PTTranslationUnit 
+            [externDeclFrom (get rhs 1)]),
 
-      rule "external_dcl -> function_def" undefined,
-      rule "external_dcl -> declaration" undefined,
+      rule "translation_unit -> translation_unit external_dcl" 
+        (\rhs -> return $ 
+          PTTranslationUnit 
+            (translationUnitFrom (get rhs 1) 
+              ++ [externDeclFrom (get rhs 2)]) ),
 
-      rule "function_def -> function_header compound_st" undefined,
+      -- externanl_dcl :: ExternDecl 
+      rule "external_dcl -> function_def"
+        (\rhs -> return $ 
+          PTExternDecl 
+            (FuncDefExtDecl (funcDefFrom (get rhs 1))) ),
 
-      rule "function_header -> dcl_spec function_name formal_param" undefined,
+      rule "external_dcl -> declaration"
+        (\rhs -> return $ 
+          PTExternDecl 
+            (DeclExtDecl (declFrom (get rhs 1))) ),
 
-      rule "dcl_spec -> dcl_specifiers" undefined,
+      -- function_def :: FuncDef 
+      rule "function_def -> function_header compound_st"
+        (\rhs -> return $
+          let (declSpec, funcName, paramDeclList) = 
+                funcHeaderFrom (get rhs 1) in
+            PTFuncDef       
+              (declSpec, funcName, paramDeclList, 
+                [stmtFrom (get rhs 2)]) ),
 
-      rule "dcl_specifiers -> dcl_specifier" undefined,
-      rule "dcl_specifiers -> dcl_specifiers dcl_specifier" undefined,
+      -- function_header :: FuncHeader
+      rule "function_header -> dcl_spec function_name formal_param"
+        (\rhs -> return $ 
+          PTFuncHeader 
+            (declSpecFrom (get rhs 1),
+             funcNameFrom (get rhs 2),
+             paramDeclListFrom (get rhs 3)) ),
 
-      rule "dcl_specifier -> type_qualifier" undefined,
-      rule "dcl_specifier -> type_specifier" undefined,
+      -- dcl_spec :: DeclSpec -- [DeclSpecifier]
+      rule "dcl_spec -> dcl_specifiers" 
+        (\rhs -> return (get rhs 1)),
 
-      rule "type_qualifier -> const" undefined,
+      -- dcl_specifiers :: DeclSpec -- [DeclSpecifier]
+      rule "dcl_specifiers -> dcl_specifier"
+        (\rhs -> return $
+          PTDeclSpec [ declSpecifierFrom (get rhs 1) ]),
 
-      rule "type_specifier -> int" undefined,
-      rule "type_specifier -> void" undefined,
+      rule "dcl_specifiers -> dcl_specifiers dcl_specifier"
+        (\rhs -> return $ 
+          PTDeclSpec $ 
+            declSpecFrom (get rhs 1) 
+              ++ [ declSpecifierFrom (get rhs 2) ]),
 
-      rule "function_name -> IDENTIFIER" undefined,
+      -- dcl_specifier :: DeclSpecifier 
+      rule "dcl_specifier -> type_qualifier" 
+        (\rhs -> return (get rhs 1)),
 
-      rule "formal_param -> ( opt_formal_param )" undefined,
+      rule "dcl_specifier -> type_specifier"
+        (\rhs -> return (get rhs 1)),
 
-      rule "opt_formal_param -> formal_param_list" undefined,
-      rule "opt_formal_param -> " undefined,
+      -- type_qualifier :: DeclSpecifier
+      rule "type_qualifier -> const"
+        (\rhs -> return (PTDeclSpecifier ConstQualifier)),
 
-      rule "formal_param_list -> param_dcl" undefined,
-      rule "formal_param_list -> formal_param_list , param_dcl" undefined,
+      -- type_specifier :: DeclSpecifier
+      rule "type_specifier -> int"
+        (\rhs -> return (PTDeclSpecifier IntSpecifier)),
 
-      rule "param_dcl -> dcl_spec declarator" undefined,
+      rule "type_specifier -> void"
+        (\rhs -> return (PTDeclSpecifier VoidSpecifier)),
 
-      rule "compound_st -> { opt_dcl_list opt_stat_list }" undefined,
+      -- function_name :: String
+      rule "function_name -> IDENTIFIER"
+        (\rhs -> return (PTFuncName (getText rhs 1))),
 
-      rule "opt_dcl_list -> declaration_list" undefined,
-      rule "opt_dcl_list -> " undefined,
+      -- formal_param :: ParamDeclList -- [ParamDecl]
+      rule "formal_param -> ( opt_formal_param )"
+        (\rhs -> return (get rhs 2)),
 
-      rule "declaration_list -> declaration" undefined,
-      rule "declaration_list -> declaration_list declaration" undefined,
+      -- opt_formal_param :: ParamDeclList -- [ParamDecl]
+      rule "opt_formal_param -> formal_param_list"
+        (\rhs -> return (get rhs 1)),
 
-      rule "declaration -> dcl_spec init_dcl_list ;" undefined,
+      rule "opt_formal_param -> "
+        (\rhs -> return (PTParamDeclList [])),
 
-      rule "init_dcl_list -> init_declarator" undefined,
-      rule "init_dcl_list -> init_dcl_list , init_declarator" undefined,
+      -- formal_param_list :: ParamDeclList -- [ParamDecl]
+      rule "formal_param_list -> param_dcl"
+        (\rhs -> return $ 
+          PTParamDeclList [paramDeclFrom (get rhs 1)] ),
 
-      rule "init_declarator -> declarator" undefined,
+      rule "formal_param_list -> formal_param_list , param_dcl"
+        (\rhs -> return $
+          PTParamDeclList $
+            paramDeclListFrom (get rhs 1) 
+              ++ [paramDeclFrom (get rhs 3)] ),
+
+      -- param_dcl :: ParamDecl 
+      rule "param_dcl -> dcl_spec declarator"
+        (\rhs -> return $ 
+          PTParamDecl $
+            ParamDecl 
+              (declSpecFrom (get rhs 1)) 
+              (declaratorFrom (get rhs 2)) ),
+
+      -- compound_st :: Stmt 
+      rule "compound_st -> { opt_dcl_list opt_stat_list }"
+        (\rhs -> return $ 
+          PTStmt $ 
+            CompoundStmt 
+              (declListFrom (get rhs 2))
+              (stmtListFrom (get rhs 3))),
+
+      -- opt_dcl_list :: DeclList -- [Decl]
+      rule "opt_dcl_list -> declaration_list"
+        (\rhs -> return (get rhs 1)),
+
+      rule "opt_dcl_list -> " 
+        (\rhs -> return $ PTDeclList []),
+
+      -- declaration_list :: [Decl]
+      rule "declaration_list -> declaration"
+        (\rhs -> return $
+          PTDeclList $
+            [declFrom (get rhs 1)]),
+
+      rule "declaration_list -> declaration_list declaration"
+        (\rhs -> return $ 
+          PTDeclList $ 
+            declListFrom (get rhs 1)
+              ++ [declFrom (get rhs 2)]),
+
+      -- declaration :: Decl 
+      rule "declaration -> dcl_spec init_dcl_list ;"
+        (\rhs -> return $ 
+          PTDecl $
+              (declSpecFrom (get rhs 1),
+               initDeclaratorListFrom (get rhs 2)) ),
+
+      -- init_dcl_list :: [InitDeclarator]
+      rule "init_dcl_list -> init_declarator"
+        (\rhs -> return $ 
+          PTInitDeclaratorList $ 
+            [ initDeclaratorFrom (get rhs 1) ] ),
+
+      rule "init_dcl_list -> init_dcl_list , init_declarator"
+        (\rhs -> return $ 
+          PTInitDeclaratorList $
+            (initDeclaratorListFrom (get rhs 1))
+              ++ [ initDeclaratorFrom (get rhs 3) ]),
+
+      -- init_declarator :: InitDeclarator
+      rule "init_declarator -> declarator"
+        (\rhs -> return $ 
+          PTInitDeclarator $ 
+            DeclItem (declaratorFrom (get rhs 1)) Nothing),
+
       rule "init_declarator -> declarator = NUMBER" undefined,
 
-      rule "declarator -> IDENTIFIER" undefined,
+      -- declarator :: Declarator
+      rule "declarator -> IDENTIFIER" 
+        (\rhs -> return $ 
+          PTDeclarator $
+            SimpleVar (getText rhs 1)),
+
       rule "declarator -> IDENTIFIER [ opt_number ]" undefined,
 
       rule "opt_number -> NUMBER" undefined,
       rule "opt_number -> " undefined,
 
-      rule "opt_stat_list -> statement_list" undefined,
-      rule "opt_stat_list -> " undefined,
+      -- opt_stat_list :: StmtList -- [Stmt]
+      rule "opt_stat_list -> statement_list"
+        (\rhs -> return (get rhs 1)),
+
+      rule "opt_stat_list -> " 
+        (\rhs -> return (PTStmtList [])),
 
       rule "statement_list -> statement" undefined,
       rule "statement_list -> statement_list statement" undefined,
