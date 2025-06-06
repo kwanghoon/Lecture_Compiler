@@ -47,7 +47,7 @@
 46: opt_expression -> expression
 47: opt_expression -> 
 48: if_st -> if ( expression ) statement
-49: if_st -> if ( expression ) statement TELSE statement
+49: if_st -> if ( expression ) statement else statement
 50: while_st -> while ( expression ) statement
 51: return_st -> return opt_expression ;
 52: expression -> assignment_exp
@@ -85,8 +85,8 @@
 84: postfix_exp -> primary_exp
 85: postfix_exp -> postfix_exp [ expression ]
 86: postfix_exp -> postfix_exp ( opt_actual_param )
-87: postfix_exp -> postfix_exp TINC
-88: postfix_exp -> postfix_exp TDEC
+87: postfix_exp -> postfix_exp ++
+88: postfix_exp -> postfix_exp --
 89: opt_actual_param -> actual_param
 90: opt_actual_param -> 
 91: actual_param -> actual_param_list

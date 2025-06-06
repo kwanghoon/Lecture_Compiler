@@ -77,7 +77,8 @@ toParseExpr expr = ParseExpr expr
 -- type TranslationUnit = ExternDeclList
 
 data Expr =
-    Assign Expr Expr 
+    Assign Expr Expr
+  | AssignOp String Expr Expr -- "+=", "-=", "*=", "/=", "%="
   | Add Expr Expr 
   | Sub Expr Expr 
   | Mul Expr Expr 
@@ -91,6 +92,7 @@ data Expr =
   | GreaterThan Expr Expr
   | LessThan Expr Expr 
   | GreaterThanOrEqualTo Expr Expr 
+  | LessThanOrEqualTo Expr Expr 
   | UnaryMinus Expr 
   | PreIncrement Expr 
   | PreDecrement Expr 
@@ -106,9 +108,9 @@ type ExprList = [Expr]
 
 data Stmt =
     CompoundStmt DeclList StmtList
-  | ExprStmt Expr 
-  | IfStmt Expr Expr (Maybe Expr)
-  | WhileStmt Expr Expr 
+  | ExprStmt (Maybe Expr) 
+  | IfStmt Expr Stmt (Maybe Stmt)
+  | WhileStmt Expr Stmt 
   | ReturnStmt (Maybe Expr)
   deriving (Show, Eq)
 
@@ -125,11 +127,11 @@ data DeclSpecifier =
 
 data Declarator =
     SimpleVar String
-  | ArrayVar String (Maybe Int)
+  | ArrayVar String (Maybe String) -- array name, number index
   deriving (Show, Eq)
 
 data InitDeclarator = 
-    DeclItem Declarator (Maybe Int)
+    DeclItem Declarator (Maybe String)
   deriving (Show, Eq)
 
 type Decl = (DeclSpec, [InitDeclarator])
@@ -158,6 +160,7 @@ type TranslationUnit = [ExternDecl]
 data ParseTree = 
     PTExpr { exprFrom :: Expr } 
   | PTExprList { exprListFrom :: ExprList }
+  | PTOptExpr { optExprFrom :: Maybe Expr}
   | PTStmt { stmtFrom :: Stmt }
   | PTStmtList { stmtListFrom :: StmtList }
   | PTDeclSpec {declSpecFrom :: DeclSpec }
@@ -172,6 +175,7 @@ data ParseTree =
   | PTFuncDef { funcDefFrom :: FuncDef }
   | PTFuncHeader { funcHeaderFrom :: FuncHeader }
   | PTFuncName { funcNameFrom :: String }
+  | PTOptNumber { optNumberFrom :: Maybe String }
   | PTExternDecl { externDeclFrom :: ExternDecl }
   | PTTranslationUnit { translationUnitFrom :: TranslationUnit }
   deriving (Show, Eq)

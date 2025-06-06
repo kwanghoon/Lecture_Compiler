@@ -189,7 +189,11 @@ parserSpec = ParserSpec
           PTInitDeclarator $ 
             DeclItem (declaratorFrom (get rhs 1)) Nothing),
 
-      rule "init_declarator -> declarator = NUMBER" undefined,
+      rule "init_declarator -> declarator = NUMBER"
+        (\rhs -> return $ 
+          PTInitDeclarator $ 
+            DeclItem (declaratorFrom (get rhs 1)) 
+              (Just (getText rhs 3))),
 
       -- declarator :: Declarator
       rule "declarator -> IDENTIFIER" 
@@ -197,10 +201,16 @@ parserSpec = ParserSpec
           PTDeclarator $
             SimpleVar (getText rhs 1)),
 
-      rule "declarator -> IDENTIFIER [ opt_number ]" undefined,
+      rule "declarator -> IDENTIFIER [ opt_number ]"
+        (\rhs -> return $ 
+          PTDeclarator $
+            ArrayVar (getText rhs 1) (optNumberFrom (get rhs 3))),
 
-      rule "opt_number -> NUMBER" undefined,
-      rule "opt_number -> " undefined,
+      rule "opt_number -> NUMBER" 
+        (\rhs -> return $ PTOptNumber (Just (getText rhs 1))),
+
+      rule "opt_number -> "
+        (\rhs -> return $ PTOptNumber Nothing),
 
       -- opt_stat_list :: StmtList -- [Stmt]
       rule "opt_stat_list -> statement_list"
@@ -209,85 +219,198 @@ parserSpec = ParserSpec
       rule "opt_stat_list -> " 
         (\rhs -> return (PTStmtList [])),
 
-      rule "statement_list -> statement" undefined,
-      rule "statement_list -> statement_list statement" undefined,
+      -- statement_list :: [Stmt]
+      rule "statement_list -> statement"
+        (\rhs -> return $ 
+          PTStmtList $ [stmtFrom (get rhs 1)]),
 
-      rule "statement -> compound_st" undefined,
-      rule "statement -> expression_st" undefined,
-      rule "statement -> if_st" undefined,
-      rule "statement -> while_st" undefined,
-      rule "statement -> return_st" undefined,
+      rule "statement_list -> statement_list statement"
+        (\rhs -> return $
+          PTStmtList $ 
+            stmtListFrom (get rhs 1) 
+              ++ [stmtFrom (get rhs 2)]),
 
-      rule "expression_st -> opt_expression ;" undefined,
+      -- statement, expression_st :: Stmt
+      rule "statement -> compound_st" (\rhs -> return (get rhs 1)),
+      rule "statement -> expression_st" (\rhs -> return (get rhs 1)),
+      rule "statement -> if_st" (\rhs -> return (get rhs 1)),
+      rule "statement -> while_st" (\rhs -> return (get rhs 1)),
+      rule "statement -> return_st" (\rhs -> return (get rhs 1)),
 
-      rule "opt_expression -> expression" undefined,
-      rule "opt_expression -> " undefined,
+      rule "expression_st -> opt_expression ;" 
+        (\rhs -> return (PTStmt (ExprStmt (optExprFrom (get rhs 1))))),
 
-      ruleWithPrec "if_st -> if ( expression ) statement" "LOWER_THAN_TELSE" undefined,
-      rule "if_st -> if ( expression ) statement TELSE statement" undefined,
+      -- opt_expression :: Maybe Expr
+      rule "opt_expression -> expression" 
+        (\rhs -> return (PTOptExpr (Just (exprFrom (get rhs 1))))),
 
-      rule "while_st -> while ( expression ) statement" undefined,
+      rule "opt_expression -> " (\rhs -> return (PTOptExpr Nothing)),
 
-      rule "return_st -> return opt_expression ;" undefined,
+      -- if_st, while_st, return_st :: Stmt
+      ruleWithPrec "if_st -> if ( expression ) statement" "LOWER_THAN_TELSE"
+        (\rhs -> return $ PTStmt $ 
+          IfStmt (exprFrom (get rhs 3)) (stmtFrom (get rhs 5)) Nothing ),
 
-      rule "expression -> assignment_exp" undefined,
+      rule "if_st -> if ( expression ) statement else statement"
+        (\rhs -> return $ PTStmt $ 
+          IfStmt (exprFrom (get rhs 3))
+            (stmtFrom (get rhs 5))
+            (Just (stmtFrom (get rhs 7))) ),
 
-      rule "assignment_exp -> logical_or_exp" undefined,
-      rule "assignment_exp -> unary_exp = assignment_exp" undefined,
-      rule "assignment_exp -> unary_exp += assignment_exp" undefined,
-      rule "assignment_exp -> unary_exp -= assignment_exp" undefined,
-      rule "assignment_exp -> unary_exp *= assignment_exp" undefined,
-      rule "assignment_exp -> unary_exp /= assignment_exp" undefined,
-      rule "assignment_exp -> unary_exp %= assignment_exp" undefined,
+      rule "while_st -> while ( expression ) statement"
+        (\rhs -> return $ PTStmt $ 
+          WhileStmt (exprFrom (get rhs 3)) (stmtFrom (get rhs 5)) ),
 
-      rule "logical_or_exp -> logical_and_exp" undefined,
-      rule "logical_or_exp -> logical_or_exp || logical_and_exp" undefined,
+      rule "return_st -> return opt_expression ;"
+        (\rhs -> return $ PTStmt $ ReturnStmt (optExprFrom (get rhs 2))),
 
-      rule "logical_and_exp -> equality_exp" undefined,
-      rule "logical_and_exp -> logical_and_exp && equality_exp" undefined,
+      -- expression, assignment_exp, ... :: Expr
+      rule "expression -> assignment_exp" (\rhs -> return (get rhs 1)),
 
-      rule "equality_exp -> relational_exp" undefined,
-      rule "equality_exp -> equality_exp == relational_exp" undefined,
-      rule "equality_exp -> equality_exp != relational_exp" undefined,
+      rule "assignment_exp -> logical_or_exp" (\rhs -> return (get rhs 1)),
+      rule "assignment_exp -> unary_exp = assignment_exp" 
+        (\rhs -> return $ PTExpr $ 
+          Assign (exprFrom (get rhs 1)) (exprFrom (get rhs 3))),
+      rule "assignment_exp -> unary_exp += assignment_exp"
+        (\rhs -> return $ PTExpr $ 
+          AssignOp "+=" (exprFrom (get rhs 1)) (exprFrom (get rhs 3)) ),
+      rule "assignment_exp -> unary_exp -= assignment_exp"
+        (\rhs -> return $ PTExpr $ 
+          AssignOp "-=" (exprFrom (get rhs 1)) (exprFrom (get rhs 3)) ),
+      rule "assignment_exp -> unary_exp *= assignment_exp"
+        (\rhs -> return $ PTExpr $ 
+          AssignOp "*=" (exprFrom (get rhs 1)) (exprFrom (get rhs 3)) ),
+      rule "assignment_exp -> unary_exp /= assignment_exp"
+        (\rhs -> return $ PTExpr $ 
+          AssignOp "/=" (exprFrom (get rhs 1)) (exprFrom (get rhs 3)) ),
+      rule "assignment_exp -> unary_exp %= assignment_exp"
+        (\rhs -> return $ PTExpr $ 
+          AssignOp "%=" (exprFrom (get rhs 1)) (exprFrom (get rhs 3)) ),
 
-      rule "relational_exp -> additive_exp" undefined,
-      rule "relational_exp -> relational_exp > additive_exp" undefined,
-      rule "relational_exp -> relational_exp < additive_exp" undefined,
-      rule "relational_exp -> relational_exp >= additive_exp" undefined,
-      rule "relational_exp -> relational_exp <= additive_exp" undefined,
+      rule "logical_or_exp -> logical_and_exp" (\rhs -> return (get rhs 1)),
 
-      rule "additive_exp -> multiplicative_exp" undefined,
-      rule "additive_exp -> additive_exp + multiplicative_exp" undefined,
-      rule "additive_exp -> additive_exp - multiplicative_exp" undefined,
+      rule "logical_or_exp -> logical_or_exp || logical_and_exp"
+        (\rhs -> return $ PTExpr $ 
+          LogicalOr (exprFrom (get rhs 1)) (exprFrom (get rhs 3)) ),
 
-      rule "multiplicative_exp -> unary_exp" undefined,
-      rule "multiplicative_exp -> multiplicative_exp * unary_exp" undefined,
-      rule "multiplicative_exp -> multiplicative_exp / unary_exp" undefined,
-      rule "multiplicative_exp -> multiplicative_exp % unary_exp" undefined,
+      rule "logical_and_exp -> equality_exp" (\rhs -> return (get rhs 1)),
 
-      rule "unary_exp -> postfix_exp" undefined,
-      rule "unary_exp -> - unary_exp" undefined,
-      rule "unary_exp -> ! unary_exp" undefined,
-      rule "unary_exp -> ++ unary_exp" undefined,
-      rule "unary_exp -> -- unary_exp" undefined,
+      rule "logical_and_exp -> logical_and_exp && equality_exp"
+        (\rhs -> return $ PTExpr $ 
+          LogicalAnd (exprFrom (get rhs 1)) (exprFrom (get rhs 3)) ),
 
-      rule "postfix_exp -> primary_exp" undefined,
-      rule "postfix_exp -> postfix_exp [ expression ]" undefined,
-      rule "postfix_exp -> postfix_exp ( opt_actual_param )" undefined,
-      rule "postfix_exp -> postfix_exp TINC" undefined,
-      rule "postfix_exp -> postfix_exp TDEC" undefined,
+      rule "equality_exp -> relational_exp" (\rhs -> return (get rhs 1)),
 
-      rule "opt_actual_param -> actual_param" undefined,
-      rule "opt_actual_param -> " undefined,
+      rule "equality_exp -> equality_exp == relational_exp"
+        (\rhs -> return $ PTExpr $ 
+          Equal (exprFrom (get rhs 1)) (exprFrom (get rhs 3)) ),
 
-      rule "actual_param -> actual_param_list" undefined,
+      rule "equality_exp -> equality_exp != relational_exp"
+        (\rhs -> return $ PTExpr $ 
+          NotEqual (exprFrom (get rhs 1)) (exprFrom (get rhs 3)) ),
 
-      rule "actual_param_list -> assignment_exp" undefined,
-      rule "actual_param_list -> actual_param_list , assignment_exp" undefined,
+      rule "relational_exp -> additive_exp" (\rhs -> return (get rhs 1)),
 
-      rule "primary_exp -> IDENTIFIER" undefined,
-      rule "primary_exp -> NUMBER" undefined,
-      rule "primary_exp -> ( expression )" undefined
+      rule "relational_exp -> relational_exp > additive_exp"
+        (\rhs -> return $ PTExpr $ 
+          GreaterThan (exprFrom (get rhs 1)) (exprFrom (get rhs 3)) ),
+
+      rule "relational_exp -> relational_exp < additive_exp"
+        (\rhs -> return $ PTExpr $ 
+          LessThan (exprFrom (get rhs 1)) (exprFrom (get rhs 3)) ),
+
+      rule "relational_exp -> relational_exp >= additive_exp"
+        (\rhs -> return $ PTExpr $ 
+          GreaterThanOrEqualTo (exprFrom (get rhs 1)) (exprFrom (get rhs 3)) ),
+
+      rule "relational_exp -> relational_exp <= additive_exp"
+        (\rhs -> return $ PTExpr $ 
+          LessThanOrEqualTo (exprFrom (get rhs 1)) (exprFrom (get rhs 3)) ),
+
+      rule "additive_exp -> multiplicative_exp" (\rhs -> return (get rhs 1)),
+
+      rule "additive_exp -> additive_exp + multiplicative_exp"
+        (\rhs -> return $ PTExpr $ 
+          Add (exprFrom (get rhs 1)) (exprFrom (get rhs 3)) ),
+
+      rule "additive_exp -> additive_exp - multiplicative_exp"
+        (\rhs -> return $ PTExpr $ 
+          Sub (exprFrom (get rhs 1)) (exprFrom (get rhs 3)) ),
+
+      rule "multiplicative_exp -> unary_exp" (\rhs -> return (get rhs 1)),
+
+      rule "multiplicative_exp -> multiplicative_exp * unary_exp"
+        (\rhs -> return $ PTExpr $ 
+          Mul (exprFrom (get rhs 1)) (exprFrom (get rhs 3)) ),
+
+      rule "multiplicative_exp -> multiplicative_exp / unary_exp"
+        (\rhs -> return $ PTExpr $ 
+          Div (exprFrom (get rhs 1)) (exprFrom (get rhs 3)) ),
+
+      rule "multiplicative_exp -> multiplicative_exp % unary_exp"
+        (\rhs -> return $ PTExpr $ 
+          Mod (exprFrom (get rhs 1)) (exprFrom (get rhs 3)) ),
+
+      rule "unary_exp -> postfix_exp" (\rhs -> return (get rhs 1)),
+
+      rule "unary_exp -> - unary_exp"
+        (\rhs -> return $ PTExpr $ 
+          UnaryMinus (exprFrom (get rhs 2)) ),
+
+      rule "unary_exp -> ! unary_exp"
+        (\rhs -> return $ PTExpr $ 
+          LogicalNot (exprFrom (get rhs 2)) ),
+
+      rule "unary_exp -> ++ unary_exp"
+        (\rhs -> return $ PTExpr $ 
+          PreIncrement (exprFrom (get rhs 2)) ),
+
+      rule "unary_exp -> -- unary_exp"
+        (\rhs -> return $ PTExpr $ 
+          PreDecrement (exprFrom (get rhs 2)) ),
+
+      rule "postfix_exp -> primary_exp" (\rhs -> return (get rhs 1)),
+
+      rule "postfix_exp -> postfix_exp [ expression ]"
+        (\rhs -> return $ PTExpr $ 
+          ArrayIndex (exprFrom (get rhs 1)) (exprFrom (get rhs 3)) ),
+
+      rule "postfix_exp -> postfix_exp ( opt_actual_param )"
+        (\rhs -> return $ PTExpr $ 
+          Call (exprFrom (get rhs 1)) (exprListFrom (get rhs 3)) ),
+
+      rule "postfix_exp -> postfix_exp ++"
+        (\rhs -> return $ PTExpr $ 
+          PostIncrement (exprFrom (get rhs 1)) ),
+
+      rule "postfix_exp -> postfix_exp --"
+        (\rhs -> return $ PTExpr $ 
+          PostDecrement (exprFrom (get rhs 1)) ),
+
+      -- opt_actual_param :: [Expr]
+      rule "opt_actual_param -> actual_param" (\rhs -> return $ get rhs 1),
+
+      rule "opt_actual_param -> " (\rhs -> return $ PTExprList []),
+
+      -- actual_param, actual_param_list :: [Expr]
+      rule "actual_param -> actual_param_list" (\rhs -> return $ get rhs 1),
+
+      rule "actual_param_list -> assignment_exp" 
+        (\rhs -> return $ PTExprList $ [ exprFrom (get rhs 1) ]),
+
+      rule "actual_param_list -> actual_param_list , assignment_exp"
+        (\rhs -> return $ PTExprList $ 
+            exprListFrom (get rhs 1) 
+              ++ [ exprFrom (get rhs 3) ]),
+
+      -- primary_exp :: Expr
+      rule "primary_exp -> IDENTIFIER"
+        (\rhs -> return $ PTExpr $ (Identifier (getText rhs 1))),
+
+      rule "primary_exp -> NUMBER" 
+        (\rhs -> return $ PTExpr $ (Number (getText rhs 1))),
+
+      rule "primary_exp -> ( expression )" (\rhs -> return $ get rhs 2)
 
     ],
     
