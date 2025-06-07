@@ -4,7 +4,6 @@ module Comp where
 
 import Expr
 import UCode
-import Expr (Decl)
 
 type UCodeUnit = [UCInstr]
 
@@ -13,7 +12,7 @@ compile tu = comp tu
 
 data DeclInfo =
     MemDeclInfo [(UCInstr, DeclSpec, Maybe Int)] -- Memory declarations
-  | FuncDeclInfo [UCInstr] -- Function declarations
+  | FuncDeclInfo (DeclSpec, FuncName, [(UCInstr, DeclSpecifier)]) -- Function declarations
   deriving (Show, Eq)
 
 comp :: TranslationUnit -> [DeclInfo]
@@ -104,5 +103,41 @@ test2 =
                  (UCsym 1 2 5,[ConstQualifier,IntSpecifier],Nothing)] ]
 
 -- Sect. 10.4.5 함수
-compFuncDefHeader :: FuncDef -> [UCInstr]
-compFuncDefHeader = undefined
+compFuncDefHeader :: FuncDef -> (DeclSpec, FuncName, [(UCInstr,DeclSpecifier)])
+compFuncDefHeader (spec, fname, params, _)
+    | isIntOrVoid spec = 
+        (spec, fname, 
+            [ (ucinstr, head spec) 
+            | (ucinstr, spec, _) <- concatMap compDecl (parmsToDecl params)])
+    | otherwise = error $ "invalid or unsupported function return type" ++ show spec
+
+isIntOrVoid :: DeclSpec -> Bool
+isIntOrVoid [IntSpecifier] = True
+isIntOrVoid [VoidSpecifier] = True
+isIntOrVoid _ = False
+
+parmsToDecl :: ParamDeclList -> [Decl]
+parmsToDecl params = 
+    [ (spec, [DeclItem declarator Nothing]) | ParamDecl spec declarator <- params]
+
+--
+--
+decl3 :: FuncDef
+decl3 = ( [IntSpecifier], "f", 
+          [ParamDecl [IntSpecifier] (SimpleVar "x"), 
+           ParamDecl [IntSpecifier] (SimpleVar "y"),
+           ParamDecl [IntSpecifier] (ArrayVar "a" (Just "5"))
+           ], [] )
+
+tu3 :: TranslationUnit
+tu3 = [FuncDefExtDecl decl3]
+
+test3 = 
+    compile tu3
+
+--
+tu4 :: TranslationUnit
+tu4 = [DeclExtDecl decl1,
+        DeclExtDecl decl2, 
+        FuncDefExtDecl decl3]   
+        

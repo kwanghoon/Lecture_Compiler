@@ -50,7 +50,7 @@ data UCInstr
   | UCchkl
 
   | UCnop              -- nop
-  | UCproc Int Int Int -- proc
+  | UCproc Int Int Int -- proc 5 2 2 (size of params, block #, level)
   | UCend              -- end
   | UCbgn Int          -- bgn 2
   | UCsym Int Int Int  -- sym 1 2 1 (level offset size)
