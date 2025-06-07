@@ -12,13 +12,13 @@ compile tu = comp tu EmptyEnv 1 1  -- level 1, offset 1
 
 data DeclInfo =
     MemDeclInfo [(UCInstr, DeclSpec, Maybe Int)] -- Memory declarations
-  | FuncDeclInfo (DeclSpec, FuncName, [(UCInstr, DeclSpecifier)]) -- Function declarations
+  | FuncDeclInfo (DeclSpec, FuncName, [(UCInstr, DeclSpecifier)], [UCInstr]) -- Function declarations
   deriving (Show, Eq)
 
 data Env = 
     EmptyEnv   
   | ExtendEnv String (UCInstr, DeclSpec, Maybe Int) Env 
-  | ExtendFuncEnv String (DeclSpec, FuncName, [(UCInstr,DeclSpecifier)]) Env
+  | ExtendFuncEnv String (DeclSpec, FuncName, [(UCInstr,DeclSpecifier)], [UCInstr]) Env
   deriving (Show, Eq) 
 
 -- Todo: Environment handling!!
@@ -128,7 +128,7 @@ test2 =
 
 -- Sect. 10.4.5 함수
 compFuncDefHeader :: FuncDef -> Env -> Level -> Offset
-    -> (Env, Offset, (DeclSpec, FuncName, [(UCInstr,DeclSpecifier)]))
+    -> (Env, Offset, (DeclSpec, FuncName, [(UCInstr,DeclSpecifier)], [UCInstr]))
 compFuncDefHeader (spec, fname, params, stmt) env level offset 
     | isIntOrVoid spec = 
         let -- foldl :: (b -> a -> b) -> b -> [a] -> b
@@ -138,8 +138,11 @@ compFuncDefHeader (spec, fname, params, stmt) env level offset
                             (env2, offset2, memdeclinfo2) = compDecl decl env1 (level+1) offset1
                         in  (env2, offset2, memdeclinfo1 ++ memdeclinfo2) )
                     (env1, 1, []) (parmsToDecl params)    -- env1 for recursion
-            funcdefinfo = (spec, fname, [ (ucinstr, head spec) | (ucinstr, spec, _) <- memdeclinfo3 ])
+            funcdefinfo = (spec, fname, 
+                [ (ucinstr, head spec) | (ucinstr, spec, _) <- memdeclinfo3 ],
+                ucinstrs )
             env1 = ExtendFuncEnv fname funcdefinfo env
+            (_,_,ucinstrs)= compStmt stmt env1 level offset
         in ( env1, offset, funcdefinfo )
             
     | otherwise = error $ "invalid or unsupported function return type" ++ show spec
@@ -193,6 +196,8 @@ test4 =
                     [ (UCsym 2 1 1, IntSpecifier)
                     , (UCsym 2 2 1, IntSpecifier)
                     , (UCsym 2 3 5, IntSpecifier)
+                    ],
+                    [
                     ]
                     )
                     (
@@ -238,6 +243,8 @@ test4 =
                     [ (UCsym 2 1 1, IntSpecifier)
                     , (UCsym 2 2 1, IntSpecifier)
                     , (UCsym 2 3 5, IntSpecifier)
+                    ],
+                    [
                     ]
                 ),
                 MemDeclInfo
@@ -245,3 +252,11 @@ test4 =
                 ]
             ]
             )        
+
+-- 
+compStmt :: Stmt -> Env -> Level -> Offset -> (Env, Offset, [UCInstr])
+compStmt (CompoundStmt declList stmtList) env level offset = (env, offset, [])
+compStmt (ExprStmt maybeExpr) env level offset = (env, offset, [])
+compStmt (IfStmt expr stmt maybeStmt) env level offset = (env, offset, [])
+compStmt (WhileStmt expr stmt) env level offset = (env, offset, [])
+compStmt (ReturnStmt maybeExpr) env level offset = (env, offset, [])
