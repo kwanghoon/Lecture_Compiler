@@ -64,6 +64,7 @@ toParseExpr expr = ParseExpr expr
 --   | ActualParam
 --   deriving (Show, Eq)
 
+-- [Mini-C AST 구조]
 -- data Expr
 -- type ExprList = [Expr]
 -- data Stmt 
