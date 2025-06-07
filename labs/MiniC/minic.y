@@ -452,11 +452,11 @@ int main(int argc, char *argv[]){
         return -1;
     }
     if(!astFile) {
-        fprintf(stderr, "ast file not not open!\n");
+        fprintf(stderr, "ast file not open!: %s\n", strcat(strtok(filename, "."), ".ast"));
         return -1;
     }
     if(!ucoFile) {
-        fprintf(stderr, "uco file not not open!\n");
+        fprintf(stderr, "uco file not open!: %s\n", strcat(strtok(filename, "."), ".uco"));
         return -1;
     }
 
