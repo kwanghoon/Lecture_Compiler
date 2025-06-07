@@ -1,0 +1,19 @@
+main       proc    1       2       2
+           sym     2       1       1
+           ldc     1
+           ldc     2
+           lod     1       1
+           lod     1       2
+           add
+           str     2       1
+           lod     2       1
+           ldc     1
+           add
+           str     2       1
+           lod     2       1
+           retv
+           end
+           bgn     2
+           ldp
+           call    main
+           end

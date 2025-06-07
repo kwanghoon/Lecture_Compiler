@@ -13,8 +13,8 @@ ucodei
 
 # test files
 
-tests/*.ast
+#tests/*.ast
 !tests/*.test.ast
 
-tests/*.uco
+#tests/*.uco
 !tests/*.test.uco
