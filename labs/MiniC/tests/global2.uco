@@ -9,6 +9,9 @@ main       proc    1       2       2
            ldc     1
            add
            str     2       1
+           ldp
+           lod     2       1
+           call    write
            lod     2       1
            retv
            end

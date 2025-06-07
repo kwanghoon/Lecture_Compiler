@@ -1,17 +1,4 @@
 Nonterminal: PROGRAM
-    Nonterminal: DCL
-        Nonterminal: DCL_SPEC
-            Nonterminal: INT_NODE
-        Nonterminal: DCL_ITEM
-            Nonterminal: SIMPLE_VAR
-                Terminal: x
-            Terminal: 1
-    Nonterminal: DCL
-        Nonterminal: DCL_SPEC
-            Nonterminal: INT_NODE
-        Nonterminal: DCL_ITEM
-            Nonterminal: SIMPLE_VAR
-                Terminal: y
     Nonterminal: FUNC_DEF
         Nonterminal: FUNC_HEAD
             Nonterminal: DCL_SPEC
@@ -25,8 +12,24 @@ Nonterminal: PROGRAM
                         Nonterminal: INT_NODE
                     Nonterminal: DCL_ITEM
                         Nonterminal: SIMPLE_VAR
+                            Terminal: x
+                Nonterminal: DCL
+                    Nonterminal: DCL_SPEC
+                        Nonterminal: INT_NODE
+                    Nonterminal: DCL_ITEM
+                        Nonterminal: SIMPLE_VAR
+                            Terminal: y
+                Nonterminal: DCL
+                    Nonterminal: DCL_SPEC
+                        Nonterminal: INT_NODE
+                    Nonterminal: DCL_ITEM
+                        Nonterminal: SIMPLE_VAR
                             Terminal: z
             Nonterminal: STAT_LIST
+                Nonterminal: EXP_ST
+                    Nonterminal: ASSIGN_OP
+                        Terminal: x
+                        Terminal: 1
                 Nonterminal: EXP_ST
                     Nonterminal: ASSIGN_OP
                         Terminal: y
