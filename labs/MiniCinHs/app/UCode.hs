@@ -53,7 +53,7 @@ data UCInstr
   | UCproc Int Int Int -- proc
   | UCend              -- end
   | UCbgn Int          -- bgn 2
-  | UCsym Int Int Int  -- sym 1 2 1
+  | UCsym Int Int Int  -- sym 1 2 1 (level offset size)
 
   | UCdump 
   | UCnone

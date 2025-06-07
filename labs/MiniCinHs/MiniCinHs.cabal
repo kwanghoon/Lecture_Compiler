@@ -47,11 +47,14 @@ library
 executable minic-exe
   main-is: Main.hs
   other-modules:
+      Comp
+      EitherState
       Lexer
       Parser
       ParserSpec
       Run
       Token
+      UCode
       Expr
       Paths_MiniCinHs
   autogen-modules:
