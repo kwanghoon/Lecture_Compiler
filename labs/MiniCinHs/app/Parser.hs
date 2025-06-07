@@ -60,7 +60,7 @@ parserSpec = ParserSpec
                 funcHeaderFrom (get rhs 1) in
             PTFuncDef       
               (declSpec, funcName, paramDeclList, 
-                [stmtFrom (get rhs 2)]) ),
+                (stmtFrom (get rhs 2))) ),
 
       -- function_header :: FuncHeader
       rule "function_header -> dcl_spec function_name formal_param"

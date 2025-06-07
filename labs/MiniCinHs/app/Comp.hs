@@ -7,23 +7,39 @@ import UCode
 
 type UCodeUnit = [UCInstr]
 
-compile :: TranslationUnit -> [DeclInfo]
-compile tu = comp tu
+compile :: TranslationUnit -> (Env, Offset, [DeclInfo])
+compile tu = comp tu EmptyEnv 1 1  -- level 1, offset 1
 
 data DeclInfo =
     MemDeclInfo [(UCInstr, DeclSpec, Maybe Int)] -- Memory declarations
   | FuncDeclInfo (DeclSpec, FuncName, [(UCInstr, DeclSpecifier)]) -- Function declarations
   deriving (Show, Eq)
 
-comp :: TranslationUnit -> [DeclInfo]
-comp [] = []
-comp (DeclExtDecl d : theRest) = MemDeclInfo (compDecl d) : comp theRest
-comp (FuncDefExtDecl f : theRest) = FuncDeclInfo (compFuncDefHeader f) : comp theRest
+data Env = 
+    EmptyEnv   
+  | ExtendEnv String (UCInstr, DeclSpec, Maybe Int) Env 
+  | ExtendFuncEnv String (DeclSpec, FuncName, [(UCInstr,DeclSpecifier)]) Env
+  deriving (Show, Eq) 
+
+-- Todo: Environment handling!!
+
+comp :: TranslationUnit -> Env -> Level -> Offset -> (Env, Offset, [DeclInfo])
+comp [] env level offset = (env, offset, [])
+comp (DeclExtDecl d : theRest) env level offset = 
+    let (env1, offset1, memdeclinfo) = compDecl d env level offset 
+        (env2, offset2, declinfos) = comp theRest env1 level offset1
+    in
+        (env2, offset2, MemDeclInfo memdeclinfo : declinfos)
+comp (FuncDefExtDecl f : theRest) env level offset = 
+    let (env1, offset1, fundefinfo) = compFuncDefHeader f env level offset 
+        (env2, offset2, declinfos) = comp theRest env1 level offset1
+    in 
+        (env2, offset2, FuncDeclInfo fundefinfo : declinfos)
 
 -- Sect. 10.4.2 선언문
-compDecl :: Decl -> [(UCInstr, DeclSpec, Maybe Int)]
-compDecl (spec, initDecls)
-    | isConstIntOrInt spec = compInitDeclarators 1 1 spec initDecls
+compDecl :: Decl -> Env -> Level -> Offset -> (Env, Offset, [(UCInstr, DeclSpec, Maybe Int)])
+compDecl (spec, initDecls) env level offset 
+    | isConstIntOrInt spec = compInitDeclarators env level offset spec initDecls
     | otherwise = error $ "compDecl: unsupported specifier " ++ show spec
 
 isConstIntOrInt :: DeclSpec -> Bool
@@ -40,23 +56,31 @@ uninitializedConst [] _ = False
 type Level = Int 
 type Offset = Int 
 
-compInitDeclarators :: Level -> Offset -> DeclSpec -> [InitDeclarator] -> 
-    [(UCInstr, DeclSpec, Maybe Int)]
-compInitDeclarators lvl offset spec [] = []
+compInitDeclarators :: Env -> Level -> Offset -> DeclSpec -> [InitDeclarator] -> 
+    (Env, Offset, [(UCInstr, DeclSpec, Maybe Int)])
+compInitDeclarators env lvl offset spec [] = (env, offset, [])
 
-compInitDeclarators lvl offset spec (DeclItem (SimpleVar x) maybeInitVal : rest) 
+compInitDeclarators env lvl offset spec (DeclItem (SimpleVar x) maybeInitVal : rest) 
     | uninitializedConst spec maybeInitVal =
         error $ "constant variable " ++ x ++ " must be initialized"
     | otherwise =
-        (UCsym lvl offset 1, spec, maybeStrToInt maybeInitVal) 
-            : compInitDeclarators lvl (offset+1) spec rest
+        let declitem = (UCsym lvl offset 1, spec, maybeStrToInt maybeInitVal)
+            env1 = ExtendEnv x declitem env 
 
-compInitDeclarators lvl offset spec (DeclItem (ArrayVar x (Just idxStr)) _ : rest) =
-    let size = read idxStr :: Int in 
-        (UCsym lvl offset size, spec, Nothing)  -- Todo: handle array initialization
-            : compInitDeclarators lvl (offset+size) spec rest
+            (env2, offset1, initDeclarators1) = 
+                compInitDeclarators env1 lvl (offset+1) spec rest 
+        in
+            (env2, offset1, declitem : initDeclarators1)
 
-compInitDeclarators lvl offset spec (DeclItem (ArrayVar x Nothing) _ : rest) =
+compInitDeclarators env lvl offset spec (DeclItem (ArrayVar x (Just idxStr)) _ : rest) =
+    let size = read idxStr :: Int 
+        declitem = (UCsym lvl offset size, spec, Nothing)
+        env1 = ExtendEnv x declitem env
+        -- Todo: handle array initialization
+        (env2, offset1, initDeclarators1) = compInitDeclarators env1 lvl (offset+size) spec rest
+    in (env2, offset1, declitem : initDeclarators1)
+            
+compInitDeclarators env lvl offset spec (DeclItem (ArrayVar x Nothing) _ : rest) =
     error "array without size is not supported"
 
 getIndex :: Maybe String -> Int 
@@ -81,12 +105,12 @@ tu1 :: TranslationUnit
 tu1 = [DeclExtDecl decl1]
 
 test1 = 
-    compile tu1 
-        == [ MemDeclInfo
-                [(UCsym 1 1 1,[IntSpecifier],Just 10),
-                (UCsym 1 2 1,[IntSpecifier],Nothing),
-                (UCsym 1 3 5,[IntSpecifier],Nothing),
-                (UCsym 1 8 1,[IntSpecifier],Nothing)] ]
+    let (_, _, memdeclinfo) = compile tu1 in
+        memdeclinfo == [ MemDeclInfo
+                        [(UCsym 1 1 1,[IntSpecifier],Just 10),
+                        (UCsym 1 2 1,[IntSpecifier],Nothing),
+                        (UCsym 1 3 5,[IntSpecifier],Nothing),
+                        (UCsym 1 8 1,[IntSpecifier],Nothing)] ]
 
 decl2 :: Decl
 decl2 = ( [ConstQualifier, IntSpecifier], 
@@ -97,18 +121,27 @@ tu2 :: TranslationUnit
 tu2 = [DeclExtDecl decl2]           
 
 test2 = 
-    compile tu2 
-        == [ MemDeclInfo
-                [(UCsym 1 1 1,[ConstQualifier,IntSpecifier],Just 10),
-                 (UCsym 1 2 5,[ConstQualifier,IntSpecifier],Nothing)] ]
+    let (_, _, memdeclinfo) = compile tu2 in
+        memdeclinfo == [ MemDeclInfo
+                        [(UCsym 1 1 1,[ConstQualifier,IntSpecifier],Just 10),
+                        (UCsym 1 2 5,[ConstQualifier,IntSpecifier],Nothing)] ]
 
 -- Sect. 10.4.5 함수
-compFuncDefHeader :: FuncDef -> (DeclSpec, FuncName, [(UCInstr,DeclSpecifier)])
-compFuncDefHeader (spec, fname, params, _)
+compFuncDefHeader :: FuncDef -> Env -> Level -> Offset
+    -> (Env, Offset, (DeclSpec, FuncName, [(UCInstr,DeclSpecifier)]))
+compFuncDefHeader (spec, fname, params, stmt) env level offset 
     | isIntOrVoid spec = 
-        (spec, fname, 
-            [ (ucinstr, head spec) 
-            | (ucinstr, spec, _) <- concatMap compDecl (parmsToDecl params)])
+        let -- foldl :: (b -> a -> b) -> b -> [a] -> b
+            (env3, _, memdeclinfo3) = 
+                foldl (\triple decl -> 
+                        let (env1, offset1, memdeclinfo1) = triple
+                            (env2, offset2, memdeclinfo2) = compDecl decl env1 (level+1) offset1
+                        in  (env2, offset2, memdeclinfo1 ++ memdeclinfo2) )
+                    (env1, 1, []) (parmsToDecl params)    -- env1 for recursion
+            funcdefinfo = (spec, fname, [ (ucinstr, head spec) | (ucinstr, spec, _) <- memdeclinfo3 ])
+            env1 = ExtendFuncEnv fname funcdefinfo env
+        in ( env1, offset, funcdefinfo )
+            
     | otherwise = error $ "invalid or unsupported function return type" ++ show spec
 
 isIntOrVoid :: DeclSpec -> Bool
@@ -127,7 +160,7 @@ decl3 = ( [IntSpecifier], "f",
           [ParamDecl [IntSpecifier] (SimpleVar "x"), 
            ParamDecl [IntSpecifier] (SimpleVar "y"),
            ParamDecl [IntSpecifier] (ArrayVar "a" (Just "5"))
-           ], [] )
+           ], CompoundStmt [] [] )
 
 tu3 :: TranslationUnit
 tu3 = [FuncDefExtDecl decl3]
@@ -139,5 +172,76 @@ test3 =
 tu4 :: TranslationUnit
 tu4 = [DeclExtDecl decl1,
         DeclExtDecl decl2, 
-        FuncDefExtDecl decl3]   
-        
+        FuncDefExtDecl decl3,
+        DeclExtDecl decl4]   
+
+decl4 :: Decl
+decl4 = ( [IntSpecifier], 
+          [DeclItem (SimpleVar "w") (Just "123")] )
+
+test4 = 
+    compile tu4 
+        ==
+            (
+            ExtendEnv "w" 
+                (UCsym 1 15 1, [IntSpecifier], Just 123)
+                (
+                ExtendFuncEnv "f"
+                    (
+                    [IntSpecifier],
+                    "f",
+                    [ (UCsym 2 1 1, IntSpecifier)
+                    , (UCsym 2 2 1, IntSpecifier)
+                    , (UCsym 2 3 5, IntSpecifier)
+                    ]
+                    )
+                    (
+                    ExtendEnv "a"
+                        (UCsym 1 10 5, [ConstQualifier, IntSpecifier], Nothing)
+                        (
+                        ExtendEnv "x"
+                            (UCsym 1 9 1, [ConstQualifier, IntSpecifier], Just 10)
+                            (
+                            ExtendEnv "z"
+                                (UCsym 1 8 1, [IntSpecifier], Nothing)
+                                (
+                                ExtendEnv "a"
+                                    (UCsym 1 3 5, [IntSpecifier], Nothing)
+                                    (
+                                    ExtendEnv "y"
+                                        (UCsym 1 2 1, [IntSpecifier], Nothing)
+                                        (
+                                        ExtendEnv "x"
+                                            (UCsym 1 1 1, [IntSpecifier], Just 10)
+                                            EmptyEnv
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                ),
+            16,
+            [ MemDeclInfo
+                [ (UCsym 1 1 1, [IntSpecifier], Just 10)
+                , (UCsym 1 2 1, [IntSpecifier], Nothing)
+                , (UCsym 1 3 5, [IntSpecifier], Nothing)
+                , (UCsym 1 8 1, [IntSpecifier], Nothing)
+                ],
+                MemDeclInfo
+                [ (UCsym 1 9 1, [ConstQualifier, IntSpecifier], Just 10)
+                , (UCsym 1 10 5, [ConstQualifier, IntSpecifier], Nothing)
+                ],
+                FuncDeclInfo
+                ( [IntSpecifier],
+                    "f",
+                    [ (UCsym 2 1 1, IntSpecifier)
+                    , (UCsym 2 2 1, IntSpecifier)
+                    , (UCsym 2 3 5, IntSpecifier)
+                    ]
+                ),
+                MemDeclInfo
+                [ (UCsym 1 15 1, [IntSpecifier], Just 123)
+                ]
+            ]
+            )        

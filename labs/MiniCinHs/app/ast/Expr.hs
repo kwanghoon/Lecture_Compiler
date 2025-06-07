@@ -151,7 +151,7 @@ data ExternDecl =
   deriving (Show, Eq)
 
 type FuncName = String
-type FuncDef = (DeclSpec, FuncName, ParamDeclList, StmtList)
+type FuncDef = (DeclSpec, FuncName, ParamDeclList, Stmt)
 type FuncHeader = (DeclSpec, FuncName, ParamDeclList)
 
 -- 
