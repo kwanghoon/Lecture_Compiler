@@ -19,7 +19,14 @@ data Env =
     EmptyEnv   
   | ExtendEnv String (UCInstr, DeclSpec, Maybe Int) Env 
   | ExtendFuncEnv String (DeclSpec, FuncName, [(UCInstr,DeclSpecifier)], [UCInstr]) Env
-  deriving (Show, Eq) 
+  deriving (Show, Eq)
+
+applyEnv :: Env -> String -> (Level, Offset)
+applyEnv EmptyEnv x = error $ "Not found: " ++ x
+applyEnv (ExtendEnv y (UCsym level offset size, _, _) env) x
+    | x == y = (level, offset)
+    | otherwise = applyEnv env x 
+applyEnv (ExtendFuncEnv f _ env) x = applyEnv env x
 
 -- Todo: Environment handling!!
 
@@ -348,11 +355,20 @@ compExpr (LogicalNot expr) env ul = compUnaryExpr expr UCnot env ul
 compExpr (PreIncrement expr) env ul = (env, ul, [])
 compExpr (PreDecrement expr) env ul = (env, ul, [])
 compExpr (ArrayIndex expr1 expr2) env ul = (env, ul, [])
-compExpr (Call expr exprList) env ul = (env, ul, [])
+
+compExpr (Call (Identifier "read") exprList) env ul = (env, ul, [])
+compExpr (Call (Identifier "write") exprList) env ul = (env, ul, [])
+compExpr (Call (Identifier "lf") exprList) env ul = (env, ul, [])
+compExpr (Call (Identifier f) exprList) env ul = (env, ul, [])
+compExpr (Call expr exprList) env ul = 
+    error $ "unsupported call: " ++ show expr
+    
 compExpr (PostIncrement expr) env ul = (env, ul, [])
 compExpr (PostDecrement expr) env ul = (env, ul, [])
-compExpr (Identifier str) env ul = (env, ul, [])
-compExpr (Number str) env ul = (env, ul, [])
+compExpr (Identifier x) env ul =
+    let (level, offset) = applyEnv env x in (env, ul, [UClod level offset])
+compExpr (Number str) env ul = 
+    let n = read str :: Int in (env, ul, [UCldc n])
 
 compBinExpr :: Expr -> Expr -> UCInstr 
     -> Env -> UniqLabel -> (Env, UniqLabel, [UCInstr])
