@@ -6,5 +6,5 @@ int g() {
 void f() {
 }
 
-const int h() {
+int h() {
 }

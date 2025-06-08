@@ -7,8 +7,24 @@ import UCode
 
 type UCodeUnit = [UCInstr]
 
-compile :: TranslationUnit -> (Env, Offset, [DeclInfo])
-compile tu = comp tu EmptyEnv 1 1  -- level 1, offset 1
+compile :: TranslationUnit -> [UCInstr]
+compile tu = 
+    let (_,_,declInfos) = compile' tu  -- level 1, offset 1
+    in codeGenFunc declInfos ++ codeGenMain declInfos 0
+
+compile' tu = comp tu EmptyEnv 1 1
+
+codeGenFunc :: [DeclInfo] -> [UCInstr]
+codeGenFunc [] = []
+codeGenFunc (MemDeclInfo memdeclinfo : rest) = codeGenFunc rest
+codeGenFunc (FuncDeclInfo (_, _, _, ucinstrs) : rest) = ucinstrs ++ codeGenFunc rest
+
+codeGenMain :: [DeclInfo] -> Int -> [UCInstr]
+codeGenMain [] n = [UCbgn n, UCldp, UCcall "main", UCend]
+codeGenMain (MemDeclInfo memdeclinfos : rest) n = 
+    let (s, _)= size memdeclinfos in codeGenMain rest (n+s)
+codeGenMain (FuncDeclInfo _ : rest) n =  codeGenMain rest n
+
 
 data DeclInfo =
     MemDeclInfo [(UCInstr, DeclSpec, Maybe Int)] -- Memory declarations
@@ -27,8 +43,6 @@ applyEnv (ExtendEnv y (UCsym level offset size, _, _) env) x
     | x == y = (level, offset)
     | otherwise = applyEnv env x 
 applyEnv (ExtendFuncEnv f _ env) x = applyEnv env x
-
--- Todo: Environment handling!!
 
 comp :: TranslationUnit -> Env -> Level -> Offset -> (Env, Offset, [DeclInfo])
 comp [] env level offset = (env, offset, [])
@@ -112,7 +126,7 @@ tu1 :: TranslationUnit
 tu1 = [DeclExtDecl decl1]
 
 test1 = 
-    let (_, _, memdeclinfo) = compile tu1 in
+    let (_, _, memdeclinfo) = compile' tu1 in
         memdeclinfo == [ MemDeclInfo
                         [(UCsym 1 1 1,[IntSpecifier],Just 10),
                         (UCsym 1 2 1,[IntSpecifier],Nothing),
@@ -128,7 +142,7 @@ tu2 :: TranslationUnit
 tu2 = [DeclExtDecl decl2]           
 
 test2 = 
-    let (_, _, memdeclinfo) = compile tu2 in
+    let (_, _, memdeclinfo) = compile' tu2 in
         memdeclinfo == [ MemDeclInfo
                         [(UCsym 1 1 1,[ConstQualifier,IntSpecifier],Just 10),
                         (UCsym 1 2 5,[ConstQualifier,IntSpecifier],Nothing)] ]
@@ -147,12 +161,20 @@ compFuncDefHeader (spec, fname, params, stmt) env level offset
                     (env1, 1, []) (parmsToDecl params)    -- env1 for recursion
             funcdefinfo = (spec, fname, 
                 [ (ucinstr, head spec) | (ucinstr, spec, _) <- memdeclinfo3 ],
-                ucinstrs )
+                ucinstrs1 )
             env1 = ExtendFuncEnv fname funcdefinfo env
             (_,_,ucinstrs)= compStmt stmt env1 (level, offset, 1)
+            (n, ucsyms) = size memdeclinfo3
+            ucinstrs1 = [UCproc n 1 (level+1)] ++ ucsyms ++ ucinstrs ++ [UCend] -- Todo: block number?
         in ( env1, offset, funcdefinfo )
             
     | otherwise = error $ "invalid or unsupported function return type" ++ show spec
+
+
+size :: [(UCInstr, DeclSpec, Maybe Int)] -> (Int, [UCInstr])
+size [] = (0, [])
+size ((instr@(UCsym _ _ s),_,_) : rest) = 
+    let (s', ucinstrs) = size rest in (s + s', instr:ucinstrs)
 
 isIntOrVoid :: DeclSpec -> Bool
 isIntOrVoid [IntSpecifier] = True
@@ -176,7 +198,7 @@ tu3 :: TranslationUnit
 tu3 = [FuncDefExtDecl decl3]
 
 test3 = 
-    compile tu3
+    compile' tu3
 
 --
 tu4 :: TranslationUnit
@@ -190,7 +212,7 @@ decl4 = ( [IntSpecifier],
           [DeclItem (SimpleVar "w") (Just "123")] )
 
 test4 = 
-    compile tu4 
+    compile' tu4 
         ==
             (
             ExtendEnv "w" 
@@ -262,7 +284,7 @@ test4 =
 
 type UniqLabel = (Level, Offset, Int)
 
--- 
+-- Sect. 10.4.4 문장
 compStmt :: Stmt -> Env -> UniqLabel -> (Env, UniqLabel, [UCInstr])
 compStmt (CompoundStmt _ stmtList) env ul =  -- Todo: declList
     let -- foldl :: (b -> a -> b) -> b -> [a] -> b
@@ -335,6 +357,7 @@ compStmt (ReturnStmt (Just expr)) env ul =
     let (env1, ul1, ucinstrsVal) = compExpr expr env ul
     in  (env, ul, [UCcomment ( "return " ++ show expr)] ++ ucinstrsVal ++ [UCretv])
 
+-- Sect. 10.4.3 식
 compExpr :: Expr -> Env -> UniqLabel -> (Env, UniqLabel, [UCInstr])
 compExpr (Assign lhs expr) env ul =
     let (env1, ul1, ucinstrs1) = compExpr expr env ul 

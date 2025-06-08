@@ -60,3 +60,59 @@ data UCInstr
   
   | UCcomment String -- comment for debugging
   deriving (Show, Eq) 
+
+pprintUCode :: UCInstr -> String
+pprintUCode instr = case instr of
+  UCnop label     -> label ++ ": nop"
+  _               -> replicate 10 ' ' ++ format instr
+  where
+    format i = case i of
+      UCnot           -> "not"
+      UCneg           -> "neg"
+      UCinc           -> "inc"
+      UCdec           -> "dec"
+      UCdup           -> "dup"
+      UCswp           -> "swp"
+
+      UCadd           -> "add"
+      UCsub           -> "sub"
+      UCmult          -> "mult"
+      UCdiv           -> "div"
+      UCmod           -> "mod"
+
+      UCand           -> "and"
+      UCor            -> "or"
+      UCgt            -> "gt"
+      UClt            -> "lt"
+      UCge            -> "ge"
+      UCle            -> "le"
+      UCeq            -> "eq"
+      UCne            -> "ne"
+
+      UClod l o       -> "lod " ++ show l ++ " " ++ show o
+      UCldc v         -> "ldc " ++ show v
+      UClda l o       -> "lda " ++ show l ++ " " ++ show o
+      UCldi           -> "ldi"
+      UCldp           -> "ldp"
+
+      UCstr l o       -> "str " ++ show l ++ " " ++ show o
+      UCsti           -> "sti"
+      UCujp label     -> "ujp " ++ label
+      UCtjp label     -> "tjp " ++ label
+      UCfjp label     -> "fjp " ++ label
+
+      UCcall name     -> "call " ++ name
+      UCret           -> "ret"
+      UCretv          -> "retv"
+      UCchkh          -> "chkh"
+      UCchkl          -> "chkl"
+
+      UCproc p b l    -> "proc " ++ show p ++ " " ++ show b ++ " " ++ show l
+      UCend           -> "end"
+      UCbgn size      -> "bgn " ++ show size
+      UCsym l o s     -> "sym " ++ show l ++ " " ++ show o ++ " " ++ show s
+
+      UCdump          -> "dump"
+      UCnone          -> "none"
+      UCcomment str   -> "// " ++ str
+      _               -> error "Unhandled instruction in format"

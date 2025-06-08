@@ -352,10 +352,17 @@ void Assemble::assemble()
    int n;
 
 
-   cout << " == Assembling ... ==" << '\n';
+   cout << " == Assembling!! ... ==" << '\n';
    while (!inputFile.eof() && !inputFile.fail() && !end) {
         instrCnt++; bufIndex = 0;
         inputFile.getline(lineBuffer, sizeof(lineBuffer));
+
+    if (lineBuffer[0] == '#') { // comment line
+            instrCnt--;
+            continue; 
+    }
+
+    cout << "|" << lineBuffer << "|" << endl;
 
     if (!isspace(lineBuffer[0])) {
             getLabel();
