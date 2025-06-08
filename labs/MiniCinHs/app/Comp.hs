@@ -275,7 +275,9 @@ compStmt (CompoundStmt _ stmtList) env ul =  -- Todo: declList
     in (env3, ul3, ucinstrs3)
 
 compStmt (ExprStmt Nothing) env ul = (env, ul, [])
-compStmt (ExprStmt (Just expr)) env ul = compExpr expr env ul
+compStmt (ExprStmt (Just expr)) env ul = 
+    let (env1, ul1, ucinstrs1) = compExpr expr env ul in 
+    (env1, ul1, UCcomment (show expr) : ucinstrs1)
 
 compStmt (IfStmt expr stmt Nothing) env ul =
     let (env1, ul1, ucinstrsCond) = compExpr expr env ul
@@ -300,6 +302,7 @@ compStmt (IfStmt expr stmt (Just elseStmt)) env ul =
         labelNextInstr = UCnop labelNext
         (env3, ul3, ucinstrsElse) = compStmt elseStmt env2 ul2'
     in (env3, ul3, 
+            [UCcomment ("if " ++ show expr)] ++   
             ucinstrsCond 
                 ++ [jumpToElseOnFalse] 
                 ++ ucinstrsThen 
@@ -320,20 +323,31 @@ compStmt (WhileStmt expr stmt) env ul =
         jumpToEntry = UCujp labelEntry
     in (env2, ul2', 
             [labelEntryInstr]
+                ++ [UCcomment ("while " ++ show expr)]
                 ++ ucinstrsCond
                 ++ [jumpToExitOnFalse]
                 ++ ucinstrsBody
                 ++ [jumpToEntry]
                 ++ [labelExitInstr])
 
-compStmt (ReturnStmt Nothing) env ul = (env, ul, [UCret])
+compStmt (ReturnStmt Nothing) env ul = (env, ul, [UCcomment "return", UCret])
 compStmt (ReturnStmt (Just expr)) env ul = 
     let (env1, ul1, ucinstrsVal) = compExpr expr env ul
-    in  (env, ul, ucinstrsVal ++ [UCretv])
+    in  (env, ul, [UCcomment ( "return " ++ show expr)] ++ ucinstrsVal ++ [UCretv])
 
 compExpr :: Expr -> Env -> UniqLabel -> (Env, UniqLabel, [UCInstr])
-compExpr (Assign expr1 expr2) env ul = (env, ul, [])
-compExpr (AssignOp op expr1 expr2) env ul = (env, ul, [])
+compExpr (Assign lhs expr) env ul =
+    let (env1, ul1, ucinstrs1) = compExpr expr env ul 
+        (env2, ul2, ucinstrs2) = compLhsExpr lhs env1 ul1
+    in (env2, ul2, ucinstrs1 ++ ucinstrs2)
+
+compExpr (AssignOp op lhs expr) env ul =
+    let rhs = lhs
+        (env1, ul1, ucinstrs1) = compExpr rhs env ul
+        (env2, ul2, ucinstrs2) = compExpr expr env1 ul1
+        (env3, ul3, ucinstrs3) = compLhsExpr lhs env2 ul2
+        ucinstrsOp = opToUninstrs op 
+    in (env3, ul3, ucinstrs1 ++ ucinstrs2 ++ ucinstrsOp ++ ucinstrs3)
 
 compExpr (Add expr1 expr2) env ul = compBinExpr expr1 expr2 UCadd env ul
 compExpr (Sub expr1 expr2) env ul = compBinExpr expr1 expr2 UCsub env ul
@@ -352,19 +366,44 @@ compExpr (LessThanOrEqualTo expr1 expr2) env ul = compBinExpr expr1 expr2 UCle e
 compExpr (UnaryMinus expr) env ul = compUnaryExpr expr UCneg env ul 
 compExpr (LogicalNot expr) env ul = compUnaryExpr expr UCnot env ul
 
-compExpr (PreIncrement expr) env ul = (env, ul, [])
-compExpr (PreDecrement expr) env ul = (env, ul, [])
-compExpr (ArrayIndex expr1 expr2) env ul = (env, ul, [])
+compExpr (PreIncrement expr) env ul = 
+    let (env1, ul1, ucinstrs1) = compExpr expr env ul
+        (env2, ul2, ucinstrs2) = compLhsExpr expr env1 ul1
+    in (env2, ul2, ucinstrs1 ++ [UCinc, UCdup] ++ ucinstrs2)
+compExpr (PreDecrement expr) env ul =
+    let (env1, ul1, ucinstrs1) = compExpr expr env ul
+        (env2, ul2, ucinstrs2) = compLhsExpr expr env1 ul1
+    in (env2, ul2, ucinstrs1 ++ [UCdec, UCdup] ++ ucinstrs2)
 
-compExpr (Call (Identifier "read") exprList) env ul = (env, ul, [])
-compExpr (Call (Identifier "write") exprList) env ul = (env, ul, [])
-compExpr (Call (Identifier "lf") exprList) env ul = (env, ul, [])
-compExpr (Call (Identifier f) exprList) env ul = (env, ul, [])
+compExpr (ArrayIndex (Identifier x) expr) env ul =
+    let (env, ul, ucinstrs) = 
+            compLhsExpr (ArrayIndex (Identifier x) expr) env ul
+    in (env, ul, ucinstrs ++ [UCldi])  -- load indirect
+compExpr (ArrayIndex _ _) env ul =
+    error "compExpr: unsupported left-hand side expression"
+
+compExpr (Call (Identifier f@"read") [Identifier x]) env ul =
+    let (level, offset) = applyEnv env x 
+    in (env, ul, [UCldp, UClda level offset] ++ [UCcall f])
+compExpr (Call (Identifier f@"write") exprList) env ul =
+    let (env1, ul1, ucinstrs1)= compArgs exprList env ul
+    in (env1, ul1, [UCldp] ++ ucinstrs1 ++ [UCcall f])
+compExpr (Call (Identifier f@"lf") []) env ul = (env, ul, [UCcall f])
+compExpr (Call (Identifier f) exprList) env ul = 
+    let (env1, ul1, ucinstrs1)= compArgs exprList env ul
+    in (env1, ul1, [UCldp] ++ ucinstrs1 ++ [UCcall f])
 compExpr (Call expr exprList) env ul = 
     error $ "unsupported call: " ++ show expr
     
-compExpr (PostIncrement expr) env ul = (env, ul, [])
-compExpr (PostDecrement expr) env ul = (env, ul, [])
+compExpr (PostIncrement expr) env ul =
+    let (env1, ul1, ucinstrs1) = compExpr expr env ul
+        (env2, ul2, ucinstrs2) = compLhsExpr expr env1 ul1
+    in (env2, ul2, ucinstrs1 ++ [UCdup, UCinc] ++ ucinstrs2)
+compExpr (PostDecrement expr) env ul =
+    let (env1, ul1, ucinstrs1) = compExpr expr env ul
+        (env2, ul2, ucinstrs2) = compLhsExpr expr env1 ul1
+    in (env2, ul2, ucinstrs1 ++ [UCdup, UCdec] ++ ucinstrs2)
+
 compExpr (Identifier x) env ul =
     let (level, offset) = applyEnv env x in (env, ul, [UClod level offset])
 compExpr (Number str) env ul = 
@@ -383,6 +422,37 @@ compUnaryExpr expr ucinstr env ul =
     let (env1, ul1, ucinstrs1) = compExpr expr env ul 
     in (env1, ul1, ucinstrs1 ++ [ucinstr])     
 
+compLhsExpr :: Expr -> Env -> UniqLabel -> (Env, UniqLabel, [UCInstr])
+compLhsExpr (Identifier x) env ul = 
+    let (level, offset) = applyEnv env x in 
+        (env, ul, [UCstr level offset])
+
+compLhsExpr (ArrayIndex (Identifier x) expr) env ul = 
+    let (env1, ul1, ucinstrs1) = compExpr expr env ul
+        (level, offset) = applyEnv env x
+        loadArr = UClda level offset
+    in (env1, ul1, ucinstrs1 ++ [UClda level offset, UCadd, UCsti])
+
+compLhsExpr _ _ _ = 
+    error "compLhsExpr: unsupported left-hand side expression"
+
+compArgs :: ExprList -> Env -> UniqLabel -> (Env, UniqLabel, [UCInstr])
+compArgs [] env ul = (env, ul, [])
+compArgs (expr : rest) env ul =
+    let (env1, ul1, ucinstrs1) = compExpr expr env ul
+        (env2, ul2, ucinstrs2) = compArgs rest env1 ul1
+    in (env2, ul2, ucinstrs1 ++ ucinstrs2)    
+
 genLabel :: UniqLabel -> (String, UniqLabel)
 genLabel (level, offset, n) = (lbl, (level, offset, n+1))
     where lbl = show level ++ ":" ++ show offset ++ ":" ++ show n
+
+opToUninstrs :: String -> [UCInstr]
+opToUninstrs op = 
+    case op of
+        "+=" -> [UCadd]
+        "-=" -> [UCsub]
+        "*=" -> [UCmult]
+        "/=" -> [UCdiv]
+        "%=" -> [UCmod]
+        _    -> error $ "Unsupported operator " ++ op

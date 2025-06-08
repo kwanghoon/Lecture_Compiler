@@ -34,11 +34,11 @@ data UCInstr
   | UClod Int Int  -- lod 1 1
   | UCldc Int      -- ldc 100
   | UClda Int Int  -- lda 
-  | UCldi          -- ldi
+  | UCldi          -- ldi (load indirect)
   | UCldp          -- ldp (load parameter)
 
   | UCstr Int Int  -- str 1 3 
-  | UCsti          -- sti
+  | UCsti          -- sti (store indirect)
   | UCujp String   -- ujp loop
   | UCtjp String   -- tjp exit
   | UCfjp String   -- fjp next
@@ -57,4 +57,6 @@ data UCInstr
 
   | UCdump 
   | UCnone
+  
+  | UCcomment String -- comment for debugging
   deriving (Show, Eq) 
