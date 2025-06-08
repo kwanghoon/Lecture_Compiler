@@ -163,7 +163,8 @@ compFuncDefHeader (spec, fname, params, stmt) env level offset
                 [ (ucinstr, head spec) | (ucinstr, spec, _) <- memdeclinfo3 ],
                 ucinstrs1 )
             env1 = ExtendFuncEnv fname funcdefinfo env
-            (_,_,ucinstrs)= compStmt stmt env1 (level, offset, 1)
+            env4 = ExtendFuncEnv fname funcdefinfo env3
+            (_,_,ucinstrs)= compStmt stmt env4 (level, offset, 1)
             (n, ucsyms) = size memdeclinfo3
             ucinstrs1 = [UCproc n 1 (level+1)] ++ ucsyms ++ ucinstrs ++ [UCend] -- Todo: block number?
         in ( env1, offset, funcdefinfo )
@@ -286,15 +287,25 @@ type UniqLabel = (Level, Offset, Int)
 
 -- Sect. 10.4.4 문장
 compStmt :: Stmt -> Env -> UniqLabel -> (Env, UniqLabel, [UCInstr])
-compStmt (CompoundStmt _ stmtList) env ul =  -- Todo: declList
-    let -- foldl :: (b -> a -> b) -> b -> [a] -> b
-        (env3, ul3, ucinstrs3) =
+compStmt (CompoundStmt declList stmtList) env ul =
+    let (level, offset, n)= ul
+        -- foldl :: (b -> a -> b) -> b -> [a] -> b
+        (env3, offset3, memdeclinfo3) = 
+            foldl (\triple decl -> 
+                    let (env1, offset1, memdeclinfo1) = triple
+                        (env2, offset2, memdeclinfo2) = compDecl decl env1 (level+1) offset1
+                    in  (env2, offset2, memdeclinfo1 ++ memdeclinfo2) )
+                (env, offset, []) declList
+        
+        ul3 = (level, offset3, n)
+
+        (env6, ul6, ucinstrs6) =
             foldl (\triple stmt ->
-                    let (env1, ul1, ucinstrs1) = triple
-                        (env2, ul2, ucinstrs2) = compStmt stmt env1 ul1 
-                    in  (env2, ul2, ucinstrs1 ++ ucinstrs2) )
-                (env, ul, []) stmtList 
-    in (env3, ul3, ucinstrs3)
+                    let (env4, ul4, ucinstrs4) = triple
+                        (env5, ul5, ucinstrs5) = compStmt stmt env4 ul4
+                    in  (env5, ul5, ucinstrs4 ++ ucinstrs5) )
+                (env3, ul3, []) stmtList 
+    in (env6, ul6, ucinstrs6)
 
 compStmt (ExprStmt Nothing) env ul = (env, ul, [])
 compStmt (ExprStmt (Just expr)) env ul = 
@@ -399,9 +410,10 @@ compExpr (PreDecrement expr) env ul =
     in (env2, ul2, ucinstrs1 ++ [UCdec, UCdup] ++ ucinstrs2)
 
 compExpr (ArrayIndex (Identifier x) expr) env ul =
-    let (env, ul, ucinstrs) = 
-            compLhsExpr (ArrayIndex (Identifier x) expr) env ul
-    in (env, ul, ucinstrs ++ [UCldi])  -- load indirect
+    let (env1, ul1, ucinstrs1) = compExpr expr env ul
+        (level, offset) = applyEnv env1 x
+        loadArr = UClda level offset
+    in (env1, ul1, ucinstrs1 ++ [loadArr, UCadd, UCldi])  -- load indirect
 compExpr (ArrayIndex _ _) env ul =
     error "compExpr: unsupported left-hand side expression"
 
@@ -436,7 +448,7 @@ compBinExpr :: Expr -> Expr -> UCInstr
     -> Env -> UniqLabel -> (Env, UniqLabel, [UCInstr])
 compBinExpr expr1 expr2 ucinstr env ul = 
     let (env1, ul1, ucinstrs1) = compExpr expr1 env ul 
-        (env2, ul2, ucinstrs2) = compExpr expr2 env ul1 
+        (env2, ul2, ucinstrs2) = compExpr expr2 env1 ul1 
     in (env2, ul2, ucinstrs1 ++ ucinstrs2 ++ [ucinstr]) 
 
 compUnaryExpr :: Expr -> UCInstr 
@@ -468,7 +480,7 @@ compArgs (expr : rest) env ul =
 
 genLabel :: UniqLabel -> (String, UniqLabel)
 genLabel (level, offset, n) = (lbl, (level, offset, n+1))
-    where lbl = show level ++ ":" ++ show offset ++ ":" ++ show n
+    where lbl = show level ++ "_" ++ show offset ++ "_" ++ show n
 
 opToUninstrs :: String -> [UCInstr]
 opToUninstrs op = 

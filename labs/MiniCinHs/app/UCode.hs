@@ -63,7 +63,7 @@ data UCInstr
 
 pprintUCode :: UCInstr -> String
 pprintUCode instr = case instr of
-  UCnop label     -> label ++ ": nop"
+  UCnop label     -> label ++ ":"
   _               -> replicate 10 ' ' ++ format instr
   where
     format i = case i of
