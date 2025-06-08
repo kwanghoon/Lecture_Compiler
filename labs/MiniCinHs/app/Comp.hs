@@ -327,21 +327,24 @@ compStmt (ReturnStmt (Just expr)) env ul =
 compExpr :: Expr -> Env -> UniqLabel -> (Env, UniqLabel, [UCInstr])
 compExpr (Assign expr1 expr2) env ul = (env, ul, [])
 compExpr (AssignOp op expr1 expr2) env ul = (env, ul, [])
-compExpr (Add expr1 expr2) env ul = (env, ul, [])
-compExpr (Sub expr1 expr2) env ul = (env, ul, [])
-compExpr (Mul expr1 expr2) env ul = (env, ul, [])
-compExpr (Div expr1 expr2) env ul = (env, ul, [])
-compExpr (Mod expr1 expr2) env ul = (env, ul, [])
-compExpr (LogicalOr expr1 expr2) env ul = (env, ul, [])
-compExpr (LogicalAnd expr1 expr2) env ul = (env, ul, [])
-compExpr (LogicalNot expr) env ul = (env, ul, [])
-compExpr (Equal expr1 expr2) env ul = (env, ul, [])
-compExpr (NotEqual expr1 expr2) env ul = (env, ul, [])
-compExpr (GreaterThan expr1 expr2) env ul = (env, ul, [])
-compExpr (LessThan expr1 expr2) env ul = (env, ul, [])
-compExpr (GreaterThanOrEqualTo expr1 expr2) env ul = (env, ul, [])
-compExpr (LessThanOrEqualTo expr1 expr2) env ul = (env, ul, [])
-compExpr (UnaryMinus expr) env ul = (env, ul, [])
+
+compExpr (Add expr1 expr2) env ul = compBinExpr expr1 expr2 UCadd env ul
+compExpr (Sub expr1 expr2) env ul = compBinExpr expr1 expr2 UCsub env ul
+compExpr (Mul expr1 expr2) env ul = compBinExpr expr1 expr2 UCmult env ul
+compExpr (Div expr1 expr2) env ul = compBinExpr expr1 expr2 UCdiv env ul
+compExpr (Mod expr1 expr2) env ul = compBinExpr expr1 expr2 UCmod env ul
+compExpr (LogicalOr expr1 expr2) env ul = compBinExpr expr1 expr2 UCor env ul
+compExpr (LogicalAnd expr1 expr2) env ul = compBinExpr expr1 expr2 UCand env ul
+compExpr (Equal expr1 expr2) env ul = compBinExpr expr1 expr2 UCeq env ul
+compExpr (NotEqual expr1 expr2) env ul = compBinExpr expr1 expr2 UCne env ul
+compExpr (GreaterThan expr1 expr2) env ul = compBinExpr expr1 expr2 UCgt env ul
+compExpr (LessThan expr1 expr2) env ul = compBinExpr expr1 expr2 UClt env ul
+compExpr (GreaterThanOrEqualTo expr1 expr2) env ul = compBinExpr expr1 expr2 UCge env ul
+compExpr (LessThanOrEqualTo expr1 expr2) env ul = compBinExpr expr1 expr2 UCle env ul
+
+compExpr (UnaryMinus expr) env ul = compUnaryExpr expr UCneg env ul 
+compExpr (LogicalNot expr) env ul = compUnaryExpr expr UCnot env ul
+
 compExpr (PreIncrement expr) env ul = (env, ul, [])
 compExpr (PreDecrement expr) env ul = (env, ul, [])
 compExpr (ArrayIndex expr1 expr2) env ul = (env, ul, [])
@@ -350,6 +353,19 @@ compExpr (PostIncrement expr) env ul = (env, ul, [])
 compExpr (PostDecrement expr) env ul = (env, ul, [])
 compExpr (Identifier str) env ul = (env, ul, [])
 compExpr (Number str) env ul = (env, ul, [])
+
+compBinExpr :: Expr -> Expr -> UCInstr 
+    -> Env -> UniqLabel -> (Env, UniqLabel, [UCInstr])
+compBinExpr expr1 expr2 ucinstr env ul = 
+    let (env1, ul1, ucinstrs1) = compExpr expr1 env ul 
+        (env2, ul2, ucinstrs2) = compExpr expr2 env ul1 
+    in (env2, ul2, ucinstrs1 ++ ucinstrs2 ++ [ucinstr]) 
+
+compUnaryExpr :: Expr -> UCInstr 
+    -> Env -> UniqLabel -> (Env, UniqLabel, [UCInstr])
+compUnaryExpr expr ucinstr env ul = 
+    let (env1, ul1, ucinstrs1) = compExpr expr env ul 
+    in (env1, ul1, ucinstrs1 ++ [ucinstr])     
 
 genLabel :: UniqLabel -> (String, UniqLabel)
 genLabel (level, offset, n) = (lbl, (level, offset, n+1))
