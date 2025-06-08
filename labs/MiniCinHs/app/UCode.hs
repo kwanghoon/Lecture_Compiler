@@ -49,7 +49,7 @@ data UCInstr
   | UCchkh 
   | UCchkl
 
-  | UCnop              -- nop
+  | UCnop  String      -- label: nop
   | UCproc Int Int Int -- proc 5 2 2 (size of params, block #, level)
   | UCend              -- end
   | UCbgn Int          -- bgn 2 (size of variables)

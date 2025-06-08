@@ -142,7 +142,7 @@ compFuncDefHeader (spec, fname, params, stmt) env level offset
                 [ (ucinstr, head spec) | (ucinstr, spec, _) <- memdeclinfo3 ],
                 ucinstrs )
             env1 = ExtendFuncEnv fname funcdefinfo env
-            (_,_,ucinstrs)= compStmt stmt env1 level offset
+            (_,_,ucinstrs)= compStmt stmt env1 (level, offset, 1)
         in ( env1, offset, funcdefinfo )
             
     | otherwise = error $ "invalid or unsupported function return type" ++ show spec
@@ -253,10 +253,104 @@ test4 =
             ]
             )        
 
+type UniqLabel = (Level, Offset, Int)
+
 -- 
-compStmt :: Stmt -> Env -> Level -> Offset -> (Env, Offset, [UCInstr])
-compStmt (CompoundStmt declList stmtList) env level offset = (env, offset, [])
-compStmt (ExprStmt maybeExpr) env level offset = (env, offset, [])
-compStmt (IfStmt expr stmt maybeStmt) env level offset = (env, offset, [])
-compStmt (WhileStmt expr stmt) env level offset = (env, offset, [])
-compStmt (ReturnStmt maybeExpr) env level offset = (env, offset, [])
+compStmt :: Stmt -> Env -> UniqLabel -> (Env, UniqLabel, [UCInstr])
+compStmt (CompoundStmt _ stmtList) env ul =  -- Todo: declList
+    let -- foldl :: (b -> a -> b) -> b -> [a] -> b
+        (env3, ul3, ucinstrs3) =
+            foldl (\triple stmt ->
+                    let (env1, ul1, ucinstrs1) = triple
+                        (env2, ul2, ucinstrs2) = compStmt stmt env1 ul1 
+                    in  (env2, ul2, ucinstrs1 ++ ucinstrs2) )
+                (env, ul, []) stmtList 
+    in (env3, ul3, ucinstrs3)
+
+compStmt (ExprStmt Nothing) env ul = (env, ul, [])
+compStmt (ExprStmt (Just expr)) env ul = compExpr expr env ul
+
+compStmt (IfStmt expr stmt Nothing) env ul =
+    let (env1, ul1, ucinstrsCond) = compExpr expr env ul
+        (labelNext, ul1')= genLabel ul1
+        (env2, ul2, ucinstrsThen) = compStmt stmt env1 ul1'
+        jumpToNextOnFalse = UCfjp labelNext
+        labelNextInstr = UCnop labelNext
+    in (env2, ul2, 
+            ucinstrsCond 
+                ++ [jumpToNextOnFalse] 
+                ++ ucinstrsThen
+                ++ [labelNextInstr])
+
+compStmt (IfStmt expr stmt (Just elseStmt)) env ul =
+    let (env1, ul1, ucinstrsCond) = compExpr expr env ul
+        (labelElse, ul1')= genLabel ul1
+        (env2, ul2, ucinstrsThen) = compStmt stmt env1 ul1'
+        (labelNext, ul2') = genLabel ul2 
+        jumpToElseOnFalse = UCfjp labelElse
+        labelElseInstr = UCnop labelElse
+        jumpToNext = UCujp labelNext
+        labelNextInstr = UCnop labelNext
+        (env3, ul3, ucinstrsElse) = compStmt elseStmt env2 ul2'
+    in (env3, ul3, 
+            ucinstrsCond 
+                ++ [jumpToElseOnFalse] 
+                ++ ucinstrsThen 
+                ++ [jumpToNext]
+                ++ [labelElseInstr]
+                ++ ucinstrsElse
+                ++ [labelNextInstr] )
+
+
+compStmt (WhileStmt expr stmt) env ul =
+    let (labelEntry, ul') = genLabel ul
+        labelEntryInstr = UCnop labelEntry 
+        (env1, ul1, ucinstrsCond) = compExpr expr env ul'
+        (env2, ul2, ucinstrsBody) = compStmt stmt env1 ul1
+        (labelExit, ul2') = genLabel ul2 
+        labelExitInstr = UCnop labelExit 
+        jumpToExitOnFalse = UCfjp labelExit
+        jumpToEntry = UCujp labelEntry
+    in (env2, ul2', 
+            [labelEntryInstr]
+                ++ ucinstrsCond
+                ++ [jumpToExitOnFalse]
+                ++ ucinstrsBody
+                ++ [jumpToEntry]
+                ++ [labelExitInstr])
+
+compStmt (ReturnStmt Nothing) env ul = (env, ul, [UCret])
+compStmt (ReturnStmt (Just expr)) env ul = 
+    let (env1, ul1, ucinstrsVal) = compExpr expr env ul
+    in  (env, ul, ucinstrsVal ++ [UCretv])
+
+compExpr :: Expr -> Env -> UniqLabel -> (Env, UniqLabel, [UCInstr])
+compExpr (Assign expr1 expr2) env ul = (env, ul, [])
+compExpr (AssignOp op expr1 expr2) env ul = (env, ul, [])
+compExpr (Add expr1 expr2) env ul = (env, ul, [])
+compExpr (Sub expr1 expr2) env ul = (env, ul, [])
+compExpr (Mul expr1 expr2) env ul = (env, ul, [])
+compExpr (Div expr1 expr2) env ul = (env, ul, [])
+compExpr (Mod expr1 expr2) env ul = (env, ul, [])
+compExpr (LogicalOr expr1 expr2) env ul = (env, ul, [])
+compExpr (LogicalAnd expr1 expr2) env ul = (env, ul, [])
+compExpr (LogicalNot expr) env ul = (env, ul, [])
+compExpr (Equal expr1 expr2) env ul = (env, ul, [])
+compExpr (NotEqual expr1 expr2) env ul = (env, ul, [])
+compExpr (GreaterThan expr1 expr2) env ul = (env, ul, [])
+compExpr (LessThan expr1 expr2) env ul = (env, ul, [])
+compExpr (GreaterThanOrEqualTo expr1 expr2) env ul = (env, ul, [])
+compExpr (LessThanOrEqualTo expr1 expr2) env ul = (env, ul, [])
+compExpr (UnaryMinus expr) env ul = (env, ul, [])
+compExpr (PreIncrement expr) env ul = (env, ul, [])
+compExpr (PreDecrement expr) env ul = (env, ul, [])
+compExpr (ArrayIndex expr1 expr2) env ul = (env, ul, [])
+compExpr (Call expr exprList) env ul = (env, ul, [])
+compExpr (PostIncrement expr) env ul = (env, ul, [])
+compExpr (PostDecrement expr) env ul = (env, ul, [])
+compExpr (Identifier str) env ul = (env, ul, [])
+compExpr (Number str) env ul = (env, ul, [])
+
+genLabel :: UniqLabel -> (String, UniqLabel)
+genLabel (level, offset, n) = (lbl, (level, offset, n+1))
+    where lbl = show level ++ ":" ++ show offset ++ ":" ++ show n
