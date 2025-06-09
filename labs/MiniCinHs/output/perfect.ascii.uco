@@ -1,73 +1,74 @@
 main       proc    5       2       2       
+           sym     2       1       1       
            sym     2       2       1       
            sym     2       3       1       
            sym     2       4       1       
            sym     2       5       1       
-           sym     2       6       1       
+# Assign (Identifier "max") (Number "500")
+           ldc     500     
+           str     1       1       
 # Assign (Identifier "i") (Number "2")
            ldc     2       
-           str     2       2       
-2_7_1      nop
+           str     2       1       
+2_6_1      nop
 # while LessThanOrEqualTo (Identifier "i") (Identifier "max")
-           lod     2       2       
+           lod     2       1       
            lod     1       1       
            le
-           fjp     2_7_6
+           fjp     2_6_6
 # Assign (Identifier "sum") (Number "0")
            ldc     0       
-           str     2       6       
+           str     2       5       
 # Assign (Identifier "k") (Div (Identifier "i") (Number "2"))
-           lod     2       2       
+           lod     2       1       
            ldc     2       
            div
-           str     2       4       
+           str     2       3       
 # Assign (Identifier "j") (Number "1")
            ldc     1       
-           str     2       3       
-2_7_2      nop
+           str     2       2       
+2_6_2      nop
 # while LessThanOrEqualTo (Identifier "j") (Identifier "k")
-           lod     2       3       
-           lod     2       4       
-           le
-           fjp     2_7_4
-# Assign (Identifier "rem") (Mod (Identifier "i") (Identifier "j"))
            lod     2       2       
            lod     2       3       
+           le
+           fjp     2_6_4
+# Assign (Identifier "rem") (Mod (Identifier "i") (Identifier "j"))
+           lod     2       1       
+           lod     2       2       
            mod
-           str     2       5       
-           lod     2       5       
+           str     2       4       
+           lod     2       4       
            ldc     0       
            eq
-           fjp     2_7_3
+           fjp     2_6_3
 # AssignOp "+=" (Identifier "sum") (Identifier "j")
-           lod     2       6       
-           lod     2       3       
-           add
-           str     2       6       
-2_7_3      nop
-# PreIncrement (Identifier "j")
-           lod     2       3       
-           inc
-           dup
-           str     2       3       
-           ujp     2_7_2
-2_7_4      nop
+           lod     2       5       
            lod     2       2       
-           lod     2       6       
+           add
+           str     2       5       
+2_6_3      nop
+# PreIncrement (Identifier "j")
+           lod     2       2       
+           inc
+           str     2       2       
+           ujp     2_6_2
+2_6_4      nop
+           lod     2       1       
+           lod     2       5       
            eq
-           fjp     2_7_5
+           fjp     2_6_5
 # Call (Identifier "write") [Identifier "i"]
            ldp
-           lod     2       2       
+           lod     2       1       
            call    write
-2_7_5      nop
+2_6_5      nop
 # PreIncrement (Identifier "i")
-           lod     2       2       
+           lod     2       1       
            inc
-           dup
-           str     2       2       
-           ujp     2_7_1
-2_7_6      nop
+           str     2       1       
+           ujp     2_6_1
+2_6_6      nop
            end
            bgn     1       
            ldp

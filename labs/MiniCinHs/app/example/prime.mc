@@ -1,8 +1,11 @@
-const int max = 100;
+// const int max = 100;
+int max = 100;
 void main()
 {
     int i, j, k;
     int rem, prime; // rem : remainder
+
+    max = 100;
 
     i = 2;
     while (i <= max) {

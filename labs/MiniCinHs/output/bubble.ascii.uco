@@ -20,14 +20,13 @@ main       proc    105     2       2
            fjp     2_106_2
 # Assign (ArrayIndex (Identifier "list") (Identifier "i")) (Identifier "element")
            lod     2       101     
-           lod     2       103     
            lda     2       1       
            add
+           lod     2       103     
            sti
 # PreIncrement (Identifier "i")
            lod     2       103     
            inc
-           dup
            str     2       103     
 # Call (Identifier "read") [Identifier "element"]
            ldp
@@ -83,29 +82,27 @@ main       proc    105     2       2
            lda     2       1       
            add
            ldi
-           lod     2       103     
            lda     2       1       
            add
+           lod     2       103     
            sti
 # Assign (ArrayIndex (Identifier "list") (Add (Identifier "i") (Number "1"))) (Identifier "temp")
            lod     2       105     
+           lda     2       1       
+           add
            lod     2       103     
            ldc     1       
-           add
-           lda     2       1       
            add
            sti
 2_106_5    nop
 # PreIncrement (Identifier "i")
            lod     2       103     
            inc
-           dup
            str     2       103     
            ujp     2_106_4
 2_106_6    nop
 # PostDecrement (Identifier "top")
            lod     2       104     
-           dup
            dec
            str     2       104     
            ujp     2_106_3
@@ -129,7 +126,6 @@ main       proc    105     2       2
 # PreIncrement (Identifier "i")
            lod     2       103     
            inc
-           dup
            str     2       103     
            ujp     2_106_8
 2_106_9    nop

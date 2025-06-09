@@ -52,7 +52,7 @@ comp (DeclExtDecl d : theRest) env block level offset =
     in
         (env2, offset2, MemDeclInfo memdeclinfo : declinfos)
 comp (FuncDefExtDecl f : theRest) env block level offset = 
-    let (env1, offset1, fundefinfo) = compFuncDefHeader f env (block+1) level offset 
+    let (env1, offset1, fundefinfo) = compFuncDefHeader f env (block+1) level 1 -- reset offset  
         (env2, offset2, declinfos) = comp theRest env1 (block+1) level offset1
     in 
         (env2, offset2, FuncDeclInfo fundefinfo : declinfos)
@@ -478,11 +478,11 @@ compExpr (LogicalNot expr) env ul = compUnaryExpr expr UCnot env ul
 compExpr (PreIncrement expr) env ul = 
     let (env1, ul1, ucinstrs1) = compExpr expr env ul
         (env2, ul2, ucinstrs2) = compLhsExpr expr env1 ul1
-    in (env2, ul2, ucinstrs1 ++ [UCinc, UCdup] ++ ucinstrs2)
+    in (env2, ul2, ucinstrs1 ++ [UCinc {- , UCdup -} ] ++ ucinstrs2) -- Todo:
 compExpr (PreDecrement expr) env ul =
     let (env1, ul1, ucinstrs1) = compExpr expr env ul
         (env2, ul2, ucinstrs2) = compLhsExpr expr env1 ul1
-    in (env2, ul2, ucinstrs1 ++ [UCdec, UCdup] ++ ucinstrs2)
+    in (env2, ul2, ucinstrs1 ++ [UCdec {- , UCdup -} ] ++ ucinstrs2) -- Todo:
 
 compExpr (ArrayIndex (Identifier x) expr) env ul =
     let (env1, ul1, ucinstrs1) = compExpr expr env ul
@@ -508,11 +508,11 @@ compExpr (Call expr exprList) env ul =
 compExpr (PostIncrement expr) env ul =
     let (env1, ul1, ucinstrs1) = compExpr expr env ul
         (env2, ul2, ucinstrs2) = compLhsExpr expr env1 ul1
-    in (env2, ul2, ucinstrs1 ++ [UCdup, UCinc] ++ ucinstrs2)
+    in (env2, ul2, ucinstrs1 ++ [{- UCdup, -} UCinc] ++ ucinstrs2) -- Todo:
 compExpr (PostDecrement expr) env ul =
     let (env1, ul1, ucinstrs1) = compExpr expr env ul
         (env2, ul2, ucinstrs2) = compLhsExpr expr env1 ul1
-    in (env2, ul2, ucinstrs1 ++ [UCdup, UCdec] ++ ucinstrs2)
+    in (env2, ul2, ucinstrs1 ++ [{- UCdup, -} UCdec] ++ ucinstrs2) -- Todo:
 
 compExpr (Identifier x) env ul =
     let (block, offset) = applyEnv env x in (env, ul, [UClod block offset])
@@ -541,7 +541,7 @@ compLhsExpr (ArrayIndex (Identifier x) expr) env ul =
     let (env1, ul1, ucinstrs1) = compExpr expr env ul
         (block, offset) = applyEnv env x
         -- loadArr = UClda block offset
-    in (env1, ul1, ucinstrs1 ++ [UClda block offset, UCadd, UCsti])
+    in (env1, ul1, [UClda block offset, UCadd] ++ ucinstrs1 ++ [UCsti])
 
 compLhsExpr _ _ _ = 
     error "compLhsExpr: unsupported left-hand side expression"
