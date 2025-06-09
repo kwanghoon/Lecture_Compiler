@@ -541,7 +541,7 @@ compLhsExpr (ArrayIndex (Identifier x) expr) env ul =
     let (env1, ul1, ucinstrs1) = compExpr expr env ul
         (block, offset) = applyEnv env x
         -- loadArr = UClda block offset
-    in (env1, ul1, ucinstrs1 ++ [UClda block offset, UCadd] ++ [UCsti])
+    in (env1, ul1, ucinstrs1 ++ [UClda block offset, UCadd, UCswp] ++ [UCsti])
 
 compLhsExpr _ _ _ = 
     error "compLhsExpr: unsupported left-hand side expression"

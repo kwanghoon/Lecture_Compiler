@@ -23,6 +23,7 @@ main       proc    105     2       2
            lod     2       103     
            lda     2       1       
            add
+           swp
            sti
 # PreIncrement (Identifier "i")
            lod     2       103     
@@ -85,6 +86,7 @@ main       proc    105     2       2
            lod     2       103     
            lda     2       1       
            add
+           swp
            sti
 # Assign (ArrayIndex (Identifier "list") (Add (Identifier "i") (Number "1"))) (Identifier "temp")
            lod     2       105     
@@ -93,6 +95,7 @@ main       proc    105     2       2
            add
            lda     2       1       
            add
+           swp
            sti
 2_106_5    nop
 # PreIncrement (Identifier "i")
