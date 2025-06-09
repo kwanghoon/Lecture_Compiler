@@ -1,0 +1,48 @@
+main       proc    2       2       2       
+           sym     2       1       1       
+           sym     2       2       1       
+# Call (Identifier "read") [Identifier "n"]
+           ldp
+           lda     2       1       
+           call    read
+# Call (Identifier "write") [Identifier "n"]
+           ldp
+           lod     2       1       
+           call    write
+# Assign (Identifier "f") (Call (Identifier "factorial") [Identifier "n"])
+           ldp
+           lod     2       1       
+           call    factorial
+           str     2       2       
+# Call (Identifier "write") [Identifier "f"]
+           ldp
+           lod     2       2       
+           call    write
+           end
+factorial  proc    1       3       2       
+           sym     3       1       1       
+# if Equal (Identifier "n") (Number "1")
+           lod     3       1       
+           ldc     1       
+           eq
+           fjp     3_1_1
+# return Number "1"
+           ldc     1       
+           retv
+           ujp     3_1_2
+3_1_1      nop
+# return Mul (Identifier "n") (Call (Identifier "factorial") [Sub (Identifier "n") (Number "1")])
+           lod     3       1       
+           ldp
+           lod     3       1       
+           ldc     1       
+           sub
+           call    factorial
+           mult
+           retv
+3_1_2      nop
+           end
+           bgn     0       
+           ldp
+           call    main
+           end

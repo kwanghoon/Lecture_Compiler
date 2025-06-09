@@ -1,0 +1,65 @@
+main       proc    4       2       2       
+           sym     2       1       1       
+           sym     2       2       1       
+           sym     2       3       1       
+           sym     2       4       1       
+# Call (Identifier "read") [Identifier "org"]
+           ldp
+           lda     2       1       
+           call    read
+           lod     2       1       
+           ldc     0       
+           lt
+           fjp     2_5_1
+# Assign (Identifier "org") (Mul (UnaryMinus (Number "1")) (Identifier "org"))
+           ldc     1       
+           neg
+           lod     2       1       
+           mult
+           str     2       1       
+2_5_1      nop
+# Assign (Identifier "i") (Identifier "org")
+           lod     2       1       
+           str     2       3       
+# Assign (Identifier "rev") (Number "0")
+           ldc     0       
+           str     2       2       
+2_5_2      nop
+# while NotEqual (Identifier "i") (Number "0")
+           lod     2       3       
+           ldc     0       
+           ne
+           fjp     2_5_3
+# Assign (Identifier "j") (Mod (Identifier "i") (Number "10"))
+           lod     2       3       
+           ldc     10      
+           mod
+           str     2       4       
+# Assign (Identifier "rev") (Add (Mul (Identifier "rev") (Number "10")) (Identifier "j"))
+           lod     2       2       
+           ldc     10      
+           mult
+           lod     2       4       
+           add
+           str     2       2       
+# AssignOp "/=" (Identifier "i") (Number "10")
+           lod     2       3       
+           ldc     10      
+           div
+           str     2       3       
+           ujp     2_5_2
+2_5_3      nop
+           lod     2       2       
+           lod     2       1       
+           eq
+           fjp     2_5_4
+# Call (Identifier "write") [Identifier "org"]
+           ldp
+           lod     2       1       
+           call    write
+2_5_4      nop
+           end
+           bgn     0       
+           ldp
+           call    main
+           end
