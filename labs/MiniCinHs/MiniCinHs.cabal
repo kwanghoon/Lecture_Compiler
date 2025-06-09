@@ -48,6 +48,7 @@ executable minic-exe
   main-is: Main.hs
   other-modules:
       Comp
+      EitherState
       Lexer
       Parser
       ParserSpec

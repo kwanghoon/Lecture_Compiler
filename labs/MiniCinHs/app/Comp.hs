@@ -12,7 +12,7 @@ compile tu =
     let (_,_,declInfos) = compile' tu  -- level 1, offset 1
     in codeGenFunc declInfos ++ codeGenMain declInfos 0
 
-compile' tu = comp tu EmptyEnv 1 1
+compile' tu = comp tu EmptyEnv 1 1 1
 
 codeGenFunc :: [DeclInfo] -> [UCInstr]
 codeGenFunc [] = []
@@ -37,30 +37,30 @@ data Env =
   | ExtendFuncEnv String (DeclSpec, FuncName, [(UCInstr,DeclSpecifier)], [UCInstr]) Env
   deriving (Show, Eq)
 
-applyEnv :: Env -> String -> (Level, Offset)
+applyEnv :: Env -> String -> (Block, Offset)
 applyEnv EmptyEnv x = error $ "Not found: " ++ x
-applyEnv (ExtendEnv y (UCsym level offset size, _, _) env) x
-    | x == y = (level, offset)
+applyEnv (ExtendEnv y (UCsym block offset size, _, _) env) x
+    | x == y = (block, offset)
     | otherwise = applyEnv env x 
 applyEnv (ExtendFuncEnv f _ env) x = applyEnv env x
 
-comp :: TranslationUnit -> Env -> Level -> Offset -> (Env, Offset, [DeclInfo])
-comp [] env level offset = (env, offset, [])
-comp (DeclExtDecl d : theRest) env level offset = 
-    let (env1, offset1, memdeclinfo) = compDecl d env level offset 
-        (env2, offset2, declinfos) = comp theRest env1 level offset1
+comp :: TranslationUnit -> Env -> Block -> Level -> Offset -> (Env, Offset, [DeclInfo])
+comp [] env block level offset = (env, offset, [])
+comp (DeclExtDecl d : theRest) env block level offset = 
+    let (env1, offset1, memdeclinfo) = compDecl d env 1 level offset 
+        (env2, offset2, declinfos) = comp theRest env1 block level offset1
     in
         (env2, offset2, MemDeclInfo memdeclinfo : declinfos)
-comp (FuncDefExtDecl f : theRest) env level offset = 
-    let (env1, offset1, fundefinfo) = compFuncDefHeader f env level offset 
-        (env2, offset2, declinfos) = comp theRest env1 level offset1
+comp (FuncDefExtDecl f : theRest) env block level offset = 
+    let (env1, offset1, fundefinfo) = compFuncDefHeader f env (block+1) level offset 
+        (env2, offset2, declinfos) = comp theRest env1 (block+1) level offset1
     in 
         (env2, offset2, FuncDeclInfo fundefinfo : declinfos)
 
 -- Sect. 10.4.2 선언문
-compDecl :: Decl -> Env -> Level -> Offset -> (Env, Offset, [(UCInstr, DeclSpec, Maybe Int)])
-compDecl (spec, initDecls) env level offset 
-    | isConstIntOrInt spec = compInitDeclarators env level offset spec initDecls
+compDecl :: Decl -> Env -> Block -> Level -> Offset -> (Env, Offset, [(UCInstr, DeclSpec, Maybe Int)])
+compDecl (spec, initDecls) env block level offset 
+    | isConstIntOrInt spec = compInitDeclarators env block level offset spec initDecls
     | otherwise = error $ "compDecl: unsupported specifier " ++ show spec
 
 isConstIntOrInt :: DeclSpec -> Bool
@@ -74,34 +74,35 @@ uninitializedConst (ConstQualifier : _) _ = False
 uninitializedConst (_ : theRest) maybeV = uninitializedConst theRest maybeV
 uninitializedConst [] _ = False
 
+type Block = Int
 type Level = Int 
 type Offset = Int 
 
-compInitDeclarators :: Env -> Level -> Offset -> DeclSpec -> [InitDeclarator] -> 
+compInitDeclarators :: Env -> Block -> Level -> Offset -> DeclSpec -> [InitDeclarator] -> 
     (Env, Offset, [(UCInstr, DeclSpec, Maybe Int)])
-compInitDeclarators env lvl offset spec [] = (env, offset, [])
+compInitDeclarators env block lvl offset spec [] = (env, offset, [])
 
-compInitDeclarators env lvl offset spec (DeclItem (SimpleVar x) maybeInitVal : rest) 
+compInitDeclarators env block lvl offset spec (DeclItem (SimpleVar x) maybeInitVal : rest) 
     | uninitializedConst spec maybeInitVal =
         error $ "constant variable " ++ x ++ " must be initialized"
     | otherwise =
-        let declitem = (UCsym lvl offset 1, spec, maybeStrToInt maybeInitVal)
+        let declitem = (UCsym block offset 1, spec, maybeStrToInt maybeInitVal)
             env1 = ExtendEnv x declitem env 
 
             (env2, offset1, initDeclarators1) = 
-                compInitDeclarators env1 lvl (offset+1) spec rest 
+                compInitDeclarators env1 block lvl (offset+1) spec rest 
         in
             (env2, offset1, declitem : initDeclarators1)
 
-compInitDeclarators env lvl offset spec (DeclItem (ArrayVar x (Just idxStr)) _ : rest) =
+compInitDeclarators env block lvl offset spec (DeclItem (ArrayVar x (Just idxStr)) _ : rest) =
     let size = read idxStr :: Int 
-        declitem = (UCsym lvl offset size, spec, Nothing)
+        declitem = (UCsym block offset size, spec, Nothing)
         env1 = ExtendEnv x declitem env
         -- Todo: handle array initialization
-        (env2, offset1, initDeclarators1) = compInitDeclarators env1 lvl (offset+size) spec rest
+        (env2, offset1, initDeclarators1) = compInitDeclarators env1 block lvl (offset+size) spec rest
     in (env2, offset1, declitem : initDeclarators1)
             
-compInitDeclarators env lvl offset spec (DeclItem (ArrayVar x Nothing) _ : rest) =
+compInitDeclarators env block lvl offset spec (DeclItem (ArrayVar x Nothing) _ : rest) =
     error "array without size is not supported"
 
 getIndex :: Maybe String -> Int 
@@ -148,15 +149,15 @@ test2 =
                         (UCsym 1 2 5,[ConstQualifier,IntSpecifier],Nothing)] ]
 
 -- Sect. 10.4.5 함수
-compFuncDefHeader :: FuncDef -> Env -> Level -> Offset
+compFuncDefHeader :: FuncDef -> Env -> Block -> Level -> Offset
     -> (Env, Offset, (DeclSpec, FuncName, [(UCInstr,DeclSpecifier)], [UCInstr]))
-compFuncDefHeader (spec, fname, params, stmt) env level offset 
+compFuncDefHeader (spec, fname, params, stmt) env block level offset 
     | isIntOrVoid spec = 
         let -- foldl :: (b -> a -> b) -> b -> [a] -> b
             (env3, _, memdeclinfo3) = 
                 foldl (\triple decl -> 
                         let (env1, offset1, memdeclinfo1) = triple
-                            (env2, offset2, memdeclinfo2) = compDecl decl env1 (level+1) offset1
+                            (env2, offset2, memdeclinfo2) = compDecl decl env1 block (level+1) offset1
                         in  (env2, offset2, memdeclinfo1 ++ memdeclinfo2) )
                     (env1, 1, []) (parmsToDecl params)    -- env1 for recursion
             funcdefinfo = (spec, fname, 
@@ -164,9 +165,10 @@ compFuncDefHeader (spec, fname, params, stmt) env level offset
                 ucinstrs1 )
             env1 = ExtendFuncEnv fname funcdefinfo env
             env4 = ExtendFuncEnv fname funcdefinfo env3
-            (_,_,ucinstrs)= compStmt stmt env4 (level, offset, 1)
+            (_,_,ucinstrs)= compStmt stmt env4 (block, level, offset, 1)
             (n, ucsyms) = size memdeclinfo3
-            ucinstrs1 = [UCproc n 1 (level+1)] ++ ucsyms ++ ucinstrs ++ [UCend] -- Todo: block number?
+            m = localVarSize ucinstrs
+            ucinstrs1 = [UCproc fname (n+m) block (level+1)] ++ ucsyms ++ ucinstrs ++ [UCend] -- Todo: block number?
         in ( env1, offset, funcdefinfo )
             
     | otherwise = error $ "invalid or unsupported function return type" ++ show spec
@@ -176,6 +178,11 @@ size :: [(UCInstr, DeclSpec, Maybe Int)] -> (Int, [UCInstr])
 size [] = (0, [])
 size ((instr@(UCsym _ _ s),_,_) : rest) = 
     let (s', ucinstrs) = size rest in (s + s', instr:ucinstrs)
+
+localVarSize :: [UCInstr] -> Int
+localVarSize [] = 0
+localVarSize (UCsym _ _ s : rest) = s + localVarSize rest   
+localVarSize (_ : rest) = 0
 
 isIntOrVoid :: DeclSpec -> Bool
 isIntOrVoid [IntSpecifier] = True
@@ -200,104 +207,172 @@ tu3 = [FuncDefExtDecl decl3]
 
 test3 = 
     compile' tu3
+        ==  ( ExtendFuncEnv
+                "f"
+                ( [IntSpecifier]
+                , "f"
+                , [ (UCsym 2 1 1, IntSpecifier)
+                , (UCsym 2 2 1, IntSpecifier)
+                , (UCsym 2 3 5, IntSpecifier)
+                ]
+                , [ UCproc "f" 7 1 2
+                , UCsym 2 1 1
+                , UCsym 2 2 1
+                , UCsym 2 3 5
+                , UCend
+                ]
+                )
+                EmptyEnv
+            , 1
+            , [ FuncDeclInfo
+                ( [IntSpecifier]
+                , "f"
+                , [ (UCsym 2 1 1, IntSpecifier)
+                    , (UCsym 2 2 1, IntSpecifier)
+                    , (UCsym 2 3 5, IntSpecifier)
+                    ]
+                , [ UCproc "f" 7 1 2
+                    , UCsym 2 1 1
+                    , UCsym 2 2 1
+                    , UCsym 2 3 5
+                    , UCend
+                    ]
+                )
+            ]
+            )            
 
 --
 tu4 :: TranslationUnit
 tu4 = [DeclExtDecl decl1,
         DeclExtDecl decl2, 
         FuncDefExtDecl decl3,
-        DeclExtDecl decl4]   
+        DeclExtDecl decl4,
+        FuncDefExtDecl decl5]   
 
 decl4 :: Decl
 decl4 = ( [IntSpecifier], 
           [DeclItem (SimpleVar "w") (Just "123")] )
 
+decl5 :: FuncDef
+decl5 = ( [IntSpecifier], "g", 
+          [ParamDecl [IntSpecifier] (SimpleVar "w"), 
+           ParamDecl [IntSpecifier] (ArrayVar "b" (Just "5"))
+           ], CompoundStmt [] [] )
+
 test4 = 
     compile' tu4 
         ==
-            (
-            ExtendEnv "w" 
-                (UCsym 1 15 1, [IntSpecifier], Just 123)
-                (
-                ExtendFuncEnv "f"
-                    (
-                    [IntSpecifier],
-                    "f",
-                    [ (UCsym 2 1 1, IntSpecifier)
-                    , (UCsym 2 2 1, IntSpecifier)
-                    , (UCsym 2 3 5, IntSpecifier)
-                    ],
-                    [
-                    ]
-                    )
-                    (
-                    ExtendEnv "a"
-                        (UCsym 1 10 5, [ConstQualifier, IntSpecifier], Nothing)
-                        (
-                        ExtendEnv "x"
-                            (UCsym 1 9 1, [ConstQualifier, IntSpecifier], Just 10)
-                            (
-                            ExtendEnv "z"
-                                (UCsym 1 8 1, [IntSpecifier], Nothing)
-                                (
-                                ExtendEnv "a"
-                                    (UCsym 1 3 5, [IntSpecifier], Nothing)
-                                    (
-                                    ExtendEnv "y"
-                                        (UCsym 1 2 1, [IntSpecifier], Nothing)
-                                        (
-                                        ExtendEnv "x"
-                                            (UCsym 1 1 1, [IntSpecifier], Just 10)
-                                            EmptyEnv
+            ( ExtendFuncEnv
+                "g"
+                ( [IntSpecifier]
+                , "g"
+                , [ (UCsym 3 1 1, IntSpecifier)
+                , (UCsym 3 2 5, IntSpecifier)
+                ]
+                , [ UCproc "g" 6 1 2
+                , UCsym 3 1 1
+                , UCsym 3 2 5
+                , UCend
+                ]
+                )
+                ( ExtendEnv "w"
+                    (UCsym 1 15 1, [IntSpecifier], Just 123)
+                    ( ExtendFuncEnv
+                        "f"
+                        ( [IntSpecifier]
+                        , "f"
+                        , [ (UCsym 2 1 1, IntSpecifier)
+                        , (UCsym 2 2 1, IntSpecifier)
+                        , (UCsym 2 3 5, IntSpecifier)
+                        ]
+                        , [ UCproc "f" 7 1 2
+                        , UCsym 2 1 1
+                        , UCsym 2 2 1
+                        , UCsym 2 3 5
+                        , UCend
+                        ]
+                        )
+                        ( ExtendEnv "a"
+                            (UCsym 1 10 5, [ConstQualifier, IntSpecifier], Nothing)
+                            ( ExtendEnv "x"
+                                (UCsym 1 9 1, [ConstQualifier, IntSpecifier], Just 10)
+                                ( ExtendEnv "z"
+                                    (UCsym 1 8 1, [IntSpecifier], Nothing)
+                                    ( ExtendEnv "a"
+                                        (UCsym 1 3 5, [IntSpecifier], Nothing)
+                                        ( ExtendEnv "y"
+                                            (UCsym 1 2 1, [IntSpecifier], Nothing)
+                                            ( ExtendEnv "x"
+                                                (UCsym 1 1 1, [IntSpecifier], Just 10)
+                                                EmptyEnv
+                                            )
                                         )
                                     )
                                 )
                             )
                         )
                     )
-                ),
-            16,
-            [ MemDeclInfo
+                )
+            , 16
+            , [ MemDeclInfo
                 [ (UCsym 1 1 1, [IntSpecifier], Just 10)
                 , (UCsym 1 2 1, [IntSpecifier], Nothing)
                 , (UCsym 1 3 5, [IntSpecifier], Nothing)
                 , (UCsym 1 8 1, [IntSpecifier], Nothing)
-                ],
-                MemDeclInfo
+                ]
+            , MemDeclInfo
                 [ (UCsym 1 9 1, [ConstQualifier, IntSpecifier], Just 10)
                 , (UCsym 1 10 5, [ConstQualifier, IntSpecifier], Nothing)
-                ],
-                FuncDeclInfo
-                ( [IntSpecifier],
-                    "f",
-                    [ (UCsym 2 1 1, IntSpecifier)
+                ]
+            , FuncDeclInfo
+                ( [IntSpecifier]
+                , "f"
+                , [ (UCsym 2 1 1, IntSpecifier)
                     , (UCsym 2 2 1, IntSpecifier)
                     , (UCsym 2 3 5, IntSpecifier)
-                    ],
-                    [
                     ]
-                ),
-                MemDeclInfo
+                , [ UCproc "f" 7 1 2
+                    , UCsym 2 1 1
+                    , UCsym 2 2 1
+                    , UCsym 2 3 5
+                    , UCend
+                    ]
+                )
+            , MemDeclInfo
                 [ (UCsym 1 15 1, [IntSpecifier], Just 123)
                 ]
+            , FuncDeclInfo
+                ( [IntSpecifier]
+                , "g"
+                , [ (UCsym 3 1 1, IntSpecifier)
+                    , (UCsym 3 2 5, IntSpecifier)
+                    ]
+                , [ UCproc "g" 6 1 2
+                    , UCsym 3 1 1
+                    , UCsym 3 2 5
+                    , UCend
+                    ]
+                )
             ]
-            )        
+            )                  
 
-type UniqLabel = (Level, Offset, Int)
+type UniqLabel = (Block, Level, Offset, Int)
 
 -- Sect. 10.4.4 문장
 compStmt :: Stmt -> Env -> UniqLabel -> (Env, UniqLabel, [UCInstr])
 compStmt (CompoundStmt declList stmtList) env ul =
-    let (level, offset, n)= ul
+    let (block, level, offset, n)= ul
         -- foldl :: (b -> a -> b) -> b -> [a] -> b
         (env3, offset3, memdeclinfo3) = 
             foldl (\triple decl -> 
                     let (env1, offset1, memdeclinfo1) = triple
-                        (env2, offset2, memdeclinfo2) = compDecl decl env1 (level+1) offset1
+                        (env2, offset2, memdeclinfo2) = compDecl decl env1 block (level+1) offset1
                     in  (env2, offset2, memdeclinfo1 ++ memdeclinfo2) )
                 (env, offset, []) declList
+
+        ucinstrsDecls = [ ucinstr | (ucinstr, _, _) <- memdeclinfo3 ]
         
-        ul3 = (level, offset3, n)
+        ul3 = (block, level, offset3, n)
 
         (env6, ul6, ucinstrs6) =
             foldl (\triple stmt ->
@@ -305,7 +380,7 @@ compStmt (CompoundStmt declList stmtList) env ul =
                         (env5, ul5, ucinstrs5) = compStmt stmt env4 ul4
                     in  (env5, ul5, ucinstrs4 ++ ucinstrs5) )
                 (env3, ul3, []) stmtList 
-    in (env6, ul6, ucinstrs6)
+    in (env6, ul6, ucinstrsDecls ++ ucinstrs6)
 
 compStmt (ExprStmt Nothing) env ul = (env, ul, [])
 compStmt (ExprStmt (Just expr)) env ul = 
@@ -411,15 +486,15 @@ compExpr (PreDecrement expr) env ul =
 
 compExpr (ArrayIndex (Identifier x) expr) env ul =
     let (env1, ul1, ucinstrs1) = compExpr expr env ul
-        (level, offset) = applyEnv env1 x
-        loadArr = UClda level offset
+        (block, offset) = applyEnv env1 x
+        loadArr = UClda block offset
     in (env1, ul1, ucinstrs1 ++ [loadArr, UCadd, UCldi])  -- load indirect
 compExpr (ArrayIndex _ _) env ul =
     error "compExpr: unsupported left-hand side expression"
 
 compExpr (Call (Identifier f@"read") [Identifier x]) env ul =
-    let (level, offset) = applyEnv env x 
-    in (env, ul, [UCldp, UClda level offset] ++ [UCcall f])
+    let (block, offset) = applyEnv env x 
+    in (env, ul, [UCldp, UClda block offset] ++ [UCcall f])
 compExpr (Call (Identifier f@"write") exprList) env ul =
     let (env1, ul1, ucinstrs1)= compArgs exprList env ul
     in (env1, ul1, [UCldp] ++ ucinstrs1 ++ [UCcall f])
@@ -440,7 +515,7 @@ compExpr (PostDecrement expr) env ul =
     in (env2, ul2, ucinstrs1 ++ [UCdup, UCdec] ++ ucinstrs2)
 
 compExpr (Identifier x) env ul =
-    let (level, offset) = applyEnv env x in (env, ul, [UClod level offset])
+    let (block, offset) = applyEnv env x in (env, ul, [UClod block offset])
 compExpr (Number str) env ul = 
     let n = read str :: Int in (env, ul, [UCldc n])
 
@@ -459,14 +534,14 @@ compUnaryExpr expr ucinstr env ul =
 
 compLhsExpr :: Expr -> Env -> UniqLabel -> (Env, UniqLabel, [UCInstr])
 compLhsExpr (Identifier x) env ul = 
-    let (level, offset) = applyEnv env x in 
-        (env, ul, [UCstr level offset])
+    let (block, offset) = applyEnv env x in 
+        (env, ul, [UCstr block offset])
 
 compLhsExpr (ArrayIndex (Identifier x) expr) env ul = 
     let (env1, ul1, ucinstrs1) = compExpr expr env ul
-        (level, offset) = applyEnv env x
-        loadArr = UClda level offset
-    in (env1, ul1, ucinstrs1 ++ [UClda level offset, UCadd, UCsti])
+        (block, offset) = applyEnv env x
+        -- loadArr = UClda block offset
+    in (env1, ul1, ucinstrs1 ++ [UClda block offset, UCadd, UCsti])
 
 compLhsExpr _ _ _ = 
     error "compLhsExpr: unsupported left-hand side expression"
@@ -479,8 +554,8 @@ compArgs (expr : rest) env ul =
     in (env2, ul2, ucinstrs1 ++ ucinstrs2)    
 
 genLabel :: UniqLabel -> (String, UniqLabel)
-genLabel (level, offset, n) = (lbl, (level, offset, n+1))
-    where lbl = show level ++ "_" ++ show offset ++ "_" ++ show n
+genLabel (block, level, offset, n) = (lbl, (block, level, offset, n+1))
+    where lbl = show block ++ "_" ++ show offset ++ "_" ++ show n
 
 opToUninstrs :: String -> [UCInstr]
 opToUninstrs op = 

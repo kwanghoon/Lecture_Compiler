@@ -1,5 +1,5 @@
 /*
-연습문제 2.18 참조
+Exercise 2.18
 */
 
 const int max = 500;

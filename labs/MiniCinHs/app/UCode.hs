@@ -50,10 +50,15 @@ data UCInstr
   | UCchkl
 
   | UCnop  String      -- label: nop
-  | UCproc Int Int Int -- proc 5 2 2 (size of params, block #, level)
+
+  -- fname  proc 5 2 2 (size of params+local vars, 
+  --                    block #,    전역 변수 영역 0, 각 함수별 1, 2, 3, ...
+  --                    lexical level) 함수는 항상 2?
+  | UCproc String Int Int Int 
+
   | UCend              -- end
   | UCbgn Int          -- bgn 2 (size of variables)
-  | UCsym Int Int Int  -- sym 1 2 1 (level offset size)
+  | UCsym Int Int Int  -- sym 1 2 1 (base-block #? offset size)
 
   | UCdump 
   | UCnone
@@ -61,10 +66,17 @@ data UCInstr
   | UCcomment String -- comment for debugging
   deriving (Show, Eq) 
 
+fill :: String -> Int -> String
+fill str n = take n (str ++ replicate n ' ')
+
 pprintUCode :: UCInstr -> String
 pprintUCode instr = case instr of
-  UCnop label     -> label ++ ":"
-  _               -> replicate 10 ' ' ++ format instr
+  UCproc fname p b l -> 
+    fill fname 11
+      ++ fill "proc" 8 ++ fill (show p) 8 ++ fill (show b) 8 ++ fill (show l) 8
+  UCnop label     -> fill label 11 ++ "nop"
+  UCcomment str   -> "# " ++ str
+  _               -> replicate 11 ' ' ++ format instr
   where
     format i = case i of
       UCnot           -> "not"
@@ -89,30 +101,31 @@ pprintUCode instr = case instr of
       UCeq            -> "eq"
       UCne            -> "ne"
 
-      UClod l o       -> "lod " ++ show l ++ " " ++ show o
-      UCldc v         -> "ldc " ++ show v
-      UClda l o       -> "lda " ++ show l ++ " " ++ show o
+      UClod l o       -> fill "lod" 8 ++ fill (show l) 8 ++ fill (show o) 8
+      UCldc v         -> fill "ldc" 8 ++ fill (show v) 8
+      UClda l o       -> fill "lda" 8 ++ fill (show l) 8 ++ fill (show o) 8
       UCldi           -> "ldi"
       UCldp           -> "ldp"
 
-      UCstr l o       -> "str " ++ show l ++ " " ++ show o
+      UCstr l o       -> fill "str" 8 ++ fill (show l) 8 ++  fill (show o) 8
       UCsti           -> "sti"
-      UCujp label     -> "ujp " ++ label
-      UCtjp label     -> "tjp " ++ label
-      UCfjp label     -> "fjp " ++ label
+      UCujp label     -> fill "ujp" 8 ++ label
+      UCtjp label     -> fill "tjp" 8 ++ label
+      UCfjp label     -> fill "fjp" 8 ++ label
 
-      UCcall name     -> "call " ++ name
+      UCcall name     -> fill "call" 8 ++ name
       UCret           -> "ret"
       UCretv          -> "retv"
       UCchkh          -> "chkh"
       UCchkl          -> "chkl"
 
-      UCproc p b l    -> "proc " ++ show p ++ " " ++ show b ++ " " ++ show l
       UCend           -> "end"
-      UCbgn size      -> "bgn " ++ show size
-      UCsym l o s     -> "sym " ++ show l ++ " " ++ show o ++ " " ++ show s
+      UCbgn size      -> fill "bgn" 8 ++ fill (show size) 8
+      UCsym l o s     -> fill "sym" 8 
+                          ++ fill (show l) 8 
+                          ++ fill (show o) 8 
+                          ++ fill (show s) 8
 
       UCdump          -> "dump"
       UCnone          -> "none"
-      UCcomment str   -> "// " ++ str
       _               -> error "Unhandled instruction in format"
