@@ -1,5 +1,9 @@
 # MiniCinHs
 
+## Mini C 예제
+ - 소스 프로그램 : .\app\example\{bubble,factorial,myown,pal,perfect,prime}.mc
+ - 컴파일된 VM 프로그램 : .\output\{bubble,factorial,myown,pal,perfect,prime}.ascii.uco
+   
 ## 윈도우즈에서 wsl을 설치하고 실행하는 방법 
  - 파워셀 관리자 모드에서 wsl --install
  - flex, bison, g++ 설치
