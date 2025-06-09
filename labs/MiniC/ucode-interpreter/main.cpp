@@ -1,9 +1,9 @@
 /*******************************************************************
- *                                                                   *
- *           Ucode Interpreter(C++ Version)                            *
- *                           1. Mini PASCAL Version : 2000.1.20      *
- *                           2. Mini C      Version : 2003.3.27        *
- *                                                                   *
+ *                                                                 *
+ *           Ucode Interpreter(C++ Version)                        *
+ *                           1. Mini PASCAL Version : 2000.1.20    *
+ *                           2. Mini C      Version : 2003.3.27    *
+ *                                                    2025.06.01   *
 *******************************************************************/
 #include <stdio.h>
 #include <iostream>
@@ -122,7 +122,7 @@ public:
 
 class Assemble {
      int instrCnt;
-     char lineBuffer[80];
+     char lineBuffer[1024];
      int bufIndex;
      Label labelProcess;
      char label[LABELSIZE];
