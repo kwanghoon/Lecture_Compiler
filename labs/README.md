@@ -19,3 +19,4 @@
  - [컴파일러 익스플로어](https://godbolt.org/)
  - [Mini Python3-Chocopy 컴파일러](https://chocopy.org/)
  - [머신러닝 컴파일러](https://mlc.ai/summer22/)
+ - [모던 컴파일러 in Java/ML/C](https://www.cs.princeton.edu/~appel/modern/toc.html)
