@@ -15,8 +15,10 @@
  - [min-caml (OCaml 버전)](https://github.com/esumii/min-caml)
  - MinCamlInHs (Haskell 버전, 개발 중)
 
+### 머신 러닝 컴파일러
+- [머신러닝 컴파일러](https://mlc.ai/summer22/) [번역](https://github.com/kwanghoon/mlc-kr)
+ 
 ### 참고 사이트
  - [컴파일러 익스플로어](https://godbolt.org/)
  - [Mini Python3-Chocopy 컴파일러](https://chocopy.org/)
- - [머신러닝 컴파일러](https://mlc.ai/summer22/)
  - [모던 컴파일러 in Java/ML/C](https://www.cs.princeton.edu/~appel/modern/toc.html)
