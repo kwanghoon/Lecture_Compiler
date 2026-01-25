@@ -1,0 +1,123 @@
+<html>
+
+<head>
+	<title>UCLA CS 132 Compiler Construction</title>
+</head>
+
+<body>
+
+
+<h1 align="center">From Java to MIPS in <strike>Five</strike> Four Nifty Steps</h1>
+<h1 align="center">UCLA CS 132 Project</h1>
+<h1 align="center"><a href="http://www.cs.ucla.edu/~palsberg">Jens Palsberg</a></h1>
+<h1 align="center">The Hundred Hour Wood</h1>
+
+<br>
+
+<center>
+<img src="winnie.jpeg" width=601 height=244 border=0>
+
+<br>
+<br>
+
+<table>
+<tr>
+	<td>MiniJava</td>
+	<td><a href="../cs132/mj/minijava.html">grammar</a></td>
+	<td align="right"><a href="../cs132/mj/minijava.jj">minijava.jj</a></td>
+	<td><a href="../cs132/mj/minijava.spec">specification</a></td>
+	<td align="center">[javac+java]</td>
+	<td><a href="../cs132/mj/">programs</a></td>
+	<td><a href="../cs132/mj/Factorial.java">Factorial.java</a></td>
+</tr>
+<tr>
+	<td>Vapor</td>
+	<td><a href="vapor-grammar.html">grammar</a></td>
+	<td align="right"><a href="vapor-parser.html">parser+AST</a></td>
+	<td><a href="vapor-spec.html">specification</a></td>
+	<td align="center"><a href="vapor-interpreter.html">interpreter</a></td>
+	<td><a href="vapor-examples">programs</a></td>
+	<td><a href="vapor-examples/Factorial.vapor">Factorial.vapor</a></td>
+</tr>
+<tr>
+	<td>Vapor-M</td>
+	<td><a href="vapor-grammar.html">grammar</a></td>
+	<td align="right"><a href="vapor-parser.html">parser+AST</a></td>
+	<td><a href="vapor-m-spec.html">specification</a></td>
+	<td align="center"><a href="vapor-interpreter.html">interpreter</a></td>
+	<td><a href="vapor-m-examples">programs</a></td>
+	<td><a href="vapor-m-examples/Factorial.vaporm">Factorial.vaporm</a></td>
+</tr>
+<tr>
+	<td>MIPS</td>
+	<td></td>
+	<td align="right"></td>
+	<td><a href="http://www.ece.umd.edu/~manoj/759M/MIPSALM.html">specification</a></td>
+	<td align="center"><a href="mips-interpreter.html">interpreter</a></td>
+	<td><a href="mips-examples">programs</a></td>
+	<td><a href="mips-examples/Factorial.s">Factorial.s</a></td>
+</tr>
+</table>
+</center>
+
+<br>
+
+<p>The compiler project consists of Homeworks 2-5.  Solutions to Homeworks 2-5 can be combined into a MiniJava-to-MIPS compiler.</p>
+
+<h2>Homework 2: Type checking of MiniJava</h2>
+
+<p>Use JTB and JavaCC and write in Java one or more visitors that type check a MiniJava program.</p>
+
+<p>Your main file should be called <tt>Typecheck.java</tt>, and if <tt>P.java</tt> contains a program to be type checked, then:</p>
+
+<p style="padding-left: 2ex"><tt>java Typecheck &lt; P.java</tt></p>
+
+<p>should print either <i>"Program type checked successfully"</i> or <i>"Type error"</i>.</p>
+
+<p>Make sure you follow the <a href="submission-guidelines.html">submission guidelines</a>.
+
+<h2>
+Homework 3: MiniJava &rarr; Vapor
+</h2>
+
+<p>Use JTB and JavaCC and write in Java one or more visitors that compile a MiniJava program to Vapor.</p>
+
+<p>Your main file should be called <tt>J2V.java</tt>, and if <tt>P.java</tt> contains a syntactically correct MiniJava program, then</p>
+
+<p style="padding-left: 2ex"><tt>java J2V < P.java > P.vapor</tt></p>
+
+<p>creates a Vapor program <tt>P.vapor</tt> with the same behavior as <tt>P.java</tt>.</p>
+
+<p>Make sure you follow the <a href="submission-guidelines.html">submission guidelines</a>.
+
+<h2>
+Homework 4: Vapor &rarr; Vapor-M
+</h2>
+
+<p>Use the provided <a href="vapor-parser.html">parser and AST classes</a> and write one or more visitors that compile a Vapor program to Vapor-M.</p>
+
+<p>Your main file should be called <tt>V2VM.java</tt>, and if <tt>P.vapor</tt> contains a syntactically correct Vapor program, then</p>
+
+<p style="padding-left: 2ex"><tt>java V2VM < P.vapor > P.vaporm</tt></p>
+
+<p>creates a Vapor-M program <tt>P.vaporm</tt> with the same behavior as <tt>P.vapor</tt>.
+
+<p>Make sure you follow the <a href="submission-guidelines.html">submission guidelines</a>.
+
+<h2>
+Homework 5: Vapor-M &rarr; MIPS
+</h2>
+
+<p>Use the provided <a href="vapor-parser.html">parser and AST classes</a> and write one or more visitors that compile a Vapor-M program to MIPS.</p>
+
+<p>Your main file should be called <tt>VM2M.java</tt>, and if <tt>P.vaporm</tt> contains a syntactically correct Vapor-M program, then</p>
+
+<p style="padding-left: 2ex"><tt>java VM2M < P.vaporm > P.s</tt></p>
+
+<p>creates a MIPS program <tt>P.s</tt> with the same behavior as <tt>P.vaporm</tt>.
+
+<p>Make sure you follow the <a href="submission-guidelines.html">submission guidelines</a>.
+
+</body>
+
+</html>

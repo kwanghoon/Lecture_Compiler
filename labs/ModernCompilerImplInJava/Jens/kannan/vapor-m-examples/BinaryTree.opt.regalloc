@@ -1,0 +1,451 @@
+func Main
+  in 0, out 0, callee-saves 0, spills 0
+Live In:
+  t.0: 9
+Linear Range:
+  t.0: 8-9
+Allocation:
+  t.0: t0
+
+func BT.Start
+  in 0, out 0, callee-saves 1, spills 0
+Live In:
+  this:
+  root: 14 17-18 21-23 26-27 30-31 34-35 38-39 42-43 46-47 50-51 54-55 58-59 62-64 67-69 72-74 77-79 82-84 87-88 91-92 95
+  ntb:
+  t.0: 63
+  t.1: 68
+  t.2: 73
+  t.3: 78
+  t.4: 83
+  t.5: 96
+Linear Range:
+  root: 13-95 (cross call)
+  t.0: 62-63
+  t.1: 67-68
+  t.2: 72-73
+  t.3: 77-78
+  t.4: 82-83
+  t.5: 95-96
+Allocation:
+  root: s0
+  t.0: t0
+  t.1: t0
+  t.2: t0
+  t.3: t0
+  t.4: t0
+  t.5: t0
+
+func Tree.Init
+  in 0, out 0, callee-saves 0, spills 0
+Live In:
+  this: 100-102
+  v_key: 100
+Linear Range:
+  this: 99-102
+  v_key: 99-100
+Allocation:
+  this: t0
+  v_key: t1
+
+func Tree.SetRight
+  in 0, out 0, callee-saves 0, spills 0
+Live In:
+  this: 106
+  rn: 106
+Linear Range:
+  this: 105-106
+  rn: 105-106
+Allocation:
+  this: t0
+  rn: t1
+
+func Tree.SetLeft
+  in 0, out 0, callee-saves 0, spills 0
+Live In:
+  this: 110
+  ln: 110
+Linear Range:
+  this: 109-110
+  ln: 109-110
+Allocation:
+  this: t0
+  ln: t1
+
+func Tree.GetRight
+  in 0, out 0, callee-saves 0, spills 0
+Live In:
+  this: 114
+  t.0: 115
+Linear Range:
+  this: 113-114
+  t.0: 114-115
+Allocation:
+  this: t0
+  t.0: t0
+
+func Tree.GetLeft
+  in 0, out 0, callee-saves 0, spills 0
+Live In:
+  this: 118
+  t.0: 119
+Linear Range:
+  this: 117-118
+  t.0: 118-119
+Allocation:
+  this: t0
+  t.0: t0
+
+func Tree.GetKey
+  in 0, out 0, callee-saves 0, spills 0
+Live In:
+  this: 122
+  t.0: 123
+Linear Range:
+  this: 121-122
+  t.0: 122-123
+Allocation:
+  this: t0
+  t.0: t0
+
+func Tree.SetKey
+  in 0, out 0, callee-saves 0, spills 0
+Live In:
+  this: 126
+  v_key: 126
+Linear Range:
+  this: 125-126
+  v_key: 125-126
+Allocation:
+  this: t0
+  v_key: t1
+
+func Tree.GetHas_Right
+  in 0, out 0, callee-saves 0, spills 0
+Live In:
+  this: 130
+  t.0: 131
+Linear Range:
+  this: 129-130
+  t.0: 130-131
+Allocation:
+  this: t0
+  t.0: t0
+
+func Tree.GetHas_Left
+  in 0, out 0, callee-saves 0, spills 0
+Live In:
+  this: 134
+  t.0: 135
+Linear Range:
+  this: 133-134
+  t.0: 134-135
+Allocation:
+  this: t0
+  t.0: t0
+
+func Tree.SetHas_Left
+  in 0, out 0, callee-saves 0, spills 0
+Live In:
+  this: 138
+  val: 138
+Linear Range:
+  this: 137-138
+  val: 137-138
+Allocation:
+  this: t0
+  val: t1
+
+func Tree.SetHas_Right
+  in 0, out 0, callee-saves 0, spills 0
+Live In:
+  this: 142
+  val: 142
+Linear Range:
+  this: 141-142
+  val: 141-142
+Allocation:
+  this: t0
+  val: t1
+
+func Tree.Compare
+  in 0, out 0, callee-saves 0, spills 0
+Live In:
+  this:
+  num1: 146-149 153
+  num2: 146-148
+  ntb: 151 156 161
+  nti: 148-149 153
+  t.0: 149
+  t.1: 154
+Linear Range:
+  num1: 145-153
+  num2: 145-148
+  ntb: 150-161
+  nti: 147-153
+  t.0: 148-149
+  t.1: 153-154
+Allocation:
+  num1: t0
+  num2: t1
+  ntb: t1
+  nti: t2
+  t.0: t1
+  t.1: t2
+
+func Tree.Insert
+  in 0, out 0, callee-saves 4, spills 0
+Live In:
+  this: 164-165 168-169
+  v_key: 164-165 168-173 176-179 182-184 187-191 194-195 198-202 205-207 210-214 217-218 221-224
+  new_node: 165 168-173 176-179 182-184 187-191 194-195 198-202 205-207 210-214 217-218 221-224
+  ntb:
+  current_node: 170-173 176-179 182-184 187-191 194-195 198-202 205-207 210-214 217-218 221-224
+  cont: 172-173 176-179 182-184 187-188 191 194-195 198-202 205-207 210-211 214 217-218 221-224
+  key_aux: 177
+  t.0: 178
+  t.1: 183
+  t.2: 206
+Linear Range:
+  this: 163-169 (cross call)
+  v_key: 163-224 (cross call)
+  new_node: 164-224 (cross call)
+  current_node: 169-224 (cross call)
+  cont: 170-224 (cross call)
+  key_aux: 176-177
+  t.0: 177-178
+  t.1: 182-183
+  t.2: 205-206
+Allocation:
+  this: s0
+  v_key: s1
+  new_node: s2
+  current_node: s0
+  cont: s3
+  key_aux: t0
+  t.0: t0
+  t.1: t0
+  t.2: t0
+
+func Tree.Delete
+  in 0, out 0, callee-saves 7, spills 0
+Live In:
+  this: 229-236 239-242 245-248 251-260 263-266 269-277 280-282 285-301
+  v_key: 229-236 239-242 245-248 251-260 263-266 269-277 280-282 285-301
+  current_node: 230-236 239-242 245-248 251-260 263-266 269-277 280-282 285-301
+  parent_node: 231-236 239-242 245-246 248 251-260 263-264 266 269-277 280-282 285-301
+  cont: 232-236 239-242 245-248 251-252 256-260 263-266 269-270 274 300-301
+  found: 233-236 239-242 245-248 251-260 263-266 269-274 297-303
+  is_root: 235-236 239-241 258-259 276 301
+  key_aux: 240-241 258
+  t.0: 241
+  t.1: 246
+  t.2: 259
+  t.3: 264
+  t.4: 281
+  t.5: 286
+  ntb:
+Linear Range:
+  this: 228-301 (cross call)
+  v_key: 228-301 (cross call)
+  current_node: 229-301 (cross call)
+  parent_node: 230-301 (cross call)
+  cont: 231-301 (cross call)
+  found: 232-303 (cross call)
+  is_root: 233-301 (cross call)
+  key_aux: 239-258
+  t.0: 240-241
+  t.1: 245-246
+  t.2: 258-259
+  t.3: 263-264
+  t.4: 280-281
+  t.5: 285-286
+Allocation:
+  this: s0
+  v_key: s1
+  current_node: s2
+  parent_node: s3
+  cont: s4
+  found: s5
+  is_root: s6
+  key_aux: t0
+  t.0: t1
+  t.1: t1
+  t.2: t0
+  t.3: t0
+  t.4: t0
+  t.5: t0
+
+func Tree.Remove
+  in 0, out 0, callee-saves 3, spills 0
+Live In:
+  this: 306 309-311 314 317-319 322 325-326 329-330 333-336 339 347 350
+  p_node: 306 309-311 314 317-319 322 325-326 329-330 333-336 339-341 344 347 350-352 355
+  c_node: 306 309-311 314 317-319 322 325
+  t.0: 310
+  ntb:
+  t.1: 318
+  auxkey1: 326 329-330 333-334
+  t.2: 330 333
+  auxkey2: 334
+  t.3: 335
+  t.4: 340
+  t.5: 351
+Linear Range:
+  this: 305-350 (cross call)
+  p_node: 305-355 (cross call)
+  c_node: 305-325 (cross call)
+  t.0: 309-310
+  t.1: 317-318
+  auxkey1: 325-334 (cross call)
+  t.2: 329-333
+  auxkey2: 333-334
+  t.3: 334-335
+  t.4: 339-340
+  t.5: 350-351
+Allocation:
+  this: s0
+  p_node: s1
+  c_node: s2
+  t.0: t0
+  t.1: t0
+  auxkey1: s2
+  t.2: t0
+  auxkey2: t0
+  t.3: t0
+  t.4: t0
+  t.5: t0
+
+func Tree.RemoveRight
+  in 0, out 0, callee-saves 3, spills 0
+Live In:
+  this: 363 366-368 371 374-375 378-381 384-387 390
+  p_node: 363 366-367 381 384-387 390-392 395
+  c_node: 363 366-368 371 374-375 378-381 384-385
+  t.0: 367
+  t.1: 375 378
+  t.2: 379
+  ntb:
+  t.3: 391
+Linear Range:
+  this: 361-390 (cross call)
+  p_node: 361-395 (cross call)
+  c_node: 361-385 (cross call)
+  t.0: 366-367
+  t.1: 374-378
+  t.2: 378-379
+  t.3: 390-391
+Allocation:
+  this: s0
+  p_node: s1
+  c_node: s2
+  t.0: t0
+  t.1: t0
+  t.2: t0
+  t.3: t0
+
+func Tree.RemoveLeft
+  in 0, out 0, callee-saves 3, spills 0
+Live In:
+  this: 400 403-405 408 411-412 415-418 421-424 427
+  p_node: 400 403-404 418 421-424 427-429 432
+  c_node: 400 403-405 408 411-412 415-418 421-422
+  t.0: 404
+  t.1: 412 415
+  t.2: 416
+  ntb:
+  t.3: 428
+Linear Range:
+  this: 398-427 (cross call)
+  p_node: 398-432 (cross call)
+  c_node: 398-422 (cross call)
+  t.0: 403-404
+  t.1: 411-415
+  t.2: 415-416
+  t.3: 427-428
+Allocation:
+  this: s0
+  p_node: s1
+  c_node: s2
+  t.0: t0
+  t.1: t0
+  t.2: t0
+  t.3: t0
+
+func Tree.Search
+  in 0, out 0, callee-saves 4, spills 0
+Live In:
+  this: 436
+  v_key: 436-441 444-447 450-452 455-464 467-469 472-483
+  current_node: 437-441 444-447 450-452 455-464 467-469 472-483
+  cont: 438-441 444-447 450-452 455-456 460-464 467-469 472-473 477 483
+  ifound: 440-441 444-447 450-452 455-464 467-469 472-477 480-485
+  key_aux: 445-446 462
+  t.0: 446
+  t.1: 451
+  t.2: 463
+  t.3: 468
+Linear Range:
+  this: 435-436
+  v_key: 435-483 (cross call)
+  current_node: 436-483 (cross call)
+  cont: 437-483 (cross call)
+  ifound: 438-485 (cross call)
+  key_aux: 444-462
+  t.0: 445-446
+  t.1: 450-451
+  t.2: 462-463
+  t.3: 467-468
+Allocation:
+  this: t0
+  v_key: s0
+  current_node: s1
+  cont: s2
+  ifound: s3
+  key_aux: t0
+  t.0: t1
+  t.1: t1
+  t.2: t0
+  t.3: t0
+
+func Tree.Print
+  in 0, out 0, callee-saves 0, spills 0
+Live In:
+  this: 488-489
+  current_node: 489
+  ntb:
+Linear Range:
+  this: 487-489
+  current_node: 488-489
+Allocation:
+  this: t0
+  current_node: t1
+
+func Tree.RecPrint
+  in 0, out 0, callee-saves 2, spills 0
+Live In:
+  this: 493 496-498 501-507 510-512 515-517 520-521
+  node: 493 496-498 501-507 510-512 515-517 520
+  t.0: 497
+  t.1: 502
+  ntb:
+  t.2: 511
+  t.3: 516
+  t.4: 521
+Linear Range:
+  this: 492-521 (cross call)
+  node: 492-520 (cross call)
+  t.0: 496-497
+  t.1: 501-502
+  t.2: 510-511
+  t.3: 515-516
+  t.4: 520-521
+Allocation:
+  this: s0
+  node: s1
+  t.0: t0
+  t.1: t0
+  t.2: t0
+  t.3: t0
+  t.4: t0
+

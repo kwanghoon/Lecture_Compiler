@@ -1,0 +1,182 @@
+const vmt_LS
+  :LS.Start
+  :LS.Print
+  :LS.Search
+  :LS.Init
+
+func Main [in 0, out 0, local 0]
+  $t0{t.0} = HeapAllocZ(12)
+  [$t0{t.0}] = :vmt_LS
+  if $t0{t.0} goto :null1
+  Error("null pointer")
+null1:
+  $t1{t.1} = [$t0{t.0}]
+  $t1{t.1} = [$t1{t.1}]
+  $a0 = $t0{t.0}
+  $a1 = 10
+  call $t1{t.1}
+  $t1{t.2} = $v0
+  PrintIntS($t1{t.2})
+  ret
+
+func LS.Start [in 0, out 0, local 1]
+  local[0] = $s0
+  $s0{this} = $a0
+  $t0{sz} = $a1
+  $t1{t.0} = [$s0{this}]
+  $t1{t.0} = [$t1{t.0}+12]
+  $a0 = $s0{this}
+  $a1 = $t0{sz}
+  call $t1{t.0}
+  $t1{t.1} = [$s0{this}]
+  $t1{t.1} = [$t1{t.1}+4]
+  $a0 = $s0{this}
+  call $t1{t.1}
+  PrintIntS(9999)
+  $t1{t.2} = [$s0{this}]
+  $t1{t.2} = [$t1{t.2}+8]
+  $a0 = $s0{this}
+  $a1 = 8
+  call $t1{t.2}
+  $t1{t.3} = $v0
+  PrintIntS($t1{t.3})
+  $t1{t.4} = [$s0{this}]
+  $t1{t.4} = [$t1{t.4}+8]
+  $a0 = $s0{this}
+  $a1 = 12
+  call $t1{t.4}
+  $t1{t.5} = $v0
+  PrintIntS($t1{t.5})
+  $t1{t.6} = [$s0{this}]
+  $t1{t.6} = [$t1{t.6}+8]
+  $a0 = $s0{this}
+  $a1 = 17
+  call $t1{t.6}
+  $t1{t.7} = $v0
+  PrintIntS($t1{t.7})
+  $t1{t.8} = [$s0{this}]
+  $t1{t.8} = [$t1{t.8}+8]
+  $a0 = $s0{this}
+  $a1 = 50
+  call $t1{t.8}
+  $t1{t.9} = $v0
+  PrintIntS($t1{t.9})
+  $v0 = 55
+  $s0 = local[0]
+  ret
+
+func LS.Print [in 0, out 0, local 0]
+  $t0{this} = $a0
+  $t1{j} = 1
+while1_top:
+  $t2{t.0} = [$t0{this}+8]
+  $t2{t.1} = LtS($t1{j} $t2{t.0})
+  if0 $t2{t.1} goto :while1_end
+  $t2{t.2} = [$t0{this}+4]
+  if $t2{t.2} goto :null2
+  Error("null pointer")
+null2:
+  $t3{t.3} = [$t2{t.2}]
+  $t3{t.3} = Lt($t1{j} $t3{t.3})
+  if $t3{t.3} goto :bounds1
+  Error("array index out of bounds")
+bounds1:
+  $t3{t.3} = MulS($t1{j} 4)
+  $t3{t.3} = Add($t3{t.3} $t2{t.2})
+  $t3{t.4} = [$t3{t.3}+4]
+  PrintIntS($t3{t.4})
+  $t1{j} = Add($t1{j} 1)
+  goto :while1_top
+while1_end:
+  $v0 = 0
+  ret
+
+func LS.Search [in 0, out 0, local 0]
+  $t0{this} = $a0
+  $t1{num} = $a1
+  $t2{j} = 1
+  $t3{ifound} = 0
+while2_top:
+  $t4{t.0} = [$t0{this}+8]
+  $t4{t.1} = LtS($t2{j} $t4{t.0})
+  if0 $t4{t.1} goto :while2_end
+  $t4{t.2} = [$t0{this}+4]
+  if $t4{t.2} goto :null3
+  Error("null pointer")
+null3:
+  $t5{t.3} = [$t4{t.2}]
+  $t5{t.3} = Lt($t2{j} $t5{t.3})
+  if $t5{t.3} goto :bounds2
+  Error("array index out of bounds")
+bounds2:
+  $t5{t.3} = MulS($t2{j} 4)
+  $t5{t.3} = Add($t5{t.3} $t4{t.2})
+  $t5{aux01} = [$t5{t.3}+4]
+  $t4{aux02} = Add($t1{num} 1)
+  $t6{t.4} = LtS($t5{aux01} $t1{num})
+  if0 $t6{t.4} goto :if1_else
+  goto :if1_end
+if1_else:
+  $t4{t.5} = LtS($t5{aux01} $t4{aux02})
+  $t4{t.6} = Sub(1 $t4{t.5})
+  if0 $t4{t.6} goto :if2_else
+  goto :if2_end
+if2_else:
+  $t3{ifound} = 1
+  $t2{j} = [$t0{this}+8]
+if2_end:
+if1_end:
+  $t2{j} = Add($t2{j} 1)
+  goto :while2_top
+while2_end:
+  $v0 = $t3{ifound}
+  ret
+
+func LS.Init [in 0, out 0, local 1]
+  local[0] = $s0
+  $s0{this} = $a0
+  $t0{sz} = $a1
+  [$s0{this}+8] = $t0{sz}
+  $a0 = $t0{sz}
+  call :AllocArray
+  $t0{t.0} = $v0
+  [$s0{this}+4] = $t0{t.0}
+  $t0{j} = 1
+  $t1{t.1} = [$s0{this}+8]
+  $t1{k} = Add($t1{t.1} 1)
+while3_top:
+  $t2{t.2} = [$s0{this}+8]
+  $t2{t.3} = LtS($t0{j} $t2{t.2})
+  if0 $t2{t.3} goto :while3_end
+  $t2{aux01} = MulS(2 $t0{j})
+  $t3{aux02} = Sub($t1{k} 3)
+  $t4{t.4} = [$s0{this}+4]
+  if $t4{t.4} goto :null4
+  Error("null pointer")
+null4:
+  $t5{t.5} = [$t4{t.4}]
+  $t5{t.5} = Lt($t0{j} $t5{t.5})
+  if $t5{t.5} goto :bounds3
+  Error("array index out of bounds")
+bounds3:
+  $t5{t.5} = MulS($t0{j} 4)
+  $t5{t.5} = Add($t5{t.5} $t4{t.4})
+  $t3{t.6} = Add($t2{aux01} $t3{aux02})
+  [$t5{t.5}+4] = $t3{t.6}
+  $t0{j} = Add($t0{j} 1)
+  $t1{k} = Sub($t1{k} 1)
+  goto :while3_top
+while3_end:
+  $v0 = 0
+  $s0 = local[0]
+  ret
+
+func AllocArray [in 0, out 0, local 0]
+  $t0{size} = $a0
+  $t1{bytes} = MulS($t0{size} 4)
+  $t1{bytes} = Add($t1{bytes} 4)
+  $t1{v} = HeapAllocZ($t1{bytes})
+  [$t1{v}] = $t0{size}
+  $v0 = $t1{v}
+  ret
+

@@ -1,0 +1,68 @@
+const vmt_MT4
+  :MT4.Start
+  :MT4.Change
+
+func Main [in 0, out 3, local 0]
+  $t0{t.0} = HeapAllocZ(4)
+  [$t0{t.0}] = :vmt_MT4
+  if $t0{t.0} goto :null1
+  Error("null pointer")
+null1:
+  $t1{t.1} = [$t0{t.0}]
+  $t1{t.1} = [$t1{t.1}]
+  $a0 = $t0{t.0}
+  $a1 = 1
+  $a2 = 2
+  $a3 = 3
+  out[0] = 4
+  out[1] = 5
+  out[2] = 6
+  call $t1{t.1}
+  $t1{t.2} = $v0
+  PrintIntS($t1{t.2})
+  ret
+
+func MT4.Start [in 3, out 3, local 0]
+  $t0{this} = $a0
+  $t1{p1} = $a1
+  $t2{p2} = $a2
+  $t3{p3} = $a3
+  $t4{p4} = in[0]
+  $t5{p5} = in[1]
+  $t6{p6} = in[2]
+  PrintIntS($t1{p1})
+  PrintIntS($t2{p2})
+  PrintIntS($t3{p3})
+  PrintIntS($t4{p4})
+  PrintIntS($t5{p5})
+  PrintIntS($t6{p6})
+  $t7{t.0} = [$t0{this}]
+  $t7{t.0} = [$t7{t.0}+4]
+  $a0 = $t0{this}
+  $a1 = $t6{p6}
+  $a2 = $t5{p5}
+  $a3 = $t4{p4}
+  out[0] = $t3{p3}
+  out[1] = $t2{p2}
+  out[2] = $t1{p1}
+  call $t7{t.0}
+  $t7{aux} = $v0
+  $v0 = $t7{aux}
+  ret
+
+func MT4.Change [in 3, out 0, local 0]
+  $t0{p1} = $a1
+  $t1{p2} = $a2
+  $t2{p3} = $a3
+  $t3{p4} = in[0]
+  $t4{p5} = in[1]
+  $t5{p6} = in[2]
+  PrintIntS($t0{p1})
+  PrintIntS($t1{p2})
+  PrintIntS($t2{p3})
+  PrintIntS($t3{p4})
+  PrintIntS($t4{p5})
+  PrintIntS($t5{p6})
+  $v0 = 0
+  ret
+

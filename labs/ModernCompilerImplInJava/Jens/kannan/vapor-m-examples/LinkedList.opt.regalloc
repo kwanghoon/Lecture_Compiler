@@ -1,0 +1,362 @@
+func Main
+  in 0, out 0, callee-saves 0, spills 0
+Live In:
+  t.0: 11
+Linear Range:
+  t.0: 10-11
+Allocation:
+  t.0: t0
+
+func Element.Init
+  in 0, out 0, callee-saves 0, spills 0
+Live In:
+  this: 15-17
+  v_Age: 15
+  v_Salary: 15-16
+  v_Married: 15-17
+Linear Range:
+  this: 14-17
+  v_Age: 14-15
+  v_Salary: 14-16
+  v_Married: 14-17
+Allocation:
+  this: t0
+  v_Age: t1
+  v_Salary: t2
+  v_Married: t3
+
+func Element.GetAge
+  in 0, out 0, callee-saves 0, spills 0
+Live In:
+  this: 21
+  t.0: 22
+Linear Range:
+  this: 20-21
+  t.0: 21-22
+Allocation:
+  this: t0
+  t.0: t0
+
+func Element.GetSalary
+  in 0, out 0, callee-saves 0, spills 0
+Live In:
+  this: 25
+  t.0: 26
+Linear Range:
+  this: 24-25
+  t.0: 25-26
+Allocation:
+  this: t0
+  t.0: t0
+
+func Element.GetMarried
+  in 0, out 0, callee-saves 0, spills 0
+Live In:
+  this: 29
+  t.0: 30
+Linear Range:
+  this: 28-29
+  t.0: 29-30
+Allocation:
+  this: t0
+  t.0: t0
+
+func Element.Equal
+  in 0, out 0, callee-saves 3, spills 0
+Live In:
+  this: 33-34 37-40 44 47-50 54
+  other: 33-34 37-40 44 47-50 54-56 59 68 71
+  ret_val: 34 37-40 42-44 47-50 52-56 59-60 62-68 71-72 74-81
+  aux01: 38-39
+  t.0: 39
+  t.1: 40
+  aux02: 48-49
+  t.2: 49
+  t.3: 50
+  t.4: 55
+  t.5: 60
+  nt:
+  t.6: 72
+Linear Range:
+  this: 32-54 (cross call)
+  other: 32-71 (cross call)
+  ret_val: 33-81 (cross call)
+  aux01: 37-39
+  t.0: 38-39
+  t.1: 39-40
+  aux02: 47-49
+  t.2: 48-49
+  t.3: 49-50
+  t.4: 54-55
+  t.5: 59-60
+  t.6: 71-72
+Allocation:
+  this: s0
+  other: s1
+  ret_val: s2
+  aux01: t0
+  t.0: t1
+  t.1: t1
+  aux02: t1
+  t.2: t0
+  t.3: t0
+  t.4: t0
+  t.5: t0
+  t.6: t0
+
+func Element.Compare
+  in 0, out 0, callee-saves 0, spills 0
+Live In:
+  this:
+  num1: 84-87 91
+  num2: 84-86
+  retval: 89 94 99
+  aux02: 86-87 91
+  t.0: 87
+  t.1: 92
+Linear Range:
+  num1: 83-91
+  num2: 83-86
+  retval: 88-99
+  aux02: 85-91
+  t.0: 86-87
+  t.1: 91-92
+Allocation:
+  num1: t0
+  num2: t1
+  retval: t1
+  aux02: t2
+  t.0: t1
+  t.1: t2
+
+func List.Init
+  in 0, out 0, callee-saves 0, spills 0
+Live In:
+  this: 102
+Linear Range:
+  this: 101-102
+Allocation:
+  this: t0
+
+func List.InitNew
+  in 0, out 0, callee-saves 0, spills 0
+Live In:
+  this: 106-108
+  v_elem: 106-107
+  v_next: 106-108
+  v_end: 106
+Linear Range:
+  this: 105-108
+  v_elem: 105-107
+  v_next: 105-108
+  v_end: 105-106
+Allocation:
+  this: t0
+  v_elem: t1
+  v_next: t2
+  v_end: t3
+
+func List.Insert
+  in 0, out 0, callee-saves 1, spills 0
+Live In:
+  this: 112
+  new_elem: 112-114 117
+  aux03: 113-114 117
+  aux02: 114 117-118
+  ret_val:
+Linear Range:
+  this: 111-112
+  new_elem: 111-117
+  aux03: 112-117
+  aux02: 113-118 (cross call)
+Allocation:
+  this: t0
+  new_elem: t1
+  aux03: t0
+  aux02: s0
+
+func List.SetNext
+  in 0, out 0, callee-saves 0, spills 0
+Live In:
+  this: 121
+  v_next: 121
+Linear Range:
+  this: 120-121
+  v_next: 120-121
+Allocation:
+  this: t0
+  v_next: t1
+
+func List.Delete
+  in 0, out 0, callee-saves 8, spills 0
+Live In:
+  this: 125-131
+  e: 125-140 143-148 151-156 159 162-173 176-177 180-181 184-190
+  my_head: 126-140 143-147 152-156 159 162-173 176-177 180-181 184-192
+  ret_val: 127-140 143-144 146-148 151-156 159 162-173 176-177 180-181 184-190
+  aux04: 128-140 143-148 151-156 159 162-171 186-190
+  aux01: 129-140 143-148 151-156 159 162-173 176-177 180-181 184-190
+  prev: 130-140 143-148 151-156 159 162-171 173 176-177 180-181 184-190
+  var_end: 131-140 143-148 151-156 159 162-171 181 184-190
+  var_elem: 133-140 143-148 151-156 159 162-171 185-190
+  t.0: 135 139
+  t.1: 144
+  t.2: 147
+  t.3: 155
+  t.4: 163
+  aux05:
+  t.5: 165
+  nt:
+Linear Range:
+  this: 124-131
+  e: 124-190 (cross call)
+  my_head: 125-192 (cross call)
+  ret_val: 126-190 (cross call)
+  aux04: 127-190 (cross call)
+  aux01: 128-190 (cross call)
+  prev: 129-190 (cross call)
+  var_end: 130-190 (cross call)
+  var_elem: 131-190 (cross call)
+  t.0: 134-139
+  t.1: 143-144
+  t.2: 146-147
+  t.3: 154-155
+  t.4: 162-163
+  t.5: 164-165
+Allocation:
+  this: t0
+  e: s0
+  my_head: s1
+  ret_val: s2
+  aux04: s3
+  aux01: s4
+  prev: s5
+  var_end: s6
+  var_elem: s7
+  t.0: t0
+  t.1: t0
+  t.2: t0
+  t.3: t0
+  t.4: t0
+  t.5: t0
+
+func List.Search
+  in 0, out 0, callee-saves 4, spills 0
+Live In:
+  this: 195-198
+  e: 195-202 205-212 215-216 219-220 223-224
+  int_ret_val: 196-202 205-206 208-212 215-216 219-220 223-226
+  aux01: 197-202 205-212 215-216 219-220 223-224
+  var_end: 198-200 220 223-224
+  var_elem: 200-202 205 224
+  t.0: 201
+  t.1: 206
+  nt:
+Linear Range:
+  this: 194-198
+  e: 194-224 (cross call)
+  int_ret_val: 195-226 (cross call)
+  aux01: 196-224 (cross call)
+  var_end: 197-224 (cross call)
+  var_elem: 198-224
+  t.0: 200-201
+  t.1: 205-206
+Allocation:
+  this: t0
+  e: s0
+  int_ret_val: s1
+  aux01: s2
+  var_end: s3
+  var_elem: t0
+  t.0: t1
+  t.1: t1
+
+func List.GetEnd
+  in 0, out 0, callee-saves 0, spills 0
+Live In:
+  this: 229
+  t.0: 230
+Linear Range:
+  this: 228-229
+  t.0: 229-230
+Allocation:
+  this: t0
+  t.0: t0
+
+func List.GetElem
+  in 0, out 0, callee-saves 0, spills 0
+Live In:
+  this: 233
+  t.0: 234
+Linear Range:
+  this: 232-233
+  t.0: 233-234
+Allocation:
+  this: t0
+  t.0: t0
+
+func List.GetNext
+  in 0, out 0, callee-saves 0, spills 0
+Live In:
+  this: 237
+  t.0: 238
+Linear Range:
+  this: 236-237
+  t.0: 237-238
+Allocation:
+  this: t0
+  t.0: t0
+
+func List.Print
+  in 0, out 0, callee-saves 2, spills 0
+Live In:
+  this: 241-243
+  aux01: 242-247 250-252 255-256 259-260 263-264
+  var_end: 243-245 260 263-264
+  var_elem: 245-247 250 264
+  t.0: 246
+  t.1: 251
+Linear Range:
+  this: 240-243
+  aux01: 241-264 (cross call)
+  var_end: 242-264 (cross call)
+  var_elem: 243-264
+  t.0: 245-246
+  t.1: 250-251
+Allocation:
+  this: t0
+  aux01: s0
+  var_end: s1
+  var_elem: t0
+  t.0: t1
+  t.1: t1
+
+func LL.Start
+  in 0, out 0, callee-saves 4, spills 0
+Live In:
+  this:
+  last_elem: 270 273-274
+  aux01:
+  head: 275 278-279 282-284 287-288 291-292 295-298 301-303 306-307 310-313 316-317 320-321 324-326 329-330 333-335 338-342 345-346 349-350 353-355 358-359 362-364 367-368 371
+  el01: 284 287-288 291 298 301-303 306 313 316-317 320 342 345-346 349-350 353-355 358-359 362-364 367
+  el02: 303 306-307 310-313 316-317 320-321 324-326 329-330 333-335 338-342 345-346 349-350 353-355 358
+  el03: 326 329-330 333-335 338
+  t.0: 334
+  t.1: 339
+Linear Range:
+  last_elem: 269-274 (cross call)
+  head: 274-371 (cross call)
+  el01: 283-367 (cross call)
+  el02: 302-358 (cross call)
+  el03: 325-338 (cross call)
+  t.0: 333-334
+  t.1: 338-339
+Allocation:
+  last_elem: s0
+  head: s0
+  el01: s1
+  el02: s2
+  el03: s3
+  t.0: t0
+  t.1: t0
+

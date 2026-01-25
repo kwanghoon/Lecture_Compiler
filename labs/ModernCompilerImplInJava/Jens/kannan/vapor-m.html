@@ -1,0 +1,65 @@
+<html>
+
+<head>
+   <title>Vapor-M Language Specification</title>
+   <link rel="stylesheet" type="text/css" href="screen.css"/>
+</head>
+
+<body>
+
+<div id="header">
+  <a href="./">back</a>
+</div>
+
+<div id="content">
+
+<h1>Vapor-M Language Specification</h1>
+
+<p>
+A Vapor-M program is largely the same as a <a href="vapor.html">Vapor</a> program except one step closer to MIPS assembly language.  The main difference is that instead of local variables, you use registers and stack memory.
+</p>
+
+<p>
+The first is that instead of local variables you get 23 registers.
+<ul>
+<li>Registers are specified by prefixing an identifier with "<tt>$</tt>".  For example: "<tt>$r1</tt>".</li>
+<li>There are 23 registers: <tt>$s0</tt>..<tt>$s7</tt>, <tt>$t0</tt>..<tt>$t8</tt>, <tt>$a0</tt>..<tt>$a3</tt>, <tt>$v0</tt>, <tt>$v1</tt>.</li>
+<li>Registers are global to all functions (whereas local variables were local to a function activation).</li>
+</ul>
+</p>
+
+<p>
+To follow MIPS calling conventions, use the registers as follows:
+<ul>
+<li><tt>$s0</tt>..<tt>$s7</tt>: general use callee-saved</li>
+<li><tt>$t0</tt>..<tt>$t8</tt>: general use caller-saved</li>
+<li><tt>$a0</tt>..<tt>$a3</tt>: reserved for argument passing</li>
+<li><tt>$v0</tt>: returning a result from a call</li>
+<li><tt>$v0</tt>, <tt>$v1</tt>: can also be used as temporary registers for loading values from the stack</li>
+</ul>
+</p>
+
+<p>
+The second difference is the ability to store values on the stack.  Each function has three stack arrays called "<tt>in</tt>", "<tt>out</tt>", and "<tt>locals</tt>".  The "<tt>in</tt>" and "<tt>out</tt>" array are for passing arguments between functions.  The "<tt>in</tt>" array actual refers to the "out" array of the caller.  The "<tt>local</tt>" array is for function-local storage (for example: spilled registers).  The sizes of these arrays are declared at the top of every function (instead of a parameter list).
+</p>
+
+<p>
+Each element of each array is a 4-byte word.  The indexes into the array is the word-offset (<em>not</em> the byte offset).  Array references can be used wherever memory references can be used.  So "<tt>in[1]</tt>" refers to the second element of the "<tt>in</tt>" stack array.
+</p>
+
+<pre class="code">
+<b>func</b> Run [in 2, out 0, local 4]
+  $r1 = in[1]
+  local[3] = $r1
+  PrintString($r1)
+  $v0 = 1
+  <b>ret</b>
+</pre>
+
+</div>
+
+<div id="footer">&nbsp;</div>
+
+</body>
+
+</html>

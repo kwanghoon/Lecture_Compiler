@@ -1,0 +1,305 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+<TITLE>BNF for VaporParser.jj</TITLE>
+</HEAD>
+<BODY>
+<H1 ALIGN=CENTER>BNF for VaporParser.jj</H1>
+<H2 ALIGN=CENTER>TOKENS</H2>
+<TABLE>
+ <!-- Special token -->
+ <TR>
+  <TD>
+<PRE>
+// -------------------------------------------------------------
+// Tokens
+
+// Whitespace and Comments
+</PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+&lt;DEFAULT&gt; SKIP : {
+" "
+| "\t"
+| &lt;LineComment: "//" (~["\n","\r"])*&gt;
+| &lt;BlockComment: "/*" (~["*"])* "*" ("*" | ~["*","/"] (~["*"])* "*")* "/"&gt;
+}
+
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+&lt;DEFAULT&gt; TOKEN : {
+&lt;#Digit: ["0"-"9"]&gt;
+| &lt;Digits: (&lt;Digit&gt;)+&gt;
+| &lt;NegDigits: "-" &lt;Digits&gt;&gt; : {
+| &lt;#IdentHead: ["a"-"z","A"-"Z","_"]&gt;
+| &lt;#IdentRest: &lt;IdentHead&gt; | &lt;Digit&gt; | "."&gt;
+| &lt;Eol: (("\r")* "\n" ([" ","\t"])*)+&gt;
+}
+
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+&lt;DEFAULT&gt; MORE : {
+&lt;LitStrStart: "\""&gt; : WITHIN_STRING
+}
+
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+&lt;WITHIN_STRING&gt; TOKEN : {
+&lt;LitStr: "\""&gt; : DEFAULT
+}
+
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+&lt;WITHIN_STRING&gt; MORE : {
+&lt;EscapeQuote: "\\\""&gt; : {
+| &lt;EscapeBackslash: "\\\\"&gt; : {
+| &lt;NormalStringContent: [" "-"~"]&gt;
+}
+
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Special token -->
+ <TR>
+  <TD>
+<PRE>
+// -------------------------------------------------------------
+</PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+&lt;DEFAULT&gt; TOKEN : {
+&lt;#Ident: &lt;IdentHead&gt; (&lt;IdentRest&gt;)*&gt;
+| &lt;RegIdent: "$" &lt;Ident&gt;&gt; : {
+| &lt;CodeLabelIdent: &lt;Ident&gt; ":"&gt; : {
+| &lt;LabelRefIdent: ":" &lt;Ident&gt;&gt; : {
+| &lt;PlainIdent: &lt;Ident&gt;&gt;
+}
+
+   </PRE>
+  </TD>
+ </TR>
+ <!-- Special token -->
+ <TR>
+  <TD>
+<PRE>
+// Catch-all token.
+</PRE>
+  </TD>
+ </TR>
+ <!-- Token -->
+ <TR>
+  <TD>
+   <PRE>
+&lt;*&gt; TOKEN : {
+&lt;Anything: ~[]&gt;
+}
+
+   </PRE>
+  </TD>
+ </TR>
+</TABLE>
+<H2 ALIGN=CENTER>NON-TERMINALS</H2>
+<TABLE>
+ <!-- Special token -->
+ <TR>
+  <TD>
+<PRE>
+// (The rest of the tokens are defined as we use them in the grammar.)
+
+// -------------------------------------------------------------
+// Parser
+// -------------------------------------------------------------
+</PRE>
+  </TD>
+ </TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod1">Program</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( <A HREF="#prod2">Eol</A> )? ( <A HREF="#prod3">Function</A> | <A HREF="#prod4">DataSegment</A> )* &lt;EOF&gt;</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod4">DataSegment</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( "const" | "var" ) <A HREF="#prod5">Ident</A> <A HREF="#prod2">Eol</A> ( ( <A HREF="#prod6">DataValue</A> )+ <A HREF="#prod2">Eol</A> )*</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod3">Function</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>"func" <A HREF="#prod5">Ident</A> ( "(" ( <A HREF="#prod7">VarRefNoReg</A> )* ")" )? ( "[" "in" &lt;Digits&gt; "," "out" &lt;Digits&gt; "," "local" &lt;Digits&gt; "]" )? <A HREF="#prod2">Eol</A> ( ( <A HREF="#prod8">CodeLabel</A> ( <A HREF="#prod2">Eol</A> | <A HREF="#prod9">Instr</A> ) | <A HREF="#prod9">Instr</A> ) )*</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod9">Instr</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( <A HREF="#prod10">Return</A> | <A HREF="#prod11">MemRead</A> | <A HREF="#prod12">MemWrite</A> | <A HREF="#prod13">Assign</A> | <A HREF="#prod14">Branch</A> | <A HREF="#prod15">Goto</A> | <A HREF="#prod16">Call</A> | <A HREF="#prod17">BuiltIn</A> )</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod11">MemRead</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod18">VarRef</A> "=" <A HREF="#prod19">MemRef</A> <A HREF="#prod2">Eol</A></TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod12">MemWrite</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod19">MemRef</A> "=" <A HREF="#prod20">Operand</A> <A HREF="#prod2">Eol</A></TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod19">MemRef</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( <A HREF="#prod21">StackMemRef</A> | <A HREF="#prod22">GlobalMemRef</A> )</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod21">StackMemRef</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( "in" | "out" | "local" ) "[" &lt;Digits&gt; "]"</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod22">GlobalMemRef</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>"[" <A HREF="#prod23">DataAddr</A> ( ( "+" | "-" ) &lt;Digits&gt; )? "]"</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod13">Assign</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod18">VarRef</A> "=" <A HREF="#prod20">Operand</A> <A HREF="#prod2">Eol</A></TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod14">Branch</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( "if" | "if0" ) <A HREF="#prod20">Operand</A> "goto" <A HREF="#prod24">CodeLabelRef</A> <A HREF="#prod2">Eol</A></TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod15">Goto</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>"goto" <A HREF="#prod25">CodeAddr</A> <A HREF="#prod2">Eol</A></TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod16">Call</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( <A HREF="#prod7">VarRefNoReg</A> "=" )? "call" <A HREF="#prod26">FuncAddr</A> ( "(" ( <A HREF="#prod27">OperandNoReg</A> )* ")" )? <A HREF="#prod2">Eol</A></TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod17">BuiltIn</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( <A HREF="#prod18">VarRef</A> "=" )? <A HREF="#prod5">Ident</A> "(" ( <A HREF="#prod20">Operand</A> )* ")" <A HREF="#prod2">Eol</A></TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod10">Return</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>"ret" ( <A HREF="#prod27">OperandNoReg</A> )? <A HREF="#prod2">Eol</A></TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod6">DataValue</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( <A HREF="#prod28">LabelRef</A> | <A HREF="#prod29">LitInt</A> )</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod20">Operand</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( <A HREF="#prod28">LabelRef</A> | <A HREF="#prod29">LitInt</A> | <A HREF="#prod30">LitStr</A> | <A HREF="#prod18">VarRef</A> )</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod28">LabelRef</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>&lt;LabelRefIdent&gt;</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod25">CodeAddr</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( <A HREF="#prod24">CodeLabelRef</A> | <A HREF="#prod18">VarRef</A> )</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod23">DataAddr</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( <A HREF="#prod31">DataSegmentRef</A> | <A HREF="#prod18">VarRef</A> )</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod26">FuncAddr</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( <A HREF="#prod32">FuncRef</A> | <A HREF="#prod18">VarRef</A> )</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod24">CodeLabelRef</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>&lt;LabelRefIdent&gt;</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod31">DataSegmentRef</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>&lt;LabelRefIdent&gt;</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod32">FuncRef</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>&lt;LabelRefIdent&gt;</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod18">VarRef</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( <A HREF="#prod5">Ident</A> | &lt;RegIdent&gt; )</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod7">VarRefNoReg</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod18">VarRef</A></TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod27">OperandNoReg</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE><A HREF="#prod20">Operand</A></TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod29">LitInt</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( &lt;Digits&gt; | &lt;NegDigits&gt; )</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod30">LitStr</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>&lt;LitStr&gt;</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod5">Ident</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( &lt;PlainIdent&gt; | "func" | "const" | "var" | "in" | "out" | "local" | "if" | "if0" | "goto" | "ret" | "call" )</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod8">CodeLabel</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>&lt;CodeLabelIdent&gt;</TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT VALIGN=BASELINE><A NAME="prod2">Eol</A></TD>
+<TD ALIGN=CENTER VALIGN=BASELINE>::=</TD>
+<TD ALIGN=LEFT VALIGN=BASELINE>( &lt;Eol&gt; )+</TD>
+</TR>
+</TABLE>
+</BODY>
+</HTML>

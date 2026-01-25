@@ -1,0 +1,171 @@
+body {
+	background: white;
+	color: black;
+	font-family: Constantia, Georgia, Lucida Bright, serif;
+	padding: 0;
+	margin: 0;
+	text-align: center;
+}
+
+#header, #index-header, #content, #footer {
+	min-width: 60ex;
+	max-width: 85ex;
+	text-align: left;
+	margin: 0 auto;
+}
+
+/***********************/
+/* Header/Footer       */
+
+#header, #index-header, #footer {
+	background-color: #604040;
+	color: white;
+	padding: 0.3em 0.5em 0.3em 0.5em;
+	white-space: nowrap;
+	text-align: left;
+}
+
+#header a:link, #header a:visited, #header a:active {
+	color: white;
+	font-size: 130%;
+	font-weight: normal;
+	text-decoration: none;
+}
+
+#index-title {
+	font-size: 250%;
+	font-weight:normal
+}
+
+#footer {
+	margin-top: 2em;
+}
+
+/***********************/
+/* Content             */
+
+#content {
+	color: black;
+}
+
+ul {
+	list-style-type: square;
+}
+
+a:link, a:visited, a:active {
+	color: #604040;
+	font-weight: normal;
+}
+
+h1,h2,h3 {
+	font-weight: normal;
+	color: #603030;
+	margin-bottom: 0.2em;
+}
+h1 { 
+	font-size: 200%;
+	letter-spacing: -.02ex; 
+}
+h2 { 
+	font-size: 155%;
+}
+h3 { 
+	font-size: 130%;
+}
+
+textarea, input {
+	border: 1px solid #bed5e6;
+}
+
+/***********************/
+/* Code                */
+
+pre, tt, code {
+	font-family: Andale Mono, Lucida Typewriter, Lucida Console, Bitstream Vera Sans Mono;
+}
+
+/* Monospace fonts are too big; reduce it a little to make it fit better. */
+tt, code { font-size: 85%; }
+
+/* The font in code blocks needs to be even smaller. */
+tt.code, pre { font-size: 80%; }
+
+tt.code { white-space: nowrap; }
+
+pre.code {
+	border: 1px dotted #402020;
+	margin-left: 4ex;
+	margin-right: 7ex;
+	padding: 1ex 1.5ex 1ex 1.5ex;
+}
+
+/* Highlight something about the code. */
+pre.code em {
+	font-style: normal;
+}
+
+/* Input fragments. */
+pre.code span.in {
+	color: #308030;
+}
+
+/* Outputs. */
+pre.code span.out {
+	border-style: solid;
+	border-color: #705050;
+	border-width: 0px 2px;
+	background: #705050;
+	color: white;
+
+	font-style: normal;
+}
+
+/* Errors Output. */
+pre.code span.err {
+	border-style: solid;
+	border-color: #c06060;
+	border-width: 0px 2px;
+	background: #c06060;
+	color: white;
+
+	font-family: Tahoma, Verdana, sans-serif;
+	font-style: none;
+	font-style: normal;
+}
+
+/* placeholder/interpolation */
+span.i {
+	border-style: solid;
+	border-width: 0px 2px;
+	border-color: #eed;
+	background: #f0e8df;
+
+	font-family: Tahoma, Verdana, sans-serif;
+	font-style: italic;
+}
+
+pre.code span.p {
+	font-family: Tahoma, Verdana, sans-serif;
+	font-style: italic;
+}
+
+/************************/
+/* Tables               */
+
+table {
+	border-collapse: collapse;
+}
+
+table.thin td {
+	border: 1px solid black;
+}
+table.thin th {
+	border: 1px solid black;
+	font-weight: bold;
+}
+
+table.hlayout td {
+	border: none;
+	padding-left: 1.5ex;
+}
+

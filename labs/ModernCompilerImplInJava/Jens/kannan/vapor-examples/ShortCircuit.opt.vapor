@@ -1,0 +1,215 @@
+
+const vmt_Main
+	:Main.run1
+	:Main.run2
+	:Main.run3
+	:Main.run4
+	:Main.if1
+	:Main.if2
+	:Main.if3
+	:Main.if4
+	:Main.if5
+	:Main.if6
+
+
+func Main()
+	PrintIntS(1)
+	ret
+
+func Main.run1(this a b c)
+	if0 a goto :ss2_else
+		t.1 := b
+		goto :ss2_end
+	ss2_else:
+		t.1 := 0
+	ss2_end:
+	if0 t.1 goto :ss1_else
+		t.0 := 1
+		goto :ss1_end
+	ss1_else:
+		t.0 := c
+	ss1_end:
+	ret t.0
+
+func Main.run2(this a b c)
+	if0 a goto :ss3_else
+		if0 b goto :ss4_else
+			t.1 := 1
+			goto :ss4_end
+		ss4_else:
+			t.1 := c
+		ss4_end:
+		t.0 := t.1
+		goto :ss3_end
+	ss3_else:
+		t.0 := 0
+	ss3_end:
+	ret t.0
+
+func Main.run3(this a b c)
+	if0 a goto :ss6_else
+		t.1 := 1
+		goto :ss6_end
+	ss6_else:
+		t.1 := b
+	ss6_end:
+	if0 t.1 goto :ss5_else
+		t.0 := c
+		goto :ss5_end
+	ss5_else:
+		t.0 := 0
+	ss5_end:
+	ret t.0
+
+func Main.run4(this a b c)
+	if0 a goto :ss7_else
+		t.0 := 1
+		goto :ss7_end
+	ss7_else:
+		if0 b goto :ss8_else
+			t.1 := c
+			goto :ss8_end
+		ss8_else:
+			t.1 := 0
+		ss8_end:
+		t.0 := t.1
+	ss7_end:
+	ret t.0
+
+func Main.if1(this a b c)
+	if0 a goto :ss10_else
+		t.1 := b
+		goto :ss10_end
+	ss10_else:
+		t.1 := 0
+	ss10_end:
+	if0 t.1 goto :ss9_else
+		t.0 := 1
+		goto :ss9_end
+	ss9_else:
+		t.0 := c
+	ss9_end:
+	if0 t.0 goto :if1_else
+	if1_then:
+		PrintIntS(1)
+		goto :if1_end
+	if1_else:
+	if1_end:
+	ret 1
+
+func Main.if2(this a b c)
+	if0 a goto :ss11_else
+		if0 b goto :ss12_else
+			t.1 := 1
+			goto :ss12_end
+		ss12_else:
+			t.1 := c
+		ss12_end:
+		t.0 := t.1
+		goto :ss11_end
+	ss11_else:
+		t.0 := 0
+	ss11_end:
+	if0 t.0 goto :if2_else
+	if2_then:
+		PrintIntS(2)
+		goto :if2_end
+	if2_else:
+	if2_end:
+	ret 1
+
+func Main.if3(this a b c)
+	if0 a goto :ss14_else
+		t.1 := 1
+		goto :ss14_end
+	ss14_else:
+		t.1 := b
+	ss14_end:
+	if0 t.1 goto :ss13_else
+		t.0 := c
+		goto :ss13_end
+	ss13_else:
+		t.0 := 0
+	ss13_end:
+	if0 t.0 goto :if3_else
+	if3_then:
+		PrintIntS(3)
+		goto :if3_end
+	if3_else:
+	if3_end:
+	ret 1
+
+func Main.if4(this a b c)
+	if0 a goto :ss15_else
+		t.0 := 1
+		goto :ss15_end
+	ss15_else:
+		if0 b goto :ss16_else
+			t.1 := c
+			goto :ss16_end
+		ss16_else:
+			t.1 := 0
+		ss16_end:
+		t.0 := t.1
+	ss15_end:
+	if0 t.0 goto :if4_else
+	if4_then:
+		PrintIntS(4)
+		goto :if4_end
+	if4_else:
+	if4_end:
+	ret 1
+
+func Main.if5(this a b c d)
+	if0 a goto :ss19_else
+		t.2 := 1
+		goto :ss19_end
+	ss19_else:
+		t.2 := b
+	ss19_end:
+	if0 t.2 goto :ss18_else
+		t.1 := 1
+		goto :ss18_end
+	ss18_else:
+		t.1 := c
+	ss18_end:
+	if0 t.1 goto :ss17_else
+		t.0 := 1
+		goto :ss17_end
+	ss17_else:
+		t.0 := d
+	ss17_end:
+	if0 t.0 goto :if5_else
+	if5_then:
+		PrintIntS(5)
+		goto :if5_end
+	if5_else:
+	if5_end:
+	ret 1
+
+func Main.if6(this a b c d)
+	if0 a goto :ss22_else
+		t.2 := b
+		goto :ss22_end
+	ss22_else:
+		t.2 := 0
+	ss22_end:
+	if0 t.2 goto :ss21_else
+		t.1 := c
+		goto :ss21_end
+	ss21_else:
+		t.1 := 0
+	ss21_end:
+	if0 t.1 goto :ss20_else
+		t.0 := d
+		goto :ss20_end
+	ss20_else:
+		t.0 := 0
+	ss20_end:
+	if0 t.0 goto :if6_else
+	if6_then:
+		PrintIntS(6)
+		goto :if6_end
+	if6_else:
+	if6_end:
+	ret 1

@@ -1,0 +1,33 @@
+func Main
+  in 0, out 0, callee-saves 0, spills 0
+Live In:
+  t.0: 7
+Linear Range:
+  t.0: 6-7
+Allocation:
+  t.0: t0
+
+func Fac.ComputeFac
+  in 0, out 0, callee-saves 1, spills 0
+Live In:
+  this: 11-12 16-17
+  num: 11-12 16-18
+  t.0: 12
+  num_aux: 14 20
+  t.1: 17
+  t.2: 18
+Linear Range:
+  this: 10-17
+  num: 10-18 (cross call)
+  t.0: 11-12
+  num_aux: 13-20
+  t.1: 16-17
+  t.2: 17-18
+Allocation:
+  this: t0
+  num: s0
+  t.0: t1
+  num_aux: t1
+  t.1: t2
+  t.2: t2
+

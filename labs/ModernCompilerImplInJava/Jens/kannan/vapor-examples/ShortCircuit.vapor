@@ -1,0 +1,128 @@
+
+const empty_Main
+
+
+func Main()
+	PrintIntS(1)
+	ret
+
+func Main.run1(this a b c)
+	if0 a goto :ss1_else
+	if0 b goto :ss1_else
+		t.0 := 1
+		goto :ss1_end
+	ss1_else:
+		t.0 := c
+	ss1_end:
+	ret t.0
+
+func Main.run2(this a b c)
+	if0 a goto :ss3_else
+		if0 b goto :ss4_else
+			t.1 := 1
+			goto :ss4_end
+		ss4_else:
+			t.1 := c
+		ss4_end:
+		t.0 := t.1
+		goto :ss3_end
+	ss3_else:
+		t.0 := 0
+	ss3_end:
+	ret t.0
+
+func Main.run3(this a b c)
+	if a goto :ss5_then
+	if0 b goto :ss5_else
+	ss5_then:
+		t.0 := c
+		goto :ss5_end
+	ss5_else:
+		t.0 := 0
+	ss5_end:
+	ret t.0
+
+func Main.run4(this a b c)
+	if0 a goto :ss7_else
+		t.0 := 1
+		goto :ss7_end
+	ss7_else:
+		if0 b goto :ss8_else
+			t.1 := c
+			goto :ss8_end
+		ss8_else:
+			t.1 := 0
+		ss8_end:
+		t.0 := t.1
+	ss7_end:
+	ret t.0
+
+func Main.if1(this a b c)
+	if0 a goto :ss9
+	if b goto :if1_then
+	ss9:
+	if0 c goto :if1_else
+	if1_then:
+		PrintIntS(1)
+		goto :if1_end
+	if1_else:
+	if1_end:
+	ret 1
+
+func Main.if2(this a b c)
+	if0 a goto :if2_else
+	if b goto :if2_then
+	if0 c goto :if2_else
+	if2_then:
+		PrintIntS(2)
+		goto :if2_end
+	if2_else:
+	if2_end:
+	ret 1
+
+func Main.if3(this a b c)
+	if a goto :ss13
+	if0 b goto :if3_else
+	ss13:
+	if0 c goto :if3_else
+	if3_then:
+		PrintIntS(3)
+		goto :if3_end
+	if3_else:
+	if3_end:
+	ret 1
+
+func Main.if4(this a b c)
+	if a goto :if4_then
+	if0 b goto :if4_else
+	if0 c goto :if4_else
+	if4_then:
+		PrintIntS(4)
+		goto :if4_end
+	if4_else:
+	if4_end:
+	ret 1
+
+func Main.if5(this a b c d)
+	if a goto :if5_then
+	if b goto :if5_then
+	if c goto :if5_then
+	if0 d goto :if5_else
+	if5_then:
+		PrintIntS(5)
+		goto :if5_end
+	if5_else:
+	if5_end:
+	ret 1
+
+func Main.if6(this a b c d)
+	if0 a goto :if6_else
+	if0 b goto :if6_else
+	if0 c goto :if6_else
+	if0 d goto :if6_else
+	if6_then:
+		PrintIntS(6)
+		goto :if6_end
+	if6_else:
+	if6_end:
+	ret 1

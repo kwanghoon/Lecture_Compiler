@@ -1,0 +1,92 @@
+<html>
+
+<head>
+   <title>Vapor Parser and AST</title>
+   <link rel="stylesheet" type="text/css" href="screen.css"/>
+</head>
+
+<body>
+
+<div id="header">
+  <a href="./">back</a>
+</div>
+
+<div id="content">
+
+<h1>Vapor Parser and AST</h1>
+
+<p>
+This parser and AST handles both Vapor and Vapor-M programs.  Compile your program against the provided JAR file using the "<tt>-classpath</tt>" option.
+</p>
+
+<ul>
+<li><a>JAR: <a href="vapor-parser/vapor-parser.jar">vapor-parser.jar</a></li>
+<li><a>Javadoc: <a href="vapor-parser/vapor-parser-javadoc/index.html">View Online</a> | <a href="vapor-parser/vapor-parser-javadoc.tar.gz">Tarball</a></li>
+<li><a>Source: <a href="vapor-parser/vapor-parser-source/">View Online</a> | <a href="vapor-parser/vapor-parser-source.tar.gz">Tarball</a></li>
+</ul>
+
+<p>To parse a Vapor program:</p>
+
+<pre class="code">
+<b>import</b> cs132.util.ProblemException;
+<b>import</b> cs132.vapor.parser.VaporParser;
+<b>import</b> cs132.vapor.ast.VaporProgram;
+<b>import</b> cs132.vapor.ast.VBuiltIn.Op;
+
+<b>import</b> java.io.InputStreamReader;
+<b>import</b> java.io.IOException;
+<b>import</b> java.io.PrintStream;
+
+...
+
+<b>public</b> <b>static</b> VaporProgram parseVapor(InputStream in, PrintStream err)
+  <b>throws</b> IOException
+{
+  Op[] ops = {
+    Op.Add, Op.Sub, Op.MulS, Op.Eq, Op.Lt, Op.LtS,
+    Op.PrintIntS, Op.HeapAllocZ, Op.Error,
+  };
+  <b>boolean</b> allowLocals = <b>true</b>;
+  String[] registers = <b>null</b>;
+  <b>boolean</b> allowStack = <b>false</b>;
+
+  VaporProgram program;
+  <b>try</b> {
+    program = VaporParser.run(<b>new</b> InputStreamReader(in), 1, 1,
+                              java.util.Arrays.asList(ops),
+                              allowLocals, registers, allowStack);
+  }
+  <b>catch</b> (ProblemException ex) {
+    err.println(ex.getMessage());
+    <b>return</b> <b>null</b>;
+  }
+
+  <b>return</b> program;
+}
+</pre>
+
+<p>To parse a Vapor-M program, it's the same thing except:</p>
+
+<pre class="code">
+  <b>boolean</b> allowLocals = <b>false</b>;
+  String[] registers = {
+    "v0", "v1",
+    "a0", "a1", "a2", "a3",
+    "t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7",
+    "s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7",
+    "t8",
+  };
+  <b>boolean</b> allowStack = <b>true</b>;
+</pre>
+
+<p>
+A Vapor program will never contain the following AST nodes: <tt>VVarRef.Register</tt>, <tt>VMemRef.Stack</tt>.  A Vapor-M program will never contain the following AST node: <tt>VVarRef.Local</tt>.
+</p>
+
+</div>
+
+<div id="footer">&nbsp;</div>
+
+</body>
+
+</html>

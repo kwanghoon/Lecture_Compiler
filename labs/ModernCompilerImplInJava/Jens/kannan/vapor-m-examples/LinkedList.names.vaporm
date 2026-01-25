@@ -1,0 +1,698 @@
+const vmt_Element
+  :Element.Init
+  :Element.GetAge
+  :Element.GetSalary
+  :Element.GetMarried
+  :Element.Equal
+  :Element.Compare
+
+const vmt_List
+  :List.Init
+  :List.InitNew
+  :List.Insert
+  :List.SetNext
+  :List.Delete
+  :List.Search
+  :List.GetEnd
+  :List.GetElem
+  :List.GetNext
+  :List.Print
+
+const vmt_LL
+  :LL.Start
+
+func Main [in 0, out 0, local 0]
+  $t0{t.0} = HeapAllocZ(4)
+  [$t0{t.0}] = :vmt_LL
+  if $t0{t.0} goto :null1
+  Error("null pointer")
+null1:
+  $t1{t.1} = [$t0{t.0}]
+  $t1{t.1} = [$t1{t.1}]
+  $a0 = $t0{t.0}
+  call $t1{t.1}
+  $t1{t.2} = $v0
+  PrintIntS($t1{t.2})
+  ret
+
+func Element.Init [in 0, out 0, local 0]
+  $t0{this} = $a0
+  $t1{v_Age} = $a1
+  $t2{v_Salary} = $a2
+  $t3{v_Married} = $a3
+  [$t0{this}+4] = $t1{v_Age}
+  [$t0{this}+8] = $t2{v_Salary}
+  [$t0{this}+12] = $t3{v_Married}
+  $v0 = 1
+  ret
+
+func Element.GetAge [in 0, out 0, local 0]
+  $t0{this} = $a0
+  $t0{t.0} = [$t0{this}+4]
+  $v0 = $t0{t.0}
+  ret
+
+func Element.GetSalary [in 0, out 0, local 0]
+  $t0{this} = $a0
+  $t0{t.0} = [$t0{this}+8]
+  $v0 = $t0{t.0}
+  ret
+
+func Element.GetMarried [in 0, out 0, local 0]
+  $t0{this} = $a0
+  $t0{t.0} = [$t0{this}+12]
+  $v0 = $t0{t.0}
+  ret
+
+func Element.Equal [in 0, out 0, local 3]
+  local[0] = $s0
+  local[1] = $s1
+  local[2] = $s2
+  $s0{this} = $a0
+  $s1{other} = $a1
+  $s2{ret_val} = 1
+  if $s1{other} goto :null2
+  Error("null pointer")
+null2:
+  $t0{t.0} = [$s1{other}]
+  $t0{t.0} = [$t0{t.0}+4]
+  $a0 = $s1{other}
+  call $t0{t.0}
+  $t0{aux01} = $v0
+  $t1{t.1} = [$s0{this}]
+  $t1{t.1} = [$t1{t.1}+20]
+  $t2{t.2} = [$s0{this}+4]
+  $a0 = $s0{this}
+  $a1 = $t0{aux01}
+  $a2 = $t2{t.2}
+  call $t1{t.1}
+  $t2{t.3} = $v0
+  $t2{t.4} = Sub(1 $t2{t.3})
+  if0 $t2{t.4} goto :if1_else
+  $s2{ret_val} = 0
+  goto :if1_end
+if1_else:
+  if $s1{other} goto :null3
+  Error("null pointer")
+null3:
+  $t2{t.5} = [$s1{other}]
+  $t2{t.5} = [$t2{t.5}+8]
+  $a0 = $s1{other}
+  call $t2{t.5}
+  $t2{aux02} = $v0
+  $t1{t.6} = [$s0{this}]
+  $t1{t.6} = [$t1{t.6}+20]
+  $t0{t.7} = [$s0{this}+8]
+  $a0 = $s0{this}
+  $a1 = $t2{aux02}
+  $a2 = $t0{t.7}
+  call $t1{t.6}
+  $t0{t.8} = $v0
+  $t0{t.9} = Sub(1 $t0{t.8})
+  if0 $t0{t.9} goto :if2_else
+  $s2{ret_val} = 0
+  goto :if2_end
+if2_else:
+  $t0{t.10} = [$s0{this}+12]
+  if0 $t0{t.10} goto :if3_else
+  if $s1{other} goto :null4
+  Error("null pointer")
+null4:
+  $t0{t.11} = [$s1{other}]
+  $t0{t.11} = [$t0{t.11}+12]
+  $a0 = $s1{other}
+  call $t0{t.11}
+  $t0{t.12} = $v0
+  $t0{t.13} = Sub(1 $t0{t.12})
+  if0 $t0{t.13} goto :if4_else
+  $s2{ret_val} = 0
+  goto :if4_end
+if4_else:
+if4_end:
+  goto :if3_end
+if3_else:
+  if $s1{other} goto :null5
+  Error("null pointer")
+null5:
+  $t0{t.14} = [$s1{other}]
+  $t0{t.14} = [$t0{t.14}+12]
+  $a0 = $s1{other}
+  call $t0{t.14}
+  $t0{t.15} = $v0
+  if0 $t0{t.15} goto :if5_else
+  $s2{ret_val} = 0
+  goto :if5_end
+if5_else:
+if5_end:
+if3_end:
+if2_end:
+if1_end:
+  $v0 = $s2{ret_val}
+  $s0 = local[0]
+  $s1 = local[1]
+  $s2 = local[2]
+  ret
+
+func Element.Compare [in 0, out 0, local 0]
+  $t0{num1} = $a1
+  $t1{num2} = $a2
+  $t2{aux02} = Add($t1{num2} 1)
+  $t1{t.0} = LtS($t0{num1} $t1{num2})
+  if0 $t1{t.0} goto :if6_else
+  $t1{retval} = 0
+  goto :if6_end
+if6_else:
+  $t2{t.1} = LtS($t0{num1} $t2{aux02})
+  $t2{t.2} = Sub(1 $t2{t.1})
+  if0 $t2{t.2} goto :if7_else
+  $t1{retval} = 0
+  goto :if7_end
+if7_else:
+  $t1{retval} = 1
+if7_end:
+if6_end:
+  $v0 = $t1{retval}
+  ret
+
+func List.Init [in 0, out 0, local 0]
+  $t0{this} = $a0
+  [$t0{this}+12] = 1
+  $v0 = 1
+  ret
+
+func List.InitNew [in 0, out 0, local 0]
+  $t0{this} = $a0
+  $t1{v_elem} = $a1
+  $t2{v_next} = $a2
+  $t3{v_end} = $a3
+  [$t0{this}+12] = $t3{v_end}
+  [$t0{this}+4] = $t1{v_elem}
+  [$t0{this}+8] = $t2{v_next}
+  $v0 = 1
+  ret
+
+func List.Insert [in 0, out 0, local 1]
+  local[0] = $s0
+  $t0{this} = $a0
+  $t1{new_elem} = $a1
+  $t0{aux03} = $t0{this}
+  $t2{t.0} = HeapAllocZ(16)
+  [$t2{t.0}] = :vmt_List
+  $s0{aux02} = $t2{t.0}
+  if $s0{aux02} goto :null6
+  Error("null pointer")
+null6:
+  $t2{t.1} = [$s0{aux02}]
+  $t2{t.1} = [$t2{t.1}+4]
+  $a0 = $s0{aux02}
+  $a1 = $t1{new_elem}
+  $a2 = $t0{aux03}
+  $a3 = 0
+  call $t2{t.1}
+  $v0 = $s0{aux02}
+  $s0 = local[0]
+  ret
+
+func List.SetNext [in 0, out 0, local 0]
+  $t0{this} = $a0
+  $t1{v_next} = $a1
+  [$t0{this}+8] = $t1{v_next}
+  $v0 = 1
+  ret
+
+func List.Delete [in 0, out 0, local 9]
+  local[1] = $s0
+  local[2] = $s1
+  local[3] = $s2
+  local[4] = $s3
+  local[5] = $s4
+  local[6] = $s5
+  local[7] = $s6
+  local[8] = $s7
+  $t0{this} = $a0
+  $s0{e} = $a1
+  $s1{my_head} = $t0{this}
+  $s2{ret_val} = 0
+  $s3{aux04} = Sub(0 1)
+  $s4{aux01} = $t0{this}
+  $s5{prev} = $t0{this}
+  $s6{var_end} = [$t0{this}+12]
+  $s7{var_elem} = [$t0{this}+4]
+while1_top:
+  $t0{t.1} = Sub(1 $s6{var_end})
+  if0 $t0{t.1} goto :ss1_else
+  $t0{t.0} = Sub(1 $s2{ret_val})
+  goto :ss1_end
+ss1_else:
+  $t0{t.0} = 0
+ss1_end:
+  if0 $t0{t.0} goto :while1_end
+  if $s0{e} goto :null7
+  Error("null pointer")
+null7:
+  $t0{t.2} = [$s0{e}]
+  $t0{t.2} = [$t0{t.2}+16]
+  $a0 = $s0{e}
+  $a1 = $s7{var_elem}
+  call $t0{t.2}
+  $t0{t.3} = $v0
+  if0 $t0{t.3} goto :if8_else
+  $s2{ret_val} = 1
+  $t0{t.4} = LtS($s3{aux04} 0)
+  if0 $t0{t.4} goto :if9_else
+  if $s4{aux01} goto :null8
+  Error("null pointer")
+null8:
+  $t0{t.5} = [$s4{aux01}]
+  $t0{t.5} = [$t0{t.5}+32]
+  $a0 = $s4{aux01}
+  call $t0{t.5}
+  $s1{my_head} = $v0
+  goto :if9_end
+if9_else:
+  $t0{t.6} = Sub(0 555)
+  PrintIntS($t0{t.6})
+  if $s5{prev} goto :null9
+  Error("null pointer")
+null9:
+  $v0 = [$s5{prev}]
+  local[0]{t.7} = $v0
+  $v0 = local[0]{t.7}
+  $v0 = [$v0+12]
+  local[0]{t.7} = $v0
+  if $s4{aux01} goto :null10
+  Error("null pointer")
+null10:
+  $t0{t.8} = [$s4{aux01}]
+  $t0{t.8} = [$t0{t.8}+32]
+  $a0 = $s4{aux01}
+  call $t0{t.8}
+  $t0{t.9} = $v0
+  $a0 = $s5{prev}
+  $a1 = $t0{t.9}
+  $v0 = local[0]{t.7}
+  call $v0
+  $t0{t.10} = Sub(0 555)
+  PrintIntS($t0{t.10})
+if9_end:
+  goto :if8_end
+if8_else:
+if8_end:
+  $t0{t.11} = Sub(1 $s2{ret_val})
+  if0 $t0{t.11} goto :if10_else
+  $s5{prev} = $s4{aux01}
+  if $s4{aux01} goto :null11
+  Error("null pointer")
+null11:
+  $t0{t.12} = [$s4{aux01}]
+  $t0{t.12} = [$t0{t.12}+32]
+  $a0 = $s4{aux01}
+  call $t0{t.12}
+  $s4{aux01} = $v0
+  if $s4{aux01} goto :null12
+  Error("null pointer")
+null12:
+  $t0{t.13} = [$s4{aux01}]
+  $t0{t.13} = [$t0{t.13}+24]
+  $a0 = $s4{aux01}
+  call $t0{t.13}
+  $s6{var_end} = $v0
+  if $s4{aux01} goto :null13
+  Error("null pointer")
+null13:
+  $t0{t.14} = [$s4{aux01}]
+  $t0{t.14} = [$t0{t.14}+28]
+  $a0 = $s4{aux01}
+  call $t0{t.14}
+  $s7{var_elem} = $v0
+  $s3{aux04} = 1
+  goto :if10_end
+if10_else:
+if10_end:
+  goto :while1_top
+while1_end:
+  $v0 = $s1{my_head}
+  $s0 = local[1]
+  $s1 = local[2]
+  $s2 = local[3]
+  $s3 = local[4]
+  $s4 = local[5]
+  $s5 = local[6]
+  $s6 = local[7]
+  $s7 = local[8]
+  ret
+
+func List.Search [in 0, out 0, local 4]
+  local[0] = $s0
+  local[1] = $s1
+  local[2] = $s2
+  local[3] = $s3
+  $t0{this} = $a0
+  $s0{e} = $a1
+  $s1{int_ret_val} = 0
+  $s2{aux01} = $t0{this}
+  $s3{var_end} = [$t0{this}+12]
+  $t0{var_elem} = [$t0{this}+4]
+while2_top:
+  $t1{t.0} = Sub(1 $s3{var_end})
+  if0 $t1{t.0} goto :while2_end
+  if $s0{e} goto :null14
+  Error("null pointer")
+null14:
+  $t1{t.1} = [$s0{e}]
+  $t1{t.1} = [$t1{t.1}+16]
+  $a0 = $s0{e}
+  $a1 = $t0{var_elem}
+  call $t1{t.1}
+  $t1{t.2} = $v0
+  if0 $t1{t.2} goto :if11_else
+  $s1{int_ret_val} = 1
+  goto :if11_end
+if11_else:
+if11_end:
+  if $s2{aux01} goto :null15
+  Error("null pointer")
+null15:
+  $t1{t.3} = [$s2{aux01}]
+  $t1{t.3} = [$t1{t.3}+32]
+  $a0 = $s2{aux01}
+  call $t1{t.3}
+  $s2{aux01} = $v0
+  if $s2{aux01} goto :null16
+  Error("null pointer")
+null16:
+  $t1{t.4} = [$s2{aux01}]
+  $t1{t.4} = [$t1{t.4}+24]
+  $a0 = $s2{aux01}
+  call $t1{t.4}
+  $s3{var_end} = $v0
+  if $s2{aux01} goto :null17
+  Error("null pointer")
+null17:
+  $t1{t.5} = [$s2{aux01}]
+  $t1{t.5} = [$t1{t.5}+28]
+  $a0 = $s2{aux01}
+  call $t1{t.5}
+  $t0{var_elem} = $v0
+  goto :while2_top
+while2_end:
+  $v0 = $s1{int_ret_val}
+  $s0 = local[0]
+  $s1 = local[1]
+  $s2 = local[2]
+  $s3 = local[3]
+  ret
+
+func List.GetEnd [in 0, out 0, local 0]
+  $t0{this} = $a0
+  $t0{t.0} = [$t0{this}+12]
+  $v0 = $t0{t.0}
+  ret
+
+func List.GetElem [in 0, out 0, local 0]
+  $t0{this} = $a0
+  $t0{t.0} = [$t0{this}+4]
+  $v0 = $t0{t.0}
+  ret
+
+func List.GetNext [in 0, out 0, local 0]
+  $t0{this} = $a0
+  $t0{t.0} = [$t0{this}+8]
+  $v0 = $t0{t.0}
+  ret
+
+func List.Print [in 0, out 0, local 2]
+  local[0] = $s0
+  local[1] = $s1
+  $t0{this} = $a0
+  $s0{aux01} = $t0{this}
+  $s1{var_end} = [$t0{this}+12]
+  $t0{var_elem} = [$t0{this}+4]
+while3_top:
+  $t1{t.0} = Sub(1 $s1{var_end})
+  if0 $t1{t.0} goto :while3_end
+  if $t0{var_elem} goto :null18
+  Error("null pointer")
+null18:
+  $t1{t.1} = [$t0{var_elem}]
+  $t1{t.1} = [$t1{t.1}+4]
+  $a0 = $t0{var_elem}
+  call $t1{t.1}
+  $t1{t.2} = $v0
+  PrintIntS($t1{t.2})
+  if $s0{aux01} goto :null19
+  Error("null pointer")
+null19:
+  $t1{t.3} = [$s0{aux01}]
+  $t1{t.3} = [$t1{t.3}+32]
+  $a0 = $s0{aux01}
+  call $t1{t.3}
+  $s0{aux01} = $v0
+  if $s0{aux01} goto :null20
+  Error("null pointer")
+null20:
+  $t1{t.4} = [$s0{aux01}]
+  $t1{t.4} = [$t1{t.4}+24]
+  $a0 = $s0{aux01}
+  call $t1{t.4}
+  $s1{var_end} = $v0
+  if $s0{aux01} goto :null21
+  Error("null pointer")
+null21:
+  $t1{t.5} = [$s0{aux01}]
+  $t1{t.5} = [$t1{t.5}+28]
+  $a0 = $s0{aux01}
+  call $t1{t.5}
+  $t0{var_elem} = $v0
+  goto :while3_top
+while3_end:
+  $v0 = 1
+  $s0 = local[0]
+  $s1 = local[1]
+  ret
+
+func LL.Start [in 0, out 0, local 4]
+  local[0] = $s0
+  local[1] = $s1
+  local[2] = $s2
+  local[3] = $s3
+  $t0{t.0} = HeapAllocZ(16)
+  [$t0{t.0}] = :vmt_List
+  $s0{last_elem} = $t0{t.0}
+  if $s0{last_elem} goto :null22
+  Error("null pointer")
+null22:
+  $t0{t.1} = [$s0{last_elem}]
+  $t0{t.1} = [$t0{t.1}]
+  $a0 = $s0{last_elem}
+  call $t0{t.1}
+  $s0{head} = $s0{last_elem}
+  if $s0{head} goto :null23
+  Error("null pointer")
+null23:
+  $t0{t.2} = [$s0{head}]
+  $t0{t.2} = [$t0{t.2}]
+  $a0 = $s0{head}
+  call $t0{t.2}
+  if $s0{head} goto :null24
+  Error("null pointer")
+null24:
+  $t0{t.3} = [$s0{head}]
+  $t0{t.3} = [$t0{t.3}+36]
+  $a0 = $s0{head}
+  call $t0{t.3}
+  $t0{t.4} = HeapAllocZ(16)
+  [$t0{t.4}] = :vmt_Element
+  $s1{el01} = $t0{t.4}
+  if $s1{el01} goto :null25
+  Error("null pointer")
+null25:
+  $t0{t.5} = [$s1{el01}]
+  $t0{t.5} = [$t0{t.5}]
+  $a0 = $s1{el01}
+  $a1 = 25
+  $a2 = 37000
+  $a3 = 0
+  call $t0{t.5}
+  if $s0{head} goto :null26
+  Error("null pointer")
+null26:
+  $t0{t.6} = [$s0{head}]
+  $t0{t.6} = [$t0{t.6}+8]
+  $a0 = $s0{head}
+  $a1 = $s1{el01}
+  call $t0{t.6}
+  $s0{head} = $v0
+  if $s0{head} goto :null27
+  Error("null pointer")
+null27:
+  $t0{t.7} = [$s0{head}]
+  $t0{t.7} = [$t0{t.7}+36]
+  $a0 = $s0{head}
+  call $t0{t.7}
+  PrintIntS(10000000)
+  $t0{t.8} = HeapAllocZ(16)
+  [$t0{t.8}] = :vmt_Element
+  $s1{el01} = $t0{t.8}
+  if $s1{el01} goto :null28
+  Error("null pointer")
+null28:
+  $t0{t.9} = [$s1{el01}]
+  $t0{t.9} = [$t0{t.9}]
+  $a0 = $s1{el01}
+  $a1 = 39
+  $a2 = 42000
+  $a3 = 1
+  call $t0{t.9}
+  $s2{el02} = $s1{el01}
+  if $s0{head} goto :null29
+  Error("null pointer")
+null29:
+  $t0{t.10} = [$s0{head}]
+  $t0{t.10} = [$t0{t.10}+8]
+  $a0 = $s0{head}
+  $a1 = $s1{el01}
+  call $t0{t.10}
+  $s0{head} = $v0
+  if $s0{head} goto :null30
+  Error("null pointer")
+null30:
+  $t0{t.11} = [$s0{head}]
+  $t0{t.11} = [$t0{t.11}+36]
+  $a0 = $s0{head}
+  call $t0{t.11}
+  PrintIntS(10000000)
+  $t0{t.12} = HeapAllocZ(16)
+  [$t0{t.12}] = :vmt_Element
+  $s1{el01} = $t0{t.12}
+  if $s1{el01} goto :null31
+  Error("null pointer")
+null31:
+  $t0{t.13} = [$s1{el01}]
+  $t0{t.13} = [$t0{t.13}]
+  $a0 = $s1{el01}
+  $a1 = 22
+  $a2 = 34000
+  $a3 = 0
+  call $t0{t.13}
+  if $s0{head} goto :null32
+  Error("null pointer")
+null32:
+  $t0{t.14} = [$s0{head}]
+  $t0{t.14} = [$t0{t.14}+8]
+  $a0 = $s0{head}
+  $a1 = $s1{el01}
+  call $t0{t.14}
+  $s0{head} = $v0
+  if $s0{head} goto :null33
+  Error("null pointer")
+null33:
+  $t0{t.15} = [$s0{head}]
+  $t0{t.15} = [$t0{t.15}+36]
+  $a0 = $s0{head}
+  call $t0{t.15}
+  $t0{t.16} = HeapAllocZ(16)
+  [$t0{t.16}] = :vmt_Element
+  $s3{el03} = $t0{t.16}
+  if $s3{el03} goto :null34
+  Error("null pointer")
+null34:
+  $t0{t.17} = [$s3{el03}]
+  $t0{t.17} = [$t0{t.17}]
+  $a0 = $s3{el03}
+  $a1 = 27
+  $a2 = 34000
+  $a3 = 0
+  call $t0{t.17}
+  if $s0{head} goto :null35
+  Error("null pointer")
+null35:
+  $t0{t.18} = [$s0{head}]
+  $t0{t.18} = [$t0{t.18}+20]
+  $a0 = $s0{head}
+  $a1 = $s2{el02}
+  call $t0{t.18}
+  $t0{t.19} = $v0
+  PrintIntS($t0{t.19})
+  if $s0{head} goto :null36
+  Error("null pointer")
+null36:
+  $t0{t.20} = [$s0{head}]
+  $t0{t.20} = [$t0{t.20}+20]
+  $a0 = $s0{head}
+  $a1 = $s3{el03}
+  call $t0{t.20}
+  $t0{t.21} = $v0
+  PrintIntS($t0{t.21})
+  PrintIntS(10000000)
+  $t0{t.22} = HeapAllocZ(16)
+  [$t0{t.22}] = :vmt_Element
+  $s1{el01} = $t0{t.22}
+  if $s1{el01} goto :null37
+  Error("null pointer")
+null37:
+  $t0{t.23} = [$s1{el01}]
+  $t0{t.23} = [$t0{t.23}]
+  $a0 = $s1{el01}
+  $a1 = 28
+  $a2 = 35000
+  $a3 = 0
+  call $t0{t.23}
+  if $s0{head} goto :null38
+  Error("null pointer")
+null38:
+  $t0{t.24} = [$s0{head}]
+  $t0{t.24} = [$t0{t.24}+8]
+  $a0 = $s0{head}
+  $a1 = $s1{el01}
+  call $t0{t.24}
+  $s0{head} = $v0
+  if $s0{head} goto :null39
+  Error("null pointer")
+null39:
+  $t0{t.25} = [$s0{head}]
+  $t0{t.25} = [$t0{t.25}+36]
+  $a0 = $s0{head}
+  call $t0{t.25}
+  PrintIntS(2220000)
+  if $s0{head} goto :null40
+  Error("null pointer")
+null40:
+  $t0{t.26} = [$s0{head}]
+  $t0{t.26} = [$t0{t.26}+16]
+  $a0 = $s0{head}
+  $a1 = $s2{el02}
+  call $t0{t.26}
+  $s0{head} = $v0
+  if $s0{head} goto :null41
+  Error("null pointer")
+null41:
+  $t0{t.27} = [$s0{head}]
+  $t0{t.27} = [$t0{t.27}+36]
+  $a0 = $s0{head}
+  call $t0{t.27}
+  PrintIntS(33300000)
+  if $s0{head} goto :null42
+  Error("null pointer")
+null42:
+  $t0{t.28} = [$s0{head}]
+  $t0{t.28} = [$t0{t.28}+16]
+  $a0 = $s0{head}
+  $a1 = $s1{el01}
+  call $t0{t.28}
+  $s0{head} = $v0
+  if $s0{head} goto :null43
+  Error("null pointer")
+null43:
+  $t0{t.29} = [$s0{head}]
+  $t0{t.29} = [$t0{t.29}+36]
+  $a0 = $s0{head}
+  call $t0{t.29}
+  PrintIntS(44440000)
+  $v0 = 0
+  $s0 = local[0]
+  $s1 = local[1]
+  $s2 = local[2]
+  $s3 = local[3]
+  ret
+

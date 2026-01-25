@@ -1,0 +1,300 @@
+<html>
+
+<head>
+   <title>Vapor Language Specification</title>
+   <link rel="stylesheet" type="text/css" href="screen.css"/>
+</head>
+
+<body>
+
+<div id="header">
+  <a href="./">back</a>
+</div>
+
+<div id="content">
+
+<h1>Vapor Language Specification</h1>
+
+<p>
+A Vapor program is a list of functions and data segments.  For example:
+</p>
+
+<pre class="code">
+<b>func</b> DoSomething(a b)
+  PrintInt(a)
+  addr = <b>call</b> :LoadTableData(b)
+  val = [addr+4]
+  <b>ret</b> val
+
+<b>const</b> Table
+  2
+  3
+  5
+  7
+
+<b>func</b> LoadTableData(offset)
+  addr = Add(:Table offset)
+  <b>ret</b> addr
+</pre>
+
+<p>
+All values &mdash; integers and addresses &mdash; are four bytes long.
+</p>
+
+<h2><a>Identifiers</a></h2>
+
+<p>
+Identifiers are used for two things: variables and labels.  Variables are always local to a function; variable names must be unique within a function.
+</p>
+
+<p>
+There are three types of labels: data labels, code labels, and function labels.  All label names must be unique across the entire program.
+</p>
+
+<p>
+Identifiers consist of a sequence of letters, digits, dots ("."), and underscores ("_"), but the first character cannot be a digit or a dot.
+</p>
+
+<h2><a>Data Segments</a></h2>
+
+<p>
+Vapor has two types of global data segments.  A "const" segment is for read-only data (like virtual function tables).  A "var" segment is for global mutable data.
+</p>
+
+<p>
+Each section starts with a data labels and is followed by static data values.  For example:
+</p>
+
+<pre class="code">
+<b>const</b> MinutesPerHour
+  60
+
+<b>var</b> MyClass.FunctionTable
+  :MyClass.Start
+  :MyClass.Finish
+  -1
+</pre>
+
+<p>
+Each entry in a data segment is four bytes long.  The entire first segment is four bytes long and contains the 2's complement representation of the number 60.  It's a constant data segment and so memory write operations will fail at runtime.
+</p>
+
+<p>
+The second segment is twelve byte long and consists of the address of the "MyClass.Start" function, followed by the address of the "MyClass.Finish" function, followed by the 2's complement representation of the number -1.  This is a variable data segment and can be written to at runtime.
+</p>
+
+<p>
+The two data labels, "MinutesPerHour" and "MyClass.FunctionTable", can be used in other places in the program.
+</p>
+
+<h2><a>Functions</a></h2>
+
+<p>
+The syntax for a function definition is:
+</p>
+
+<pre class="code">
+<b>func</b> <span class="i">FunctionLabel</span>(<span class="i">Params...</span>)
+  <span class="i">Body...</span>
+</pre>
+
+<p>
+Each line of the body of a function is one of:
+</p>
+<ul>
+  <li>code label: <tt><span class="i">Label</span>:</tt></li>
+  <li>assignment: <tt><span class="i">Location</span> = <span class="i">Value</span></tt></li>
+  <li>branch: <tt><b>if</b> <span class="i">Value</span> <b>goto</b> <span class="i">CodeAddress</span></tt></li>
+  <li>goto: <tt><b>goto</b> <span class="i">CodeAddress</span></tt></li>
+  <li>function call: <tt><b>call</b> <span class="i">FunctionAddress</span> (<span class="i">Args...</span>)</tt></li>
+  <li>function return: <tt><b>ret</b> <span class="i">Value</span></tt></li>
+  <li>call to built-in operation: <tt><span class="i">OpName</span> (<span class="i">Args...</span>)</tt></li>
+</ul>
+
+<h3>Assignment</h3>
+
+<p>
+There are actually three distinct types of assignment.  The first is variable assignment:
+</p>
+
+<pre class="code">
+<span class="i">Var</span> = <span class="i">Value<span>
+</pre>
+
+<p>
+Here, "<tt><span class="i">Value</span></tt>" is either an integer literal, a string literal, a variable name, or a label reference ("<tt>:<span class="i">Label</span></tt>").
+</p>
+
+<p>For example:</p>
+
+<pre class="code">
+a = 12              <span class="p">Store the value 12 into variable 'a'.</span>
+a = sum             <span class="p">Copy the value in variable 'sum' into variable 'a'.</span>
+a = :Factorial      <span class="p">Store the address of the label Factorial into variable 'a'.</span>
+</pre>
+
+<p>
+The next two types of assignment are memory load and memory store.  Memory operations always operate on 4-byte quantities and memory addresses must be 4-byte aligned.
+</p>
+
+<pre class="code">
+<span class="i">Var</span> = <span class="i">MemoryReference</span>
+<span class="i">MemoryReference</span> = <span class="i">Value</span>
+</pre>
+
+<p>
+A memory reference consists of a base address, which is either a label reference or a register, followed by an integer offset (either positive or negative).
+</p>
+<ul>
+<li>
+  <tt>[:MyArray+4]</tt> refers to the address 4 bytes past the "MyArray" label.
+</li>
+<li>
+  <tt>[x-4]</tt> refers to the address 4 bytes before the address stored in variable 'x'.
+</li>
+</ul>
+</pre>
+
+<p>Some memory load/store examples:</p>
+
+<pre class="code">
+x = [:FunctionTable+8]
+[:GlobalCounter] = 15
+[array-4] = length
+</pre>
+
+<h3>Branch</h3>
+
+<p>
+There are two variants of the branch instruction:
+</p>
+
+<pre class="code">
+<b>if</b> <span class="i">Value</span> <b>goto</b> :<span class="i">CodeLabel</span>
+<b>if0</b> <span class="i">Value</span> <b>goto</b> :<span class="i">CodeLabel</span>
+</pre>
+
+<p>
+The "<tt>if</tt>" jumps to <tt><span class="i">CodeLabel</span></tt> if
+<tt><span class="i">Value</span></tt> is non-zero and falls through
+to the next instruction otherwise.  The "<tt>if0</tt>" does the opposite,
+jumping to the specified label if <tt><span class="i">Value</span></tt>
+is zero.
+</p>
+
+<h3>Goto</h3>
+
+<p>
+The "<tt>goto</tt>" instruction is an unconditional jump to the specified
+target.
+</p>
+
+<pre class="code">
+<b>goto</b> :<span class="i">CodeLabel</span>
+</pre>
+
+<p>
+In addition to jumping to fixed labels, the "<tt>goto</tt>" instruction
+can also jump to a computed address read in from a variable.
+</p>
+
+<pre class="code">
+<b>goto</b> <span class="i">Var</span>
+</pre>
+
+<h3>Function Call</h3>
+
+<pre class="code">
+<span class="i">Var</span> = <b>call</b> :<span class="i">FunctionLabel</span> (<span class="i">Args...</span>)
+</pre>
+
+<p>
+The "<tt><span class="i">Var</span> =</tt>" is optional.
+</p>
+
+<p>
+The "<tt><span class="i">Args...</span></tt>" list is a whitespace-separated
+list of "<tt><span class="i">Value</span></tt>" entries (either integer
+literals, variables, or label references).  The return value of the function
+is stored in the <tt><span class="i">Var</span></tt> variable.
+</p>
+
+<p>
+Like "<tt>goto</tt>", "<tt>call</tt>" can also use a function address loaded
+from a variable:
+</p>
+
+<pre class="code">
+<span class="i">Var</span> = <b>call</b> <span class="i">Var</span> (<span class="i">Args...</span>)
+</pre>
+
+<h3>Function Return</h3>
+
+The "<tt>ret</tt>" instruction returns from a function.  The return value is optional.
+
+<pre class="code">
+<b>ret</b> <span class="i">Value</span>
+<b>ret</b>
+</pre>
+
+<h3>Built-In Operations</h3>
+
+<p>
+In addition to the core language, the Vapor interpreter also supports a set of built-in operations for things like arithmetic, memory allocation, and displaying output.
+</p>
+
+<ul>
+
+<li>
+Basic arithmetic:
+<tt>Add</tt>, <tt>Sub</tt>, <tt>Mul</tt>, <tt>Div</tt>, <tt>Rem</tt>, 
+<tt>MulS</tt>, <tt>DivS</tt>, <tt>RemS</tt>, <tt>ShiftL</tt>, <tt>ShiftR</tt>, 
+<tt>ShiftLA</tt>.  The "<tt>-S</tt>" variants operate on signed integers.
+</li>
+
+<li>
+Comparison: <tt>Eq</tt>, <tt>Ne</tt>, <tt>Lt</tt>, <tt>Le</tt>,
+<tt>LtS</tt>, <tt>LeS</tt>.  The "<tt>-S</tt>" variants operate on
+signed integers.
+</li>
+
+<li>
+Bitwise boolean operators:
+<tt>And</tt>, <tt>Or</tt>, <tt>Not</tt>.
+</li>
+
+<li>
+<tt>HeapAlloc</tt> and <tt>HeapAllocZ</tt> take an integer &mdash; the number of bytes of memory to allocate &mdash; and returns the address of newly-allocated memory.  The "<tt>-Z</tt>" variant also initalizes the memory to all zero.
+</li>
+
+<li>
+Output:
+<tt>PrintInt</tt> and <tt>PrintIntS</tt> print out unsigned and signed integers, respectively.  <tt>PrintString</tt> prints out strings.  These do not return a value.
+</li>
+
+<li>
+<tt>Error</tt> is for abnormal program termination (for errors like null pointer deferences, etc).  It takes a string message to display to the user.
+</li>
+
+<li>
+<tt>DebugPrint</tt> is only for debugging.  It accepts any number of values and prints out the interpreter's internal representation of the value.  This can be useful for getting information about pointers.
+</li>
+
+</ul>
+
+<pre class="code">
+a = HeapAlloc(20)
+b = 12
+a = Add(a b)
+s = "Hello"
+PrintInt(13)
+PrintString(s)
+</pre>
+
+</div>
+
+<div id="footer">&nbsp;</div>
+
+</body>
+
+</html>

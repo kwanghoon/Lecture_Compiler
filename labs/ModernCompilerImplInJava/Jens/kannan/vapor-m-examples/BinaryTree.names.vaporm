@@ -1,0 +1,996 @@
+const vmt_BT
+  :BT.Start
+
+const vmt_Tree
+  :Tree.Init
+  :Tree.SetRight
+  :Tree.SetLeft
+  :Tree.GetRight
+  :Tree.GetLeft
+  :Tree.GetKey
+  :Tree.SetKey
+  :Tree.GetHas_Right
+  :Tree.GetHas_Left
+  :Tree.SetHas_Left
+  :Tree.SetHas_Right
+  :Tree.Compare
+  :Tree.Insert
+  :Tree.Delete
+  :Tree.Remove
+  :Tree.RemoveRight
+  :Tree.RemoveLeft
+  :Tree.Search
+  :Tree.Print
+  :Tree.RecPrint
+
+func Main [in 0, out 0, local 0]
+  $t0{t.0} = HeapAllocZ(4)
+  [$t0{t.0}] = :vmt_BT
+  if $t0{t.0} goto :null1
+  Error("null pointer")
+null1:
+  $t1{t.1} = [$t0{t.0}]
+  $t1{t.1} = [$t1{t.1}]
+  $a0 = $t0{t.0}
+  call $t1{t.1}
+  $t1{t.2} = $v0
+  PrintIntS($t1{t.2})
+  ret
+
+func BT.Start [in 0, out 0, local 1]
+  local[0] = $s0
+  $t0{t.0} = HeapAllocZ(28)
+  [$t0{t.0}] = :vmt_Tree
+  $s0{root} = $t0{t.0}
+  if $s0{root} goto :null2
+  Error("null pointer")
+null2:
+  $t0{t.1} = [$s0{root}]
+  $t0{t.1} = [$t0{t.1}]
+  $a0 = $s0{root}
+  $a1 = 16
+  call $t0{t.1}
+  if $s0{root} goto :null3
+  Error("null pointer")
+null3:
+  $t0{t.2} = [$s0{root}]
+  $t0{t.2} = [$t0{t.2}+72]
+  $a0 = $s0{root}
+  call $t0{t.2}
+  PrintIntS(100000000)
+  if $s0{root} goto :null4
+  Error("null pointer")
+null4:
+  $t0{t.3} = [$s0{root}]
+  $t0{t.3} = [$t0{t.3}+48]
+  $a0 = $s0{root}
+  $a1 = 8
+  call $t0{t.3}
+  if $s0{root} goto :null5
+  Error("null pointer")
+null5:
+  $t0{t.4} = [$s0{root}]
+  $t0{t.4} = [$t0{t.4}+72]
+  $a0 = $s0{root}
+  call $t0{t.4}
+  if $s0{root} goto :null6
+  Error("null pointer")
+null6:
+  $t0{t.5} = [$s0{root}]
+  $t0{t.5} = [$t0{t.5}+48]
+  $a0 = $s0{root}
+  $a1 = 24
+  call $t0{t.5}
+  if $s0{root} goto :null7
+  Error("null pointer")
+null7:
+  $t0{t.6} = [$s0{root}]
+  $t0{t.6} = [$t0{t.6}+48]
+  $a0 = $s0{root}
+  $a1 = 4
+  call $t0{t.6}
+  if $s0{root} goto :null8
+  Error("null pointer")
+null8:
+  $t0{t.7} = [$s0{root}]
+  $t0{t.7} = [$t0{t.7}+48]
+  $a0 = $s0{root}
+  $a1 = 12
+  call $t0{t.7}
+  if $s0{root} goto :null9
+  Error("null pointer")
+null9:
+  $t0{t.8} = [$s0{root}]
+  $t0{t.8} = [$t0{t.8}+48]
+  $a0 = $s0{root}
+  $a1 = 20
+  call $t0{t.8}
+  if $s0{root} goto :null10
+  Error("null pointer")
+null10:
+  $t0{t.9} = [$s0{root}]
+  $t0{t.9} = [$t0{t.9}+48]
+  $a0 = $s0{root}
+  $a1 = 28
+  call $t0{t.9}
+  if $s0{root} goto :null11
+  Error("null pointer")
+null11:
+  $t0{t.10} = [$s0{root}]
+  $t0{t.10} = [$t0{t.10}+48]
+  $a0 = $s0{root}
+  $a1 = 14
+  call $t0{t.10}
+  if $s0{root} goto :null12
+  Error("null pointer")
+null12:
+  $t0{t.11} = [$s0{root}]
+  $t0{t.11} = [$t0{t.11}+72]
+  $a0 = $s0{root}
+  call $t0{t.11}
+  if $s0{root} goto :null13
+  Error("null pointer")
+null13:
+  $t0{t.12} = [$s0{root}]
+  $t0{t.12} = [$t0{t.12}+68]
+  $a0 = $s0{root}
+  $a1 = 24
+  call $t0{t.12}
+  $t0{t.13} = $v0
+  PrintIntS($t0{t.13})
+  if $s0{root} goto :null14
+  Error("null pointer")
+null14:
+  $t0{t.14} = [$s0{root}]
+  $t0{t.14} = [$t0{t.14}+68]
+  $a0 = $s0{root}
+  $a1 = 12
+  call $t0{t.14}
+  $t0{t.15} = $v0
+  PrintIntS($t0{t.15})
+  if $s0{root} goto :null15
+  Error("null pointer")
+null15:
+  $t0{t.16} = [$s0{root}]
+  $t0{t.16} = [$t0{t.16}+68]
+  $a0 = $s0{root}
+  $a1 = 16
+  call $t0{t.16}
+  $t0{t.17} = $v0
+  PrintIntS($t0{t.17})
+  if $s0{root} goto :null16
+  Error("null pointer")
+null16:
+  $t0{t.18} = [$s0{root}]
+  $t0{t.18} = [$t0{t.18}+68]
+  $a0 = $s0{root}
+  $a1 = 50
+  call $t0{t.18}
+  $t0{t.19} = $v0
+  PrintIntS($t0{t.19})
+  if $s0{root} goto :null17
+  Error("null pointer")
+null17:
+  $t0{t.20} = [$s0{root}]
+  $t0{t.20} = [$t0{t.20}+68]
+  $a0 = $s0{root}
+  $a1 = 12
+  call $t0{t.20}
+  $t0{t.21} = $v0
+  PrintIntS($t0{t.21})
+  if $s0{root} goto :null18
+  Error("null pointer")
+null18:
+  $t0{t.22} = [$s0{root}]
+  $t0{t.22} = [$t0{t.22}+52]
+  $a0 = $s0{root}
+  $a1 = 12
+  call $t0{t.22}
+  if $s0{root} goto :null19
+  Error("null pointer")
+null19:
+  $t0{t.23} = [$s0{root}]
+  $t0{t.23} = [$t0{t.23}+72]
+  $a0 = $s0{root}
+  call $t0{t.23}
+  if $s0{root} goto :null20
+  Error("null pointer")
+null20:
+  $t0{t.24} = [$s0{root}]
+  $t0{t.24} = [$t0{t.24}+68]
+  $a0 = $s0{root}
+  $a1 = 12
+  call $t0{t.24}
+  $t0{t.25} = $v0
+  PrintIntS($t0{t.25})
+  $v0 = 0
+  $s0 = local[0]
+  ret
+
+func Tree.Init [in 0, out 0, local 0]
+  $t0{this} = $a0
+  $t1{v_key} = $a1
+  [$t0{this}+12] = $t1{v_key}
+  [$t0{this}+16] = 0
+  [$t0{this}+20] = 0
+  $v0 = 1
+  ret
+
+func Tree.SetRight [in 0, out 0, local 0]
+  $t0{this} = $a0
+  $t1{rn} = $a1
+  [$t0{this}+8] = $t1{rn}
+  $v0 = 1
+  ret
+
+func Tree.SetLeft [in 0, out 0, local 0]
+  $t0{this} = $a0
+  $t1{ln} = $a1
+  [$t0{this}+4] = $t1{ln}
+  $v0 = 1
+  ret
+
+func Tree.GetRight [in 0, out 0, local 0]
+  $t0{this} = $a0
+  $t0{t.0} = [$t0{this}+8]
+  $v0 = $t0{t.0}
+  ret
+
+func Tree.GetLeft [in 0, out 0, local 0]
+  $t0{this} = $a0
+  $t0{t.0} = [$t0{this}+4]
+  $v0 = $t0{t.0}
+  ret
+
+func Tree.GetKey [in 0, out 0, local 0]
+  $t0{this} = $a0
+  $t0{t.0} = [$t0{this}+12]
+  $v0 = $t0{t.0}
+  ret
+
+func Tree.SetKey [in 0, out 0, local 0]
+  $t0{this} = $a0
+  $t1{v_key} = $a1
+  [$t0{this}+12] = $t1{v_key}
+  $v0 = 1
+  ret
+
+func Tree.GetHas_Right [in 0, out 0, local 0]
+  $t0{this} = $a0
+  $t0{t.0} = [$t0{this}+20]
+  $v0 = $t0{t.0}
+  ret
+
+func Tree.GetHas_Left [in 0, out 0, local 0]
+  $t0{this} = $a0
+  $t0{t.0} = [$t0{this}+16]
+  $v0 = $t0{t.0}
+  ret
+
+func Tree.SetHas_Left [in 0, out 0, local 0]
+  $t0{this} = $a0
+  $t1{val} = $a1
+  [$t0{this}+16] = $t1{val}
+  $v0 = 1
+  ret
+
+func Tree.SetHas_Right [in 0, out 0, local 0]
+  $t0{this} = $a0
+  $t1{val} = $a1
+  [$t0{this}+20] = $t1{val}
+  $v0 = 1
+  ret
+
+func Tree.Compare [in 0, out 0, local 0]
+  $t0{num1} = $a1
+  $t1{num2} = $a2
+  $t2{nti} = Add($t1{num2} 1)
+  $t1{t.0} = LtS($t0{num1} $t1{num2})
+  if0 $t1{t.0} goto :if1_else
+  $t1{ntb} = 0
+  goto :if1_end
+if1_else:
+  $t2{t.1} = LtS($t0{num1} $t2{nti})
+  $t2{t.2} = Sub(1 $t2{t.1})
+  if0 $t2{t.2} goto :if2_else
+  $t1{ntb} = 0
+  goto :if2_end
+if2_else:
+  $t1{ntb} = 1
+if2_end:
+if1_end:
+  $v0 = $t1{ntb}
+  ret
+
+func Tree.Insert [in 0, out 0, local 4]
+  local[0] = $s0
+  local[1] = $s1
+  local[2] = $s2
+  local[3] = $s3
+  $s0{this} = $a0
+  $s1{v_key} = $a1
+  $t0{t.0} = HeapAllocZ(28)
+  [$t0{t.0}] = :vmt_Tree
+  $s2{new_node} = $t0{t.0}
+  if $s2{new_node} goto :null21
+  Error("null pointer")
+null21:
+  $t0{t.1} = [$s2{new_node}]
+  $t0{t.1} = [$t0{t.1}]
+  $a0 = $s2{new_node}
+  $a1 = $s1{v_key}
+  call $t0{t.1}
+  $s0{current_node} = $s0{this}
+  $s3{cont} = 1
+while1_top:
+  if0 $s3{cont} goto :while1_end
+  if $s0{current_node} goto :null22
+  Error("null pointer")
+null22:
+  $t0{t.2} = [$s0{current_node}]
+  $t0{t.2} = [$t0{t.2}+20]
+  $a0 = $s0{current_node}
+  call $t0{t.2}
+  $t0{key_aux} = $v0
+  $t0{t.3} = LtS($s1{v_key} $t0{key_aux})
+  if0 $t0{t.3} goto :if3_else
+  if $s0{current_node} goto :null23
+  Error("null pointer")
+null23:
+  $t0{t.4} = [$s0{current_node}]
+  $t0{t.4} = [$t0{t.4}+32]
+  $a0 = $s0{current_node}
+  call $t0{t.4}
+  $t0{t.5} = $v0
+  if0 $t0{t.5} goto :if4_else
+  if $s0{current_node} goto :null24
+  Error("null pointer")
+null24:
+  $t0{t.6} = [$s0{current_node}]
+  $t0{t.6} = [$t0{t.6}+16]
+  $a0 = $s0{current_node}
+  call $t0{t.6}
+  $s0{current_node} = $v0
+  goto :if4_end
+if4_else:
+  $s3{cont} = 0
+  if $s0{current_node} goto :null25
+  Error("null pointer")
+null25:
+  $t0{t.7} = [$s0{current_node}]
+  $t0{t.7} = [$t0{t.7}+36]
+  $a0 = $s0{current_node}
+  $a1 = 1
+  call $t0{t.7}
+  if $s0{current_node} goto :null26
+  Error("null pointer")
+null26:
+  $t0{t.8} = [$s0{current_node}]
+  $t0{t.8} = [$t0{t.8}+8]
+  $a0 = $s0{current_node}
+  $a1 = $s2{new_node}
+  call $t0{t.8}
+if4_end:
+  goto :if3_end
+if3_else:
+  if $s0{current_node} goto :null27
+  Error("null pointer")
+null27:
+  $t0{t.9} = [$s0{current_node}]
+  $t0{t.9} = [$t0{t.9}+28]
+  $a0 = $s0{current_node}
+  call $t0{t.9}
+  $t0{t.10} = $v0
+  if0 $t0{t.10} goto :if5_else
+  if $s0{current_node} goto :null28
+  Error("null pointer")
+null28:
+  $t0{t.11} = [$s0{current_node}]
+  $t0{t.11} = [$t0{t.11}+12]
+  $a0 = $s0{current_node}
+  call $t0{t.11}
+  $s0{current_node} = $v0
+  goto :if5_end
+if5_else:
+  $s3{cont} = 0
+  if $s0{current_node} goto :null29
+  Error("null pointer")
+null29:
+  $t0{t.12} = [$s0{current_node}]
+  $t0{t.12} = [$t0{t.12}+40]
+  $a0 = $s0{current_node}
+  $a1 = 1
+  call $t0{t.12}
+  if $s0{current_node} goto :null30
+  Error("null pointer")
+null30:
+  $t0{t.13} = [$s0{current_node}]
+  $t0{t.13} = [$t0{t.13}+4]
+  $a0 = $s0{current_node}
+  $a1 = $s2{new_node}
+  call $t0{t.13}
+if5_end:
+if3_end:
+  goto :while1_top
+while1_end:
+  $v0 = 1
+  $s0 = local[0]
+  $s1 = local[1]
+  $s2 = local[2]
+  $s3 = local[3]
+  ret
+
+func Tree.Delete [in 0, out 0, local 7]
+  local[0] = $s0
+  local[1] = $s1
+  local[2] = $s2
+  local[3] = $s3
+  local[4] = $s4
+  local[5] = $s5
+  local[6] = $s6
+  $s0{this} = $a0
+  $s1{v_key} = $a1
+  $s2{current_node} = $s0{this}
+  $s3{parent_node} = $s0{this}
+  $s4{cont} = 1
+  $s5{found} = 0
+  $s6{is_root} = 1
+while2_top:
+  if0 $s4{cont} goto :while2_end
+  if $s2{current_node} goto :null31
+  Error("null pointer")
+null31:
+  $t0{t.0} = [$s2{current_node}]
+  $t0{t.0} = [$t0{t.0}+20]
+  $a0 = $s2{current_node}
+  call $t0{t.0}
+  $t0{key_aux} = $v0
+  $t1{t.1} = LtS($s1{v_key} $t0{key_aux})
+  if0 $t1{t.1} goto :if6_else
+  if $s2{current_node} goto :null32
+  Error("null pointer")
+null32:
+  $t1{t.2} = [$s2{current_node}]
+  $t1{t.2} = [$t1{t.2}+32]
+  $a0 = $s2{current_node}
+  call $t1{t.2}
+  $t1{t.3} = $v0
+  if0 $t1{t.3} goto :if7_else
+  $s3{parent_node} = $s2{current_node}
+  if $s2{current_node} goto :null33
+  Error("null pointer")
+null33:
+  $t1{t.4} = [$s2{current_node}]
+  $t1{t.4} = [$t1{t.4}+16]
+  $a0 = $s2{current_node}
+  call $t1{t.4}
+  $s2{current_node} = $v0
+  goto :if7_end
+if7_else:
+  $s4{cont} = 0
+if7_end:
+  goto :if6_end
+if6_else:
+  $t0{t.5} = LtS($t0{key_aux} $s1{v_key})
+  if0 $t0{t.5} goto :if8_else
+  if $s2{current_node} goto :null34
+  Error("null pointer")
+null34:
+  $t0{t.6} = [$s2{current_node}]
+  $t0{t.6} = [$t0{t.6}+28]
+  $a0 = $s2{current_node}
+  call $t0{t.6}
+  $t0{t.7} = $v0
+  if0 $t0{t.7} goto :if9_else
+  $s3{parent_node} = $s2{current_node}
+  if $s2{current_node} goto :null35
+  Error("null pointer")
+null35:
+  $t0{t.8} = [$s2{current_node}]
+  $t0{t.8} = [$t0{t.8}+12]
+  $a0 = $s2{current_node}
+  call $t0{t.8}
+  $s2{current_node} = $v0
+  goto :if9_end
+if9_else:
+  $s4{cont} = 0
+if9_end:
+  goto :if8_end
+if8_else:
+  if0 $s6{is_root} goto :if10_else
+  if $s2{current_node} goto :null36
+  Error("null pointer")
+null36:
+  $t0{t.10} = [$s2{current_node}]
+  $t0{t.10} = [$t0{t.10}+28]
+  $a0 = $s2{current_node}
+  call $t0{t.10}
+  $t0{t.11} = $v0
+  $t0{t.12} = Sub(1 $t0{t.11})
+  if0 $t0{t.12} goto :ss1_else
+  if $s2{current_node} goto :null37
+  Error("null pointer")
+null37:
+  $t0{t.13} = [$s2{current_node}]
+  $t0{t.13} = [$t0{t.13}+32]
+  $a0 = $s2{current_node}
+  call $t0{t.13}
+  $t0{t.14} = $v0
+  $t0{t.9} = Sub(1 $t0{t.14})
+  goto :ss1_end
+ss1_else:
+  $t0{t.9} = 0
+ss1_end:
+  if0 $t0{t.9} goto :if11_else
+  goto :if11_end
+if11_else:
+  $t0{t.15} = [$s0{this}]
+  $t0{t.15} = [$t0{t.15}+56]
+  $a0 = $s0{this}
+  $a1 = $s3{parent_node}
+  $a2 = $s2{current_node}
+  call $t0{t.15}
+if11_end:
+  goto :if10_end
+if10_else:
+  $t0{t.16} = [$s0{this}]
+  $t0{t.16} = [$t0{t.16}+56]
+  $a0 = $s0{this}
+  $a1 = $s3{parent_node}
+  $a2 = $s2{current_node}
+  call $t0{t.16}
+if10_end:
+  $s5{found} = 1
+  $s4{cont} = 0
+if8_end:
+if6_end:
+  $s6{is_root} = 0
+  goto :while2_top
+while2_end:
+  $v0 = $s5{found}
+  $s0 = local[0]
+  $s1 = local[1]
+  $s2 = local[2]
+  $s3 = local[3]
+  $s4 = local[4]
+  $s5 = local[5]
+  $s6 = local[6]
+  ret
+
+func Tree.Remove [in 0, out 0, local 3]
+  local[0] = $s0
+  local[1] = $s1
+  local[2] = $s2
+  $s0{this} = $a0
+  $s1{p_node} = $a1
+  $s2{c_node} = $a2
+  if $s2{c_node} goto :null38
+  Error("null pointer")
+null38:
+  $t0{t.0} = [$s2{c_node}]
+  $t0{t.0} = [$t0{t.0}+32]
+  $a0 = $s2{c_node}
+  call $t0{t.0}
+  $t0{t.1} = $v0
+  if0 $t0{t.1} goto :if12_else
+  $t0{t.2} = [$s0{this}]
+  $t0{t.2} = [$t0{t.2}+64]
+  $a0 = $s0{this}
+  $a1 = $s1{p_node}
+  $a2 = $s2{c_node}
+  call $t0{t.2}
+  goto :if12_end
+if12_else:
+  if $s2{c_node} goto :null39
+  Error("null pointer")
+null39:
+  $t0{t.3} = [$s2{c_node}]
+  $t0{t.3} = [$t0{t.3}+28]
+  $a0 = $s2{c_node}
+  call $t0{t.3}
+  $t0{t.4} = $v0
+  if0 $t0{t.4} goto :if13_else
+  $t0{t.5} = [$s0{this}]
+  $t0{t.5} = [$t0{t.5}+60]
+  $a0 = $s0{this}
+  $a1 = $s1{p_node}
+  $a2 = $s2{c_node}
+  call $t0{t.5}
+  goto :if13_end
+if13_else:
+  if $s2{c_node} goto :null40
+  Error("null pointer")
+null40:
+  $t0{t.6} = [$s2{c_node}]
+  $t0{t.6} = [$t0{t.6}+20]
+  $a0 = $s2{c_node}
+  call $t0{t.6}
+  $s2{auxkey1} = $v0
+  if $s1{p_node} goto :null41
+  Error("null pointer")
+null41:
+  $t0{t.7} = [$s1{p_node}]
+  $t0{t.7} = [$t0{t.7}+16]
+  $a0 = $s1{p_node}
+  call $t0{t.7}
+  $t0{t.8} = $v0
+  if $t0{t.8} goto :null42
+  Error("null pointer")
+null42:
+  $t1{t.9} = [$t0{t.8}]
+  $t1{t.9} = [$t1{t.9}+20]
+  $a0 = $t0{t.8}
+  call $t1{t.9}
+  $t1{auxkey2} = $v0
+  $t0{t.10} = [$s0{this}]
+  $t0{t.10} = [$t0{t.10}+44]
+  $a0 = $s0{this}
+  $a1 = $s2{auxkey1}
+  $a2 = $t1{auxkey2}
+  call $t0{t.10}
+  $t0{t.11} = $v0
+  if0 $t0{t.11} goto :if14_else
+  if $s1{p_node} goto :null43
+  Error("null pointer")
+null43:
+  $t0{t.12} = [$s1{p_node}]
+  $t0{t.12} = [$t0{t.12}+8]
+  $t1{t.13} = [$s0{this}+24]
+  $a0 = $s1{p_node}
+  $a1 = $t1{t.13}
+  call $t0{t.12}
+  if $s1{p_node} goto :null44
+  Error("null pointer")
+null44:
+  $t1{t.14} = [$s1{p_node}]
+  $t1{t.14} = [$t1{t.14}+36]
+  $a0 = $s1{p_node}
+  $a1 = 0
+  call $t1{t.14}
+  goto :if14_end
+if14_else:
+  if $s1{p_node} goto :null45
+  Error("null pointer")
+null45:
+  $t1{t.15} = [$s1{p_node}]
+  $t1{t.15} = [$t1{t.15}+4]
+  $t0{t.16} = [$s0{this}+24]
+  $a0 = $s1{p_node}
+  $a1 = $t0{t.16}
+  call $t1{t.15}
+  if $s1{p_node} goto :null46
+  Error("null pointer")
+null46:
+  $t0{t.17} = [$s1{p_node}]
+  $t0{t.17} = [$t0{t.17}+40]
+  $a0 = $s1{p_node}
+  $a1 = 0
+  call $t0{t.17}
+if14_end:
+if13_end:
+if12_end:
+  $v0 = 1
+  $s0 = local[0]
+  $s1 = local[1]
+  $s2 = local[2]
+  ret
+
+func Tree.RemoveRight [in 0, out 0, local 4]
+  local[0] = $s0
+  local[1] = $s1
+  local[2] = $s2
+  local[3] = $s3
+  $s0{this} = $a0
+  $s1{p_node} = $a1
+  $s2{c_node} = $a2
+while3_top:
+  if $s2{c_node} goto :null47
+  Error("null pointer")
+null47:
+  $t0{t.0} = [$s2{c_node}]
+  $t0{t.0} = [$t0{t.0}+28]
+  $a0 = $s2{c_node}
+  call $t0{t.0}
+  $t0{t.1} = $v0
+  if0 $t0{t.1} goto :while3_end
+  if $s2{c_node} goto :null48
+  Error("null pointer")
+null48:
+  $s3{t.2} = [$s2{c_node}]
+  $s3{t.2} = [$s3{t.2}+24]
+  if $s2{c_node} goto :null49
+  Error("null pointer")
+null49:
+  $t0{t.3} = [$s2{c_node}]
+  $t0{t.3} = [$t0{t.3}+12]
+  $a0 = $s2{c_node}
+  call $t0{t.3}
+  $t0{t.4} = $v0
+  if $t0{t.4} goto :null50
+  Error("null pointer")
+null50:
+  $t1{t.5} = [$t0{t.4}]
+  $t1{t.5} = [$t1{t.5}+20]
+  $a0 = $t0{t.4}
+  call $t1{t.5}
+  $t1{t.6} = $v0
+  $a0 = $s2{c_node}
+  $a1 = $t1{t.6}
+  call $s3{t.2}
+  $s1{p_node} = $s2{c_node}
+  if $s2{c_node} goto :null51
+  Error("null pointer")
+null51:
+  $t1{t.7} = [$s2{c_node}]
+  $t1{t.7} = [$t1{t.7}+12]
+  $a0 = $s2{c_node}
+  call $t1{t.7}
+  $s2{c_node} = $v0
+  goto :while3_top
+while3_end:
+  if $s1{p_node} goto :null52
+  Error("null pointer")
+null52:
+  $t1{t.8} = [$s1{p_node}]
+  $t1{t.8} = [$t1{t.8}+4]
+  $t0{t.9} = [$s0{this}+24]
+  $a0 = $s1{p_node}
+  $a1 = $t0{t.9}
+  call $t1{t.8}
+  if $s1{p_node} goto :null53
+  Error("null pointer")
+null53:
+  $t0{t.10} = [$s1{p_node}]
+  $t0{t.10} = [$t0{t.10}+40]
+  $a0 = $s1{p_node}
+  $a1 = 0
+  call $t0{t.10}
+  $v0 = 1
+  $s0 = local[0]
+  $s1 = local[1]
+  $s2 = local[2]
+  $s3 = local[3]
+  ret
+
+func Tree.RemoveLeft [in 0, out 0, local 4]
+  local[0] = $s0
+  local[1] = $s1
+  local[2] = $s2
+  local[3] = $s3
+  $s0{this} = $a0
+  $s1{p_node} = $a1
+  $s2{c_node} = $a2
+while4_top:
+  if $s2{c_node} goto :null54
+  Error("null pointer")
+null54:
+  $t0{t.0} = [$s2{c_node}]
+  $t0{t.0} = [$t0{t.0}+32]
+  $a0 = $s2{c_node}
+  call $t0{t.0}
+  $t0{t.1} = $v0
+  if0 $t0{t.1} goto :while4_end
+  if $s2{c_node} goto :null55
+  Error("null pointer")
+null55:
+  $s3{t.2} = [$s2{c_node}]
+  $s3{t.2} = [$s3{t.2}+24]
+  if $s2{c_node} goto :null56
+  Error("null pointer")
+null56:
+  $t0{t.3} = [$s2{c_node}]
+  $t0{t.3} = [$t0{t.3}+16]
+  $a0 = $s2{c_node}
+  call $t0{t.3}
+  $t0{t.4} = $v0
+  if $t0{t.4} goto :null57
+  Error("null pointer")
+null57:
+  $t1{t.5} = [$t0{t.4}]
+  $t1{t.5} = [$t1{t.5}+20]
+  $a0 = $t0{t.4}
+  call $t1{t.5}
+  $t1{t.6} = $v0
+  $a0 = $s2{c_node}
+  $a1 = $t1{t.6}
+  call $s3{t.2}
+  $s1{p_node} = $s2{c_node}
+  if $s2{c_node} goto :null58
+  Error("null pointer")
+null58:
+  $t1{t.7} = [$s2{c_node}]
+  $t1{t.7} = [$t1{t.7}+16]
+  $a0 = $s2{c_node}
+  call $t1{t.7}
+  $s2{c_node} = $v0
+  goto :while4_top
+while4_end:
+  if $s1{p_node} goto :null59
+  Error("null pointer")
+null59:
+  $t1{t.8} = [$s1{p_node}]
+  $t1{t.8} = [$t1{t.8}+8]
+  $t0{t.9} = [$s0{this}+24]
+  $a0 = $s1{p_node}
+  $a1 = $t0{t.9}
+  call $t1{t.8}
+  if $s1{p_node} goto :null60
+  Error("null pointer")
+null60:
+  $t0{t.10} = [$s1{p_node}]
+  $t0{t.10} = [$t0{t.10}+36]
+  $a0 = $s1{p_node}
+  $a1 = 0
+  call $t0{t.10}
+  $v0 = 1
+  $s0 = local[0]
+  $s1 = local[1]
+  $s2 = local[2]
+  $s3 = local[3]
+  ret
+
+func Tree.Search [in 0, out 0, local 4]
+  local[0] = $s0
+  local[1] = $s1
+  local[2] = $s2
+  local[3] = $s3
+  $t0{this} = $a0
+  $s0{v_key} = $a1
+  $s1{current_node} = $t0{this}
+  $s2{cont} = 1
+  $s3{ifound} = 0
+while5_top:
+  if0 $s2{cont} goto :while5_end
+  if $s1{current_node} goto :null61
+  Error("null pointer")
+null61:
+  $t0{t.0} = [$s1{current_node}]
+  $t0{t.0} = [$t0{t.0}+20]
+  $a0 = $s1{current_node}
+  call $t0{t.0}
+  $t0{key_aux} = $v0
+  $t1{t.1} = LtS($s0{v_key} $t0{key_aux})
+  if0 $t1{t.1} goto :if15_else
+  if $s1{current_node} goto :null62
+  Error("null pointer")
+null62:
+  $t1{t.2} = [$s1{current_node}]
+  $t1{t.2} = [$t1{t.2}+32]
+  $a0 = $s1{current_node}
+  call $t1{t.2}
+  $t1{t.3} = $v0
+  if0 $t1{t.3} goto :if16_else
+  if $s1{current_node} goto :null63
+  Error("null pointer")
+null63:
+  $t1{t.4} = [$s1{current_node}]
+  $t1{t.4} = [$t1{t.4}+16]
+  $a0 = $s1{current_node}
+  call $t1{t.4}
+  $s1{current_node} = $v0
+  goto :if16_end
+if16_else:
+  $s2{cont} = 0
+if16_end:
+  goto :if15_end
+if15_else:
+  $t0{t.5} = LtS($t0{key_aux} $s0{v_key})
+  if0 $t0{t.5} goto :if17_else
+  if $s1{current_node} goto :null64
+  Error("null pointer")
+null64:
+  $t0{t.6} = [$s1{current_node}]
+  $t0{t.6} = [$t0{t.6}+28]
+  $a0 = $s1{current_node}
+  call $t0{t.6}
+  $t0{t.7} = $v0
+  if0 $t0{t.7} goto :if18_else
+  if $s1{current_node} goto :null65
+  Error("null pointer")
+null65:
+  $t0{t.8} = [$s1{current_node}]
+  $t0{t.8} = [$t0{t.8}+12]
+  $a0 = $s1{current_node}
+  call $t0{t.8}
+  $s1{current_node} = $v0
+  goto :if18_end
+if18_else:
+  $s2{cont} = 0
+if18_end:
+  goto :if17_end
+if17_else:
+  $s3{ifound} = 1
+  $s2{cont} = 0
+if17_end:
+if15_end:
+  goto :while5_top
+while5_end:
+  $v0 = $s3{ifound}
+  $s0 = local[0]
+  $s1 = local[1]
+  $s2 = local[2]
+  $s3 = local[3]
+  ret
+
+func Tree.Print [in 0, out 0, local 0]
+  $t0{this} = $a0
+  $t1{current_node} = $t0{this}
+  $t2{t.0} = [$t0{this}]
+  $t2{t.0} = [$t2{t.0}+76]
+  $a0 = $t0{this}
+  $a1 = $t1{current_node}
+  call $t2{t.0}
+  $v0 = 1
+  ret
+
+func Tree.RecPrint [in 0, out 0, local 3]
+  local[0] = $s0
+  local[1] = $s1
+  local[2] = $s2
+  $s0{this} = $a0
+  $s1{node} = $a1
+  if $s1{node} goto :null66
+  Error("null pointer")
+null66:
+  $t0{t.0} = [$s1{node}]
+  $t0{t.0} = [$t0{t.0}+32]
+  $a0 = $s1{node}
+  call $t0{t.0}
+  $t0{t.1} = $v0
+  if0 $t0{t.1} goto :if19_else
+  $s2{t.2} = [$s0{this}]
+  $s2{t.2} = [$s2{t.2}+76]
+  if $s1{node} goto :null67
+  Error("null pointer")
+null67:
+  $t0{t.3} = [$s1{node}]
+  $t0{t.3} = [$t0{t.3}+16]
+  $a0 = $s1{node}
+  call $t0{t.3}
+  $t0{t.4} = $v0
+  $a0 = $s0{this}
+  $a1 = $t0{t.4}
+  call $s2{t.2}
+  goto :if19_end
+if19_else:
+if19_end:
+  if $s1{node} goto :null68
+  Error("null pointer")
+null68:
+  $t0{t.5} = [$s1{node}]
+  $t0{t.5} = [$t0{t.5}+20]
+  $a0 = $s1{node}
+  call $t0{t.5}
+  $t0{t.6} = $v0
+  PrintIntS($t0{t.6})
+  if $s1{node} goto :null69
+  Error("null pointer")
+null69:
+  $t0{t.7} = [$s1{node}]
+  $t0{t.7} = [$t0{t.7}+28]
+  $a0 = $s1{node}
+  call $t0{t.7}
+  $t0{t.8} = $v0
+  if0 $t0{t.8} goto :if20_else
+  $s2{t.9} = [$s0{this}]
+  $s2{t.9} = [$s2{t.9}+76]
+  if $s1{node} goto :null70
+  Error("null pointer")
+null70:
+  $t0{t.10} = [$s1{node}]
+  $t0{t.10} = [$t0{t.10}+12]
+  $a0 = $s1{node}
+  call $t0{t.10}
+  $t0{t.11} = $v0
+  $a0 = $s0{this}
+  $a1 = $t0{t.11}
+  call $s2{t.9}
+  goto :if20_end
+if20_else:
+if20_end:
+  $v0 = 1
+  $s0 = local[0]
+  $s1 = local[1]
+  $s2 = local[2]
+  ret
+

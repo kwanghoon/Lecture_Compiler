@@ -1,0 +1,64 @@
+func Main
+  in 0, out 3, callee-saves 0, spills 0
+Live In:
+  t.0: 7
+Linear Range:
+  t.0: 6-7
+Allocation:
+  t.0: t0
+
+func MT4.Start
+  in 3, out 3, callee-saves 0, spills 0
+Live In:
+  this: 11-17
+  p1: 11-17
+  p2: 11-17
+  p3: 11-17
+  p4: 11-17
+  p5: 11-17
+  p6: 11-17
+  aux: 18
+Linear Range:
+  this: 10-17
+  p1: 10-17
+  p2: 10-17
+  p3: 10-17
+  p4: 10-17
+  p5: 10-17
+  p6: 10-17
+  aux: 17-18
+Allocation:
+  this: t0
+  p1: t1
+  p2: t2
+  p3: t3
+  p4: t4
+  p5: t5
+  p6: t6
+  aux: t6
+
+func MT4.Change
+  in 3, out 0, callee-saves 0, spills 0
+Live In:
+  this:
+  p1: 21
+  p2: 21-22
+  p3: 21-23
+  p4: 21-24
+  p5: 21-25
+  p6: 21-26
+Linear Range:
+  p1: 20-21
+  p2: 20-22
+  p3: 20-23
+  p4: 20-24
+  p5: 20-25
+  p6: 20-26
+Allocation:
+  p1: t0
+  p2: t1
+  p3: t2
+  p4: t3
+  p5: t4
+  p6: t5
+

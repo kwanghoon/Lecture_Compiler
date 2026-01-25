@@ -1,0 +1,193 @@
+func Main
+  in 0, out 0, callee-saves 0, spills 0
+Live In:
+  t.0: 11-12 15-17
+  t.1: 16-17
+  t.2: 18
+Linear Range:
+  t.0: 10-17
+  t.1: 15-17
+  t.2: 17-18
+Allocation:
+  t.0: t0
+  t.1: t1
+  t.2: t1
+
+func LS.Start
+  in 0, out 0, callee-saves 1, spills 0
+Live In:
+  this: 22-43
+  sz: 22-24
+  t.0: 23-24
+  aux01:
+  t.1: 26-27
+  aux02:
+  t.2: 30-31
+  t.3: 32
+  t.4: 34-35
+  t.5: 36
+  t.6: 38-39
+  t.7: 40
+  t.8: 42-43
+  t.9: 44
+Linear Range:
+  this: 21-43 (cross call)
+  sz: 21-24
+  t.0: 22-24
+  t.1: 25-27
+  t.2: 29-31
+  t.3: 31-32
+  t.4: 33-35
+  t.5: 35-36
+  t.6: 37-39
+  t.7: 39-40
+  t.8: 41-43
+  t.9: 43-44
+Allocation:
+  this: s0
+  sz: t0
+  t.0: t1
+  t.1: t1
+  t.2: t1
+  t.3: t1
+  t.4: t1
+  t.5: t1
+  t.6: t1
+  t.7: t1
+  t.8: t1
+  t.9: t1
+
+func LS.Print
+  in 0, out 0, callee-saves 0, spills 0
+Live In:
+  this: 48-54 57-59 62-67
+  j: 50-54 57-59 62-67
+  t.0: 51
+  t.1: 52
+  t.2: 54 57-59 62-63
+  t.3: 58-59 63-64
+  t.4: 65
+Linear Range:
+  this: 47-67
+  j: 48-67
+  t.0: 50-51
+  t.1: 51-52
+  t.2: 53-63
+  t.3: 57-64
+  t.4: 64-65
+Allocation:
+  this: t0
+  j: t1
+  t.0: t2
+  t.1: t2
+  t.2: t2
+  t.3: t3
+  t.4: t3
+
+func LS.Search
+  in 0, out 0, callee-saves 0, spills 0
+Live In:
+  this: 72-80 83-85 88-109
+  num: 72-80 83-85 88-109
+  j: 73-80 83-85 88-101 108-109
+  ls01:
+  ifound: 76-80 83-85 88-101 105-111
+  t.0: 77
+  t.1: 78
+  t.2: 80 83-85 88-89
+  t.3: 84-85 89-90
+  aux01: 91-93 97
+  aux02: 92-93 97
+  t.4: 93
+  nt:
+  t.5: 98
+  t.6: 99
+Linear Range:
+  this: 71-109
+  num: 71-109
+  j: 72-109
+  ifound: 74-111
+  t.0: 76-77
+  t.1: 77-78
+  t.2: 79-89
+  t.3: 83-90
+  aux01: 90-97
+  aux02: 91-97
+  t.4: 92-93
+  t.5: 97-98
+  t.6: 98-99
+Allocation:
+  this: t0
+  num: t1
+  j: t2
+  ifound: t3
+  t.0: t4
+  t.1: t4
+  t.2: t4
+  t.3: t5
+  aux01: t5
+  aux02: t4
+  t.4: t6
+  t.5: t4
+  t.6: t4
+
+func LS.Init
+  in 0, out 0, callee-saves 1, spills 0
+Live In:
+  this: 114-127 130-132 135-141
+  sz: 114-115
+  t.0: 116
+  j: 118-127 130-132 135-141
+  t.1: 119
+  k: 121-127 130-132 135-141
+  t.2: 122
+  t.3: 123
+  aux01: 125-127 130-132 135-137
+  aux02: 126-127 130-132 135-137
+  t.4: 127 130-132 135-136
+  t.5: 131-132 136-138
+  t.6: 138
+Linear Range:
+  this: 113-141 (cross call)
+  sz: 113-115
+  t.0: 115-116
+  j: 117-141
+  t.1: 118-119
+  k: 119-141
+  t.2: 121-122
+  t.3: 122-123
+  aux01: 124-137
+  aux02: 125-137
+  t.4: 126-136
+  t.5: 130-138
+  t.6: 137-138
+Allocation:
+  this: s0
+  sz: t0
+  t.0: t0
+  j: t0
+  t.1: t1
+  k: t1
+  t.2: t2
+  t.3: t2
+  aux01: t2
+  aux02: t3
+  t.4: t4
+  t.5: t5
+  t.6: t3
+
+func AllocArray
+  in 0, out 0, callee-saves 0, spills 0
+Live In:
+  size: 146-149
+  bytes: 147-148
+  v: 149-150
+Linear Range:
+  size: 145-149
+  bytes: 146-148
+  v: 148-150
+Allocation:
+  size: t0
+  bytes: t1
+  v: t1
+
