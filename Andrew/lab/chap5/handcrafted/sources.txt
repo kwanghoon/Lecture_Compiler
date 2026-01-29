@@ -5,6 +5,7 @@
 ./visitor/Visitor.java
 ./visitor/DepthFirstVisitor.java
 ./visitor/TypeDepthFirstVisitor.java
+./visitor/TypeCheckVisitor.java
 ./visitor/PrettyPrintVisitor.java
 ./MiniJavaParserTokenManager.java
 ./ParseException.java
