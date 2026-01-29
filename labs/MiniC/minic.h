@@ -1,2 +1,0 @@
-
-char* toString(char* temp);
