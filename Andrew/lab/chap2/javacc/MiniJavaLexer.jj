@@ -25,6 +25,13 @@ SKIP : {
   " " | "\t" | "\r" | "\n"
 }
 
+SPECIAL_TOKEN : /* COMMENTS */
+{
+  <SINGLE_LINE_COMMENT: "//" (~["\n","\r"])* ("\n"|"\r"|"\r\n")>
+| <FORMAL_COMMENT: "/**" (~["*"])* "*" ("*" | (~["*","/"] (~["*"])* "*"))* "/">
+| <MULTI_LINE_COMMENT: "/*" (~["*"])* "*" ("*" | (~["*","/"] (~["*"])* "*"))* "/">
+}
+
 // <DIGIT>
 // ['0'..'9']
 
@@ -54,8 +61,8 @@ TOKEN : {
 | < LENGTH: "length" >
 | < PRINTLN: "System.out.println" >
 | < ANDAND: "&&" >
-| < DIGIT: ["0"-"9"] >
-| < IDENTIFIER: ["a"-"z","A"-"Z"] (["a"-"z","A"-"Z"] | <DIGIT>)* >
+| < #DIGIT: ["0"-"9"] >
+| < IDENTIFIER: ["_", "a"-"z","A"-"Z"] (["_", "a"-"z","A"-"Z"] | <DIGIT>)* >
 | < INTEGER_LITERAL: (<DIGIT>)+ >
 | < LBRACE:"{" > | < RBRACE:"}" > | < LPAREN:"(" > | < RPAREN:")" >
 | < LBRACK:"[" > | < RBRACK:"]" > | < SEMI:";" > | < COMMA:"," >

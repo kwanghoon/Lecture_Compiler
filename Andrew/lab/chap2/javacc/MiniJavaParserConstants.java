@@ -9,79 +9,85 @@ public interface MiniJavaParserConstants {
   /** End of File. */
   int EOF = 0;
   /** RegularExpression Id. */
-  int CLASS = 5;
+  int SINGLE_LINE_COMMENT = 5;
   /** RegularExpression Id. */
-  int PUBLIC = 6;
+  int FORMAL_COMMENT = 6;
   /** RegularExpression Id. */
-  int STATIC = 7;
+  int MULTI_LINE_COMMENT = 7;
   /** RegularExpression Id. */
-  int VOID = 8;
+  int CLASS = 8;
   /** RegularExpression Id. */
-  int MAIN = 9;
+  int PUBLIC = 9;
   /** RegularExpression Id. */
-  int EXTENDS = 10;
+  int STATIC = 10;
   /** RegularExpression Id. */
-  int RETURN = 11;
+  int VOID = 11;
   /** RegularExpression Id. */
-  int INT = 12;
+  int MAIN = 12;
   /** RegularExpression Id. */
-  int BOOLEAN = 13;
+  int EXTENDS = 13;
   /** RegularExpression Id. */
-  int IF = 14;
+  int RETURN = 14;
   /** RegularExpression Id. */
-  int ELSE = 15;
+  int INT = 15;
   /** RegularExpression Id. */
-  int WHILE = 16;
+  int BOOLEAN = 16;
   /** RegularExpression Id. */
-  int TRUE = 17;
+  int IF = 17;
   /** RegularExpression Id. */
-  int FALSE = 18;
+  int ELSE = 18;
   /** RegularExpression Id. */
-  int THIS = 19;
+  int WHILE = 19;
   /** RegularExpression Id. */
-  int NEW = 20;
+  int TRUE = 20;
   /** RegularExpression Id. */
-  int LENGTH = 21;
+  int FALSE = 21;
   /** RegularExpression Id. */
-  int PRINTLN = 22;
+  int THIS = 22;
   /** RegularExpression Id. */
-  int ANDAND = 23;
+  int NEW = 23;
   /** RegularExpression Id. */
-  int DIGIT = 24;
+  int LENGTH = 24;
   /** RegularExpression Id. */
-  int IDENTIFIER = 25;
+  int PRINTLN = 25;
   /** RegularExpression Id. */
-  int INTEGER_LITERAL = 26;
+  int ANDAND = 26;
   /** RegularExpression Id. */
-  int LBRACE = 27;
+  int DIGIT = 27;
   /** RegularExpression Id. */
-  int RBRACE = 28;
+  int IDENTIFIER = 28;
   /** RegularExpression Id. */
-  int LPAREN = 29;
+  int INTEGER_LITERAL = 29;
   /** RegularExpression Id. */
-  int RPAREN = 30;
+  int LBRACE = 30;
   /** RegularExpression Id. */
-  int LBRACK = 31;
+  int RBRACE = 31;
   /** RegularExpression Id. */
-  int RBRACK = 32;
+  int LPAREN = 32;
   /** RegularExpression Id. */
-  int SEMI = 33;
+  int RPAREN = 33;
   /** RegularExpression Id. */
-  int COMMA = 34;
+  int LBRACK = 34;
   /** RegularExpression Id. */
-  int ASSIGN = 35;
+  int RBRACK = 35;
   /** RegularExpression Id. */
-  int LT = 36;
+  int SEMI = 36;
   /** RegularExpression Id. */
-  int PLUS = 37;
+  int COMMA = 37;
   /** RegularExpression Id. */
-  int MINUS = 38;
+  int ASSIGN = 38;
   /** RegularExpression Id. */
-  int STAR = 39;
+  int LT = 39;
   /** RegularExpression Id. */
-  int DOT = 40;
+  int PLUS = 40;
   /** RegularExpression Id. */
-  int BANG = 41;
+  int MINUS = 41;
+  /** RegularExpression Id. */
+  int STAR = 42;
+  /** RegularExpression Id. */
+  int DOT = 43;
+  /** RegularExpression Id. */
+  int BANG = 44;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -93,6 +99,9 @@ public interface MiniJavaParserConstants {
     "\"\\t\"",
     "\"\\r\"",
     "\"\\n\"",
+    "<SINGLE_LINE_COMMENT>",
+    "<FORMAL_COMMENT>",
+    "<MULTI_LINE_COMMENT>",
     "\"class\"",
     "\"public\"",
     "\"static\"",

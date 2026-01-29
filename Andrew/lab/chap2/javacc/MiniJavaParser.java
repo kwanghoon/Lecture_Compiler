@@ -232,10 +232,10 @@ void Goal() throws ParseException {
 	   jj_la1_init_1();
 	}
 	private static void jj_la1_init_0() {
-	   jj_la1_0 = new int[] {0xfeffffe0,0xfeffffe0,};
+	   jj_la1_0 = new int[] {0xf7ffff00,0xf7ffff00,};
 	}
 	private static void jj_la1_init_1() {
-	   jj_la1_1 = new int[] {0x3ff,0x3ff,};
+	   jj_la1_1 = new int[] {0x1fff,0x1fff,};
 	}
 
   /** Constructor with InputStream. */
@@ -381,7 +381,7 @@ void Goal() throws ParseException {
   /** Generate ParseException. */
   static public ParseException generateParseException() {
 	 jj_expentries.clear();
-	 boolean[] la1tokens = new boolean[42];
+	 boolean[] la1tokens = new boolean[45];
 	 if (jj_kind >= 0) {
 	   la1tokens[jj_kind] = true;
 	   jj_kind = -1;
@@ -398,7 +398,7 @@ void Goal() throws ParseException {
 		 }
 	   }
 	 }
-	 for (int i = 0; i < 42; i++) {
+	 for (int i = 0; i < 45; i++) {
 	   if (la1tokens[i]) {
 		 jj_expentry = new int[1];
 		 jj_expentry[0] = i;
