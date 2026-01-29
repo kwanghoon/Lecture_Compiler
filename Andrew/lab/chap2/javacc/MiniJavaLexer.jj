@@ -29,7 +29,7 @@ SKIP : {
 // ['0'..'9']
 
 // <IDENTIFIER>
-// ['a'..'z'] ( ['a'..'z'] | (digit) )*
+// ['a'..'z''A'..'Z'] ( ['a'..'z''A'..'Z'] | (digit) )*
 
 // <INTEGER_LITERAL>
 // digit+
@@ -55,7 +55,7 @@ TOKEN : {
 | < PRINTLN: "System.out.println" >
 | < ANDAND: "&&" >
 | < DIGIT: ["0"-"9"] >
-| < IDENTIFIER: ["a"-"z"] (["a"-"z"] | <DIGIT>)* >
+| < IDENTIFIER: ["a"-"z","A"-"Z"] (["a"-"z","A"-"Z"] | <DIGIT>)* >
 | < INTEGER_LITERAL: (<DIGIT>)+ >
 | < LBRACE:"{" > | < RBRACE:"}" > | < LPAREN:"(" > | < RPAREN:")" >
 | < LBRACK:"[" > | < RBRACK:"]" > | < SEMI:";" > | < COMMA:"," >
