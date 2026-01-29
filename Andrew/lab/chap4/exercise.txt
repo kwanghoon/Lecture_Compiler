@@ -1,0 +1,20 @@
+$ cd handcrafted
+
+Main.java를 커맨드 인자로 소스를 받도록 수정
+ - handcrafted/Main.java 파싱하고 리턴한 Program 객체를 visitor로 순회하면 AST를 출력
+ - ../../chap3/javacc/Main.java 커맨드 인자를 소스를 받는 구조 
+
+
+$ cp ../../chap3/javacc/MiniJavaLexer.jj .
+
+[GPT-5 프롬프트]
+
+MiniJavaLexer.jj는 JavaCC로 작성한 MiniJava의 파서이다. sytanxtree 디렉토리에 포함된 java 소스는 이 파서로 파싱된 프로그램의 AST를 만들기 위해 준비한 클래스들이다. JavaCC로 작성한 파서에 파서 액션을 추가하여 이 AST 클래스들로 만든 AST 객체를 리턴하도록 MiniJavaLexer.jj를 수정하시오.
+
+$ find . -name "*.java" > sources.txt
+
+$ javac @sources.txt
+
+$ java Main ../../programs/Factorial.java 
+
+

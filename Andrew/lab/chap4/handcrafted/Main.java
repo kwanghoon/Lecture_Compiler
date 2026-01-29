@@ -9,7 +9,6 @@ public class Main {
             MiniJavaParser parser = new MiniJavaParser(in);
             Program root = parser.Goal();
             root.accept(new PrettyPrintVisitor());
-            System.out.println("Parse succeeded: " + path);
          } catch (ParseException e) {
             System.err.println("Parse error in " + path + ":\n" + e.toString());
             System.exit(2);
