@@ -1,0 +1,11 @@
+[GPT-5 프롬프트]
+
+Grammar.pdf에 MiniJava 언어의 문법이 기술되어 있다. MiniJavaLexer.jj에 이 문법을 JavaCC 명세로 구현하시오. 이 jj 파일 안에 필요한 토큰은 선언되어 있다. 혹시 선언되지 않은 토큰이 있으면 추가해도 된다.
+
+
+$ javacc MiniJavaLexer.jj
+
+$ javac *.java
+
+$ java Main ../../programs/Factorial.java
+

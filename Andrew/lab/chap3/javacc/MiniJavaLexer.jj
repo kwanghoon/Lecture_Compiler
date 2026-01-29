@@ -3,26 +3,34 @@ options {
 }
 
 PARSER_BEGIN(MiniJavaParser)
-  public class MiniJavaParser {}
+  public class MiniJavaParser {
+    public static void main(String[] args) throws ParseException {
+      java.io.InputStream in = System.in;
+      if (args.length > 0) {
+        try {
+          in = new java.io.FileInputStream(args[0]);
+        } catch (java.io.FileNotFoundException e) {
+          System.err.println("File not found: " + args[0]);
+          System.exit(1);
+        }
+      }
+      MiniJavaParser parser = new MiniJavaParser(in);
+      parser.Goal();
+      System.out.println("Parse succeeded.");
+    }
+  }
 PARSER_END(MiniJavaParser)
 
 
-// Insert a specification of a lexical analysis here. 
-
-
-// The following is a simple grammar that will allow you
-// to test the generated lexer.
-
-
-void Goal() :
-{}
-{
-  ( MiniJavaToken() )*
-  <EOF>
-}
-
 SKIP : {
   " " | "\t" | "\r" | "\n"
+}
+
+SPECIAL_TOKEN : /* COMMENTS */
+{
+  <SINGLE_LINE_COMMENT: "//" (~["\n","\r"])* ("\n"|"\r"|"\r\n")>
+| <FORMAL_COMMENT: "/**" (~["*"])* "*" ("*" | (~["*","/"] (~["*"])* "*"))* "/">
+| <MULTI_LINE_COMMENT: "/*" (~["*"])* "*" ("*" | (~["*","/"] (~["*"])* "*"))* "/">
 }
 
 // <DIGIT>
@@ -40,6 +48,7 @@ TOKEN : {
 | < STATIC: "static" >
 | < VOID: "void" >
 | < MAIN: "main" >
+| < STRING: "String" >
 | < EXTENDS: "extends" >
 | < RETURN: "return" >
 | < INT: "int" >
@@ -54,8 +63,8 @@ TOKEN : {
 | < LENGTH: "length" >
 | < PRINTLN: "System.out.println" >
 | < ANDAND: "&&" >
-| < DIGIT: ["0"-"9"] >
-| < IDENTIFIER: ["a"-"z","A"-"Z"] (["a"-"z","A"-"Z"] | <DIGIT>)* >
+| < #DIGIT: ["0"-"9"] >
+| < IDENTIFIER: ["_", "a"-"z","A"-"Z"] (["_", "a"-"z","A"-"Z"] | <DIGIT>)* >
 | < INTEGER_LITERAL: (<DIGIT>)+ >
 | < LBRACE:"{" > | < RBRACE:"}" > | < LPAREN:"(" > | < RPAREN:")" >
 | < LBRACK:"[" > | < RBRACK:"]" > | < SEMI:";" > | < COMMA:"," >
@@ -63,15 +72,338 @@ TOKEN : {
 | < DOT:"." > | < BANG:"!" >
 }
 
-void MiniJavaToken():
+/************************************
+ * The MiniJava Grammar Starts Here *
+ ************************************/
+
+void Goal() :
 {}
 {
-  <CLASS> | <PUBLIC> | <STATIC> | <VOID> | <MAIN> | <EXTENDS> | <RETURN>
-  | <INT> | <BOOLEAN> | <IF> | <ELSE> | <WHILE> | <TRUE> | <FALSE> | <THIS>
-  | <NEW> | <LENGTH> | <PRINTLN> | <ANDAND>
-  | <IDENTIFIER> | <INTEGER_LITERAL>
-  | <LBRACE> | <RBRACE> | <LPAREN> | <RPAREN> | <LBRACK> | <RBRACK>
-  | <SEMI> | <COMMA> | <ASSIGN> | <LT> | <PLUS> | <MINUS> | <STAR> | <DOT> | <BANG>
+  MainClass()
+  ( TypeDeclaration() )*
+  <EOF>
+}
+
+void MainClass() :
+{}
+{
+  "class" Identifier() "{"
+    "public" "static" "void" "main" "(" "String" "[" "]" Identifier() ")"   
+    "{" ( LOOKAHEAD(2) VarDeclaration() )* ( Statement() )* "}"
+  "}"
+}
+
+void TypeDeclaration() :  
+{}
+{ 
+  LOOKAHEAD(3)
+  ClassDeclaration()
+|
+  ClassExtendsDeclaration()
+}
+
+void ClassDeclaration() :
+{}
+{
+  "class" Identifier() "{" ( VarDeclaration() )* 
+                           ( MethodDeclaration() )* 
+                       "}"
+}
+
+void ClassExtendsDeclaration() :
+{}
+{
+  "class" Identifier() "extends" Identifier()
+                       "{" ( VarDeclaration() )* 
+                           ( MethodDeclaration() )* 
+                       "}"
+}
+
+void VarDeclaration() :  
+{}
+{ 
+  Type() Identifier() ";"      
+}
+
+void MethodDeclaration() :  
+{}
+{
+  "public" Type() Identifier() 
+  "(" ( FormalParameterList() )? ")"   
+  "{" ( LOOKAHEAD(2) VarDeclaration() )* 
+      ( Statement() )* "return" Expression() ";" "}"
+}
+
+void FormalParameterList() :
+{}
+{
+  FormalParameter() ( FormalParameterRest() )*
+}
+
+void FormalParameter() :
+{}
+{
+  Type() Identifier()
+}
+
+void FormalParameterRest() :
+{}
+{
+  "," FormalParameter()
+}
+
+void Type() :
+{}
+{
+  LOOKAHEAD(3)
+  ArrayType()
+|
+  BooleanType()
+|
+  IntegerType()
+|
+  Identifier()     
+}
+
+void ArrayType() :
+{}
+{
+  "int" "[" "]"
+}
+
+void BooleanType() :
+{}
+{
+  "boolean"
+}
+
+void IntegerType() :
+{}
+{
+  "int"
+}
+
+void Statement() :
+{}
+{
+  Block()
+| 
+  LOOKAHEAD(2)
+  AssignmentStatement()
+|
+  LOOKAHEAD(2)
+  ArrayAssignmentStatement()
+|
+  IfStatement()
+|
+  WhileStatement()
+|
+  PrintStatement()
+}
+
+void Block() :
+{}
+{
+  "{" ( Statement() )* "}"
+}
+
+void AssignmentStatement() :
+{}
+{
+  Identifier() "=" Expression() ";"
+}
+
+void ArrayAssignmentStatement() :
+{}
+{
+  Identifier() "[" Expression() "]" "=" Expression() ";"
+}
+
+void IfStatement() :
+{}
+{
+  "if" "(" Expression() ")" Statement() "else" Statement() 
+}
+
+void WhileStatement() :
+{}
+{
+  "while" "(" Expression() ")" Statement() 
+}
+
+void PrintStatement() :
+{}
+{
+  "System.out.println" "(" Expression() ")" ";"
+}
+
+void Expression() :
+{}
+{
+  LOOKAHEAD( PrimaryExpression() "&&" )
+  AndExpression()
+|
+  LOOKAHEAD( PrimaryExpression() "<" )
+  CompareExpression()
+|
+  LOOKAHEAD( PrimaryExpression() "+" )
+  PlusExpression()
+|
+  LOOKAHEAD( PrimaryExpression() "-" )
+  MinusExpression()
+|
+  LOOKAHEAD( PrimaryExpression() "*" )
+  TimesExpression()
+|
+  LOOKAHEAD( PrimaryExpression() "[" )
+  ArrayLookup()
+|
+  LOOKAHEAD( PrimaryExpression() "." "length" )
+  ArrayLength()
+|
+  LOOKAHEAD( PrimaryExpression() "." Identifier() "(" )
+  MessageSend()
+| 
+  PrimaryExpression()
+}
+
+void AndExpression() :
+{} 
+{
+  PrimaryExpression() "&&" PrimaryExpression()
+}
+
+void CompareExpression() :
+{} 
+{
+  PrimaryExpression() "<" PrimaryExpression()
+}
+
+void PlusExpression() :
+{}
+{
+  PrimaryExpression() "+" PrimaryExpression()
+}
+
+void MinusExpression() :
+{}
+{
+  PrimaryExpression() "-" PrimaryExpression()
+}
+
+void TimesExpression() :
+{}
+{
+  PrimaryExpression() "*" PrimaryExpression()
+}
+
+void ArrayLookup() :
+{}
+{
+  PrimaryExpression() "[" PrimaryExpression() "]"
+}
+
+void ArrayLength() :
+{}
+{
+  PrimaryExpression() "." "length"
+}
+
+void MessageSend() :
+{}
+{
+  PrimaryExpression() "." Identifier() 
+  "(" ( ExpressionList() )? ")"
+}
+
+void ExpressionList() :
+{}
+{
+  Expression() ( ExpressionRest() )*
+}
+
+void ExpressionRest() :
+{}
+{
+  "," Expression()
+}
+
+void PrimaryExpression() :
+{}
+{
+  IntegerLiteral()
+|
+  TrueLiteral()
+|
+  FalseLiteral()
+|
+  Identifier()
+|
+  ThisExpression()
+|
+  LOOKAHEAD(3)
+  ArrayAllocationExpression()
+|
+  AllocationExpression()
+|   
+  NotExpression()
+|   
+  BracketExpression()
+}
+
+void IntegerLiteral() :
+{}
+{
+  <INTEGER_LITERAL>
+}
+
+
+void TrueLiteral() :
+{}
+{
+  "true"
+}
+
+void FalseLiteral() :
+{}
+{
+  "false"
+}
+
+void Identifier() :
+{}
+{
+  <IDENTIFIER>
+}
+
+void ThisExpression() :
+{}
+{
+  "this"
+}
+
+void ArrayAllocationExpression() :
+{}
+{
+  "new" "int" "[" Expression() "]"
+}
+
+void AllocationExpression() :
+{}
+{
+  "new" Identifier() "(" ")"
+}
+
+void NotExpression() :
+{}
+{
+  "!" Expression() 
+}
+
+void BracketExpression() :
+{}
+{
+  "(" Expression() ")"
 }
 
 
