@@ -1,2 +1,69 @@
-cp -R ../chap4/handcrafted .
+$ cp -R ../chap4/handcrafted .
+
+$ cd handcrafted
+
+[GPT-5 프롬프트]
+
+MiniJavaLexer.jj로 빌드한 AST를 받아 
+miniJava-typesystem.pdf에 설명한 타입 규칙에
+ 따라 타입 체킹을 하는 프로그램 TypeCheckVisitor.java를 
+ 작성해주세요. 단, TypeCheckVisitor.java는 
+ visitor 패턴(visitor/TypeVisitor.java와 
+ TypeDepthFirst.java)을 따릅니다. 
+ 타입 미스매치를 발견하거나 선언되지 않은 이름을 
+ 만나면 적절한 에러 메시지를 출력하는 기능도 
+ 있어야 합니다.
+
+COLLECT와 CHECK phase, 두번 순회하도록 구현한
+코드를 생성함. 하지만 CHECK만 해야하는 Expression
+종류의 노드에서 조건이 없어 COLLECT할 때도 수행되고 
+이때는 아직 정보 수집 전이기 때문에 타입 검사가 제대로
+이루어질 수 없는 상황이 발생하여 에러가 남.
+
+[GPT-5 프롬프트]
+TypeCheckVistor.java는 COLLECT와 CHECK, 
+두 가지 Phase 모드로 동작하도록 되어 있다. 
+하지만 visit(Call n)의 구현할 때 
+CHECK인 경우만 동작하도록 조건을 걸어야 한다. 
+왜냐하면 Call n의 AST 트리에서는 
+COLLECT할께 아마도 없을 것이기 때문이다. 
+현재 구현에는 그러한 조건이 빠져 있어서 
+COLLECT Phase에서도 CHECK에서 검사하려는 동작을 
+수행해서 에러가 발생하고 있다. 
+다른 종류의 AST 노드에서도 비슷한 상황이 
+발생하고 있다. 모두 수정해주세요.
+
+$ find . -name "*.java" > sources.txt 
+$ javac @sources.txt
+
+$ java Main ../../programs/Factorial.java
+
+
+[에러 발생과 예제 버그 수정]
+../../programs/TreeVisitor.java에 빠진 
+두 가지 변수 선언을 추가함. 
+
+class MyVisitor extends Visitor {
+
+    public int visit(Tree n){
+	int nti ;
+	Tree r;   <==  변수 r의 선언이 빠져 타입 에러
+	Tree l;   <==  변수 r의 선언이 빠져 타입 에러
+
+	if (n.GetHas_Right()){
+	    r = n.GetRight() ;
+	    nti = r.accept(this) ; }
+	else nti = 0 ;
+
+	System.out.println(n.GetKey());
+
+	if (n.GetHas_Left()) {
+	    l = n.GetLeft(); 
+	    nti =l.accept(this) ; }
+	else nti = 0 ;
+
+	return 0;
+    }
+
+}
 
