@@ -1,0 +1,62 @@
+$ cd chap2
+$ cd javacc
+
+$ javacc MiniJavaLexer.jj
+Java Compiler Compiler Version 7.0.13 (Parser Generator)
+(type "javacc" with no arguments for help)
+Reading from file MiniJavaLexer.jj . . .
+Error: Line 27, Column 15: Undefined lexical token name "IDENTIFIER".
+Error: Line 31, Column 14: Undefined lexical token name "INTEGER_LITERAL".
+Detected 2 errors and 0 warnings.
+
+// 아래와 같이 작성
+
+SKIP : {
+  " " | "\t" | "\r" | "\n"
+}
+
+// <DIGIT>
+// ['0'..'9']
+
+// <IDENTIFIER>
+// ['a'..'z'] ( ['a'..'z'] | (digit) )*
+
+// <INTEGER_LITERAL>
+// digit+
+
+TOKEN : {
+  < #DIGIT : ["0"-"9"] >
+| < IDENTIFIER : ["a"-"z"] ( ["a"-"z"] | <DIGIT> )* >
+| < INTEGER_LITERAL : (<DIGIT>)+ >
+}
+
+$ javacc MiniJavaLexer.jj
+Java Compiler Compiler Version 7.0.13 (Parser Generator)
+(type "javacc" with no arguments for help)
+Reading from file MiniJavaLexer.jj . . .
+Warning:  "if" cannot be matched as a string literal token at line 48, column 48. It will be matched as  <IDENTIFIER>.
+Warning:  "int" cannot be matched as a string literal token at line 48, column 22. It will be matched as  <IDENTIFIER>.
+Warning:  "new" cannot be matched as a string literal token at line 50, column 62. It will be matched as  <IDENTIFIER>.
+Warning:  "void" cannot be matched as a string literal token at line 46, column 58. It will be matched as  <IDENTIFIER>.
+Warning:  "else" cannot be matched as a string literal token at line 48, column 55. It will be matched as  <IDENTIFIER>.
+Warning:  "true" cannot be matched as a string literal token at line 50, column 34. It will be matched as  <IDENTIFIER>.
+Warning:  "main" cannot be matched as a string literal token at line 47, column 3. It will be matched as  <IDENTIFIER>.
+Warning:  "this" cannot be matched as a string literal token at line 50, column 53. It will be matched as  <IDENTIFIER>.
+Warning:  "while" cannot be matched as a string literal token at line 48, column 64. It will be matched as  <IDENTIFIER>.
+Warning:  "false" cannot be matched as a string literal token at line 50, column 43. It will be matched as  <IDENTIFIER>.
+Warning:  "class" cannot be matched as a string literal token at line 46, column 3. It will be matched as  <IDENTIFIER>.
+Warning:  "public" cannot be matched as a string literal token at line 46, column 36. It will be matched as  <IDENTIFIER>.
+Warning:  "static" cannot be matched as a string literal token at line 46, column 47. It will be matched as  <IDENTIFIER>.
+Warning:  "length" cannot be matched as a string literal token at line 50, column 3. It will be matched as  <IDENTIFIER>.
+Warning:  "return" cannot be matched as a string literal token at line 48, column 5. It will be matched as  <IDENTIFIER>.
+Warning:  "boolean" cannot be matched as a string literal token at line 48, column 30. It will be matched as  <IDENTIFIER>.
+Warning:  "extends" cannot be matched as a string literal token at line 47, column 54. It will be matched as  <IDENTIFIER>.
+File "TokenMgrError.java" does not exist.  Will create one.
+File "ParseException.java" does not exist.  Will create one.
+File "Token.java" does not exist.  Will create one.
+File "JavaCharStream.java" does not exist.  Will create one.
+Parser generated with 0 errors and 17 warnings.
+javacc$ ls
+JavaCharStream.java  MiniJavaParser.java              ParseException.java
+Main.java            MiniJavaParserConstants.java     Token.java
+MiniJavaLexer.jj     MiniJavaParserTokenManager.java  TokenMgrError.java

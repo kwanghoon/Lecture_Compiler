@@ -1,0 +1,77 @@
+options {
+  JAVA_UNICODE_ESCAPE = true;
+}
+
+PARSER_BEGIN(MiniJavaParser)
+  public class MiniJavaParser {}
+PARSER_END(MiniJavaParser)
+
+
+// Insert a specification of a lexical analysis here. 
+
+
+// The following is a simple grammar that will allow you
+// to test the generated lexer.
+
+
+void Goal() :
+{}
+{
+  ( MiniJavaToken() )*
+  <EOF>
+}
+
+SKIP : {
+  " " | "\t" | "\r" | "\n"
+}
+
+// <DIGIT>
+// ['0'..'9']
+
+// <IDENTIFIER>
+// ['a'..'z'] ( ['a'..'z'] | (digit) )*
+
+// <INTEGER_LITERAL>
+// digit+
+
+TOKEN : {
+  < CLASS: "class" >
+| < PUBLIC: "public" >
+| < STATIC: "static" >
+| < VOID: "void" >
+| < MAIN: "main" >
+| < EXTENDS: "extends" >
+| < RETURN: "return" >
+| < INT: "int" >
+| < BOOLEAN: "boolean" >
+| < IF: "if" >
+| < ELSE: "else" >
+| < WHILE: "while" >
+| < TRUE: "true" >
+| < FALSE: "false" >
+| < THIS: "this" >
+| < NEW: "new" >
+| < LENGTH: "length" >
+| < PRINTLN: "System.out.println" >
+| < ANDAND: "&&" >
+| < DIGIT: ["0"-"9"] >
+| < IDENTIFIER: ["a"-"z"] (["a"-"z"] | <DIGIT>)* >
+| < INTEGER_LITERAL: (<DIGIT>)+ >
+| < LBRACE:"{" > | < RBRACE:"}" > | < LPAREN:"(" > | < RPAREN:")" >
+| < LBRACK:"[" > | < RBRACK:"]" > | < SEMI:";" > | < COMMA:"," >
+| < ASSIGN:"=" > | < LT:"<" > | < PLUS:"+" > | < MINUS:"-" > | < STAR:"*" >
+| < DOT:"." > | < BANG:"!" >
+}
+
+void MiniJavaToken():
+{}
+{
+  <CLASS> | <PUBLIC> | <STATIC> | <VOID> | <MAIN> | <EXTENDS> | <RETURN>
+  | <INT> | <BOOLEAN> | <IF> | <ELSE> | <WHILE> | <TRUE> | <FALSE> | <THIS>
+  | <NEW> | <LENGTH> | <PRINTLN> | <ANDAND>
+  | <IDENTIFIER> | <INTEGER_LITERAL>
+  | <LBRACE> | <RBRACE> | <LPAREN> | <RPAREN> | <LBRACK> | <RBRACK>
+  | <SEMI> | <COMMA> | <ASSIGN> | <LT> | <PLUS> | <MINUS> | <STAR> | <DOT> | <BANG>
+}
+
+
