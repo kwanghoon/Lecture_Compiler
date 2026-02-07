@@ -133,3 +133,73 @@ SEQ(
    TEMP t5,
    TEMP t2)))
 
+
+
+[연습문제]
+
+call lowering with class-qualified labels in MiniJava -> IR
+
+
+Acknowledged. Plan: explain the concept and rationale behind “call lowering with class-qualified labels” in MiniJava → IR, with examples and where it fits in the pipeline. No code changes.
+
+정의: 고수준 메서드 호출을 IR의 CALL 노드로 변환하는 과정이
+ “call lowering”입니다. “class-qualified labels”는 
+ 메서드 엔트리 라벨 이름에 클래스명을 포함해 유일하게 만드는 방식입니다. 
+ 예: Fac.ComputeFac → 라벨 Fac_ComputeFac.
+
+목적:
+
+- 유일성: 서로 다른 클래스의 같은 메서드명 충돌 방지.
+
+- 링크/코드생성 용이: 각 메서드를 하나의 절차(프로시저)로 볼 수 있어 
+  점프 대상이 명확.
+
+- 디스패치 토대: 현재는 정적(클래스) 기준으로 낮추고, 이후 장에서 
+  가상 디스패치(vtable)로 치환하기 쉬움.
+
+- 디버깅 가독성: IR 출력에서 호출 대상이 어느 클래스의 메서드인지 
+  한눈에 확인.
+
+
+변환 형태:
+
+- 원본: obj.m(a, b) (AST의 Call)
+
+- IR(정적 라벨 방식): CALL(NAME Fac_ComputeFac, recv=obj, a, b)
+
+  * 첫 인자에 this(수신자) 전달로 인스턴스 메서드 의미를 보존.
+- IR(가상 디스패치 도입 시): 
+   CALL(MEM(BINOP(MEM(obj), offset_of_m)), a, b)처럼 
+   vtable을 통해 동적으로 라벨(주소)을 로드.
+
+- 비-Qualified와의 차이:
+
+  * 비-Qualified: CALL(NAME ComputeFac, ...)는 클래스가 달라도 
+    이름이 같으면 충돌/애매함.
+
+  * Qualified: CALL(NAME Fac_ComputeFac, ...)로 클래스에 묶여 
+    명확하고 유일.
+
+- 적용 시점:
+
+ * 타입 체크가 끝난 후, AST Call 노드를 IR로 내릴 때 정적 대상 
+   라벨을 생성합니다.
+
+ * 메서드 정의 시에도 본문 선두에 해당 라벨(LABEL Fac_ComputeFac)을 
+   붙여 진입점을 일치시킵니다.
+
+ * main은 관례적으로 NAME main 같은 특별 라벨을 사용.
+
+- MiniJava 고려사항:
+
+ * MiniJava는 메서드 오버로딩이 보통 없고 오버라이딩만 있으므로 
+ 클래스+메서드명으로 충분합니다. 만약 오버로딩을 지원한다면 
+ 파라미터 타입 서명까지 포함하여 맹글링합니다
+ (예: Class_method_int_int).
+
+
+- 출력 예시(개념적):
+
+ * 이전: CALL(NAME ComputeFac, ...) → 모호
+ * 이후: CALL(NAME Fac_ComputeFac, obj, num) → 명확, 링크 가능
+ 
