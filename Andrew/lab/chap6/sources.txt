@@ -5,5 +5,8 @@
 ./Temp/CombineMap.java
 ./Temp/LabelList.java
 ./Temp/Label.java
+./Mips/Frame.java
+./Mips/FrameDriver.java
+./Mips/Access.java
 ./Symbol/Symbol.java
 ./Util/BoolList.java

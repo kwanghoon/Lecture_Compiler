@@ -10,3 +10,103 @@ $ cd chap6
 $ find . -name "*.java" > sources.txt
 $ javac @sources.txt
 
+
+실습 연습문제 
+
+FRAMES
+
+If you are compiling for the Sparc, implement the Sparc package containing
+Sparc/SparcFrame.java. If compiling for the MIPS, implement the Mips
+package, and so on.
+If you are working on a RISC machine (such as MIPS or Sparc) that passes
+the first k parameters in registers and the rest in memory, keep things simple
+by handling only the case where there are k or fewer parameters.
+Supporting files available in $MINIJAVA/chap6 include:
+Temp/* The module supporting temporaries and labels.
+Util/BoolList.java The class for lists of booleans.
+Optional: Handle functions with more than k formal parameters.
+
+이 프로그램 연습문제를 풀어보려고 한다. 
+MIPS 컴퓨터를 타겟으로 한다. 
+6.2절 Frames in the Minijava compiler를
+참고하여 어떻게 작성하면 좋을지 제안해주세요.
+
+Mips/Access.java
+Mips/Access.InFrame
+Mips/Access.InReg
+Mips/Frame.java 
+Mips/Frame
+
+목표
+
+MIPS 타겟의 6.2절 Frames 구현을 단순화하여 
+시작할 수 있는 골격을 제공합니다.
+최대 k=4 인자만 처리하고, escape 여부에 따라 
+InFrame/InReg로 매핑합니다.
+프로로그/에필로그를 문자열로 생성해 
+스택 프레임 동작을 확인할 수 있게 합니다.
+
+생성된 파일 (Mips 폴더)
+
+Access.java 
+MipsFrame.java => 나중에 Frame.java로 이름 변경 
+
+설계 요점
+
+인자 처리: 
+k=4로 고정($a0..$a3), escape면 InFrame(음수 오프셋), 
+아니면 InReg(Temp).
+
+프레임 크기: 
+로컬/escape 파라미터마다 WORD=4씩 증가하여 
+$fp 기준 음수 오프셋에 배치.
+
+프로로그:
+
+ addi $sp, $sp, -(frameSize + 8)
+ sw $ra, frameSize+4($sp)
+ sw $fp, frameSize($sp)
+ addi $fp, $sp, frameSize
+
+ InFrame인 인자를 $aN에서 해당 오프셋으로 저장
+
+에필로그:
+ addi $sp, $fp, -frameSize
+ lw $fp, frameSize($sp), lw $ra, frameSize+4($sp)
+ addi $sp, $sp, frameSize+8, jr $ra
+
+
+간단 사용 예:
+
+    // 예: 인자 3개, 첫 번째/세 번째는 escape, 두 번째는 non-escape
+    BoolList formals = new BoolList(true, 
+            new BoolList(false, new BoolList(true, null)));
+    Frame f = new Frame("foo", formals);
+
+    // 로컬 변수 할당: 하나는 escape, 하나는 non-escape
+    f.allocLocal(true);
+    f.allocLocal(false);
+
+    System.out.println("# name: " + f.name);
+    System.out.println("# frameSize: " + f.frameSize());
+    System.out.println(f.prologue());
+    System.out.println(f.epilogue());
+
+Mips 프레임 테스트 예제
+
+$ java Mips.FrameDriver
+# name: foo
+# frameSize: 12
+addi $sp, $sp, -20
+sw $ra, 16($sp)
+sw $fp, 12($sp)
+addi $fp, $sp, 12
+sw $a0, -4($fp)
+sw $a2, -8($fp)
+
+addi $sp, $fp, -12
+lw $fp, 12($sp)
+lw $ra, 16($sp)
+addi $sp, $sp, 20
+jr $ra
+
