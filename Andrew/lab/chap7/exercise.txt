@@ -23,3 +23,113 @@ $ javac @sources.txt
 
 에러가 없음을 확인
 
+
+Design a set of visitors which translate 
+a MiniJava program into intermediate
+representation trees.
+Supporting files in $MINIJAVA/chap7 include:
+Tree/* Data types for the Tree language.
+Tree/Print.java Functions to display trees 
+for debugging.
+
+7장 lab 연습문제입니다. 
+Ch07 translation_to_intermediate_code.pdf의 
+설명에 따라 파싱으로 얻은 chap7/syntaxtree/*.java 
+클래스로 표현한 파스 트리를 
+중간언어 chap7/Tree/*.java 클래스로 표현한 IR 트리로
+변환하는 Translate 패키지(폴더)를 만들어주세요. 
+Main.java은, 타입 체킹이 성공한 
+root (Program 객체, 파스 트리)를 IR 트리로 변환하고 
+그 결과를 Tree/Print.java의 함수로 화면에 출력하도록 
+수정 해주세요.
+
+$ java Main ../programs/Factorial.java
+
+class Factorial {
+  public static void main (String [] a) {
+    System.out.println(new Fac().ComputeFac(10));  }
+}
+
+class Fac { 
+
+  public int ComputeFac (int num) { 
+    int num_aux;
+    if ((num < 1)) 
+    num_aux = 1;
+    else num_aux = (num * this.ComputeFac((num - 1)));
+    return num_aux;
+  }
+}
+
+
+SEQ(
+ SEQ(
+  LABEL main,
+  EXP(
+   CALL(
+    NAME print,
+     CALL(
+      NAME ComputeFac,
+       ESEQ(
+        EXP(
+         CALL(
+          NAME new_object_Fac)),
+        TEMP t0),
+       CONST 10)))),
+ SEQ(
+  SEQ(
+   LABEL ComputeFac,
+   SEQ(
+    SEQ(
+     SEQ(
+      SEQ(
+       SEQ(
+        SEQ(
+         CJUMP(NE,
+          ESEQ(
+           SEQ(
+            SEQ(
+             SEQ(
+              SEQ(
+               SEQ(
+                SEQ(
+                 MOVE(
+                  TEMP t3,
+                  CONST 0),
+                 CJUMP(LT,
+                  TEMP t1,
+                  CONST 1,
+                  L0,L1)),
+                LABEL L0),
+               MOVE(
+                TEMP t3,
+                CONST 1)),
+              JUMP(
+               NAME L2)),
+             LABEL L1),
+            LABEL L2),
+           TEMP t3),
+          CONST 0,
+          L3,L4),
+         LABEL L3),
+        MOVE(
+         TEMP t2,
+         CONST 1)),
+       JUMP(
+        NAME L5)),
+      LABEL L4),
+     MOVE(
+      TEMP t2,
+      BINOP(MUL,
+       TEMP t1,
+       CALL(
+        NAME ComputeFac,
+         TEMP t4,
+         BINOP(MINUS,
+          TEMP t1,
+          CONST 1))))),
+    LABEL L5)),
+  MOVE(
+   TEMP t5,
+   TEMP t2)))
+
