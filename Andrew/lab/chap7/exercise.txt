@@ -1,0 +1,17 @@
+chap6/{Mips,Symbol,Temp,Util}을 chap7 폴더로 복사 
+
+$ cd chap7 
+$ cp ../chap6/{Mips,Temp,Symbol,Util}/* .
+
+Tree/Exp1.java를 Tree/Exp.java로 이름 바꾸기 
+JUMP.java에 추가 및 수정
+ - import Temp.Label;
+ - import Temp.LabelList;
+
+ - Temp.Label을 Label로 
+ - Temp.LabelList를 LabelList로 
+ - 등등 
+
+$ find . -name "*.java" > sources.txt
+$ javac @sources.txt 
+
