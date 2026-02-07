@@ -11,16 +11,27 @@ public class Frame {
   private int frameSize = 0;
   private static final int WORD = 4;
   private static final int K = 4;
+  private static final int ARG_BASE = 8; // positive offsets from $fp for stack-passed args
 
   public Frame(String name, BoolList escapes) {
     this.name = name;
     int a = 0;
-    for (BoolList p = escapes; p != null && a < K; p = p.tail, a++) {
-      if (p.head) {
-        frameSize += WORD;
-        formals.add(new InFrame(-frameSize));
+    for (BoolList p = escapes; p != null; p = p.tail, a++) {
+      if (a < K) {
+        // First K args come in registers $a0..$a3
+        if (p.head) {
+          // Escaping: place in frame (negative offset)
+          frameSize += WORD;
+          formals.add(new InFrame(-frameSize));
+        } else {
+          // Non-escaping: keep in a register (represented by a temp)
+          formals.add(new InReg(new Temp()));
+        }
       } else {
-        formals.add(new InReg(new Temp()));
+        // Args beyond K come in on the caller's stack: positive offsets from $fp
+        int stackArgIndex = a - K;
+        int offset = ARG_BASE + stackArgIndex * WORD;
+        formals.add(new InFrame(offset));
       }
     }
   }
@@ -46,8 +57,9 @@ public class Frame {
     sb.append("addi $fp, $sp, ").append(frameSize).append("\n");
     int a = 0;
     for (Access acc : formals) {
-      if (acc instanceof InFrame) {
+      if (a < K && acc instanceof InFrame) {
         int off = ((InFrame)acc).offset;
+        // Only move register args into frame when their Access is InFrame
         sb.append("sw $a").append(a).append(", ").append(off).append("($fp)\n");
       }
       a++;
