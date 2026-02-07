@@ -25,6 +25,10 @@ public class IRTranslator implements Visitor {
   private Stm resultStm; // last statement result
   private Exp resultExp; // last expression result
   private final ArrayList<Stm> programStms = new ArrayList<>();
+  private final HashMap<String, ArrayList<String>> classFields = new HashMap<>();
+  private final HashMap<String, HashMap<String, Integer>> fieldOffsets = new HashMap<>();
+  private static final int WORD_SIZE = 4;
+  private String currentClassName = null;
 
   public IRTranslator() {}
 
@@ -100,16 +104,46 @@ public class IRTranslator implements Visitor {
 
   // ClassDeclSimple: translate methods
   public void visit(syntaxtree.ClassDeclSimple n) {
+    String savedClass = currentClassName;
+    currentClassName = n.i.s;
+    ArrayList<String> fields = new ArrayList<>();
+    for (int i = 0; i < n.vl.size(); i++) {
+      fields.add(n.vl.elementAt(i).i.s);
+    }
+    classFields.put(n.i.s, fields);
+    HashMap<String, Integer> offsets = new HashMap<>();
+    for (int i = 0; i < fields.size(); i++) {
+      offsets.put(fields.get(i), i * WORD_SIZE);
+    }
+    fieldOffsets.put(n.i.s, offsets);
     for (int i = 0; i < n.ml.size(); i++) {
       n.ml.elementAt(i).accept(this);
     }
+    currentClassName = savedClass;
   }
 
   // ClassDeclExtends: translate methods similarly
   public void visit(syntaxtree.ClassDeclExtends n) {
+    String savedClass = currentClassName;
+    currentClassName = n.i.s;
+    ArrayList<String> fields = new ArrayList<>();
+    for (int i = 0; i < n.vl.size(); i++) {
+      fields.add(n.vl.elementAt(i).i.s);
+    }
+    // Inherit parent fields first if present
+    ArrayList<String> parentFields = classFields.getOrDefault(n.j.s, new ArrayList<>());
+    ArrayList<String> allFields = new ArrayList<>(parentFields);
+    allFields.addAll(fields);
+    classFields.put(n.i.s, allFields);
+    HashMap<String, Integer> offsets = new HashMap<>();
+    for (int i = 0; i < allFields.size(); i++) {
+      offsets.put(allFields.get(i), i * WORD_SIZE);
+    }
+    fieldOffsets.put(n.i.s, offsets);
     for (int i = 0; i < n.ml.size(); i++) {
       n.ml.elementAt(i).accept(this);
     }
+    currentClassName = savedClass;
   }
 
   public void visit(syntaxtree.VarDecl n) { /* locals handled in MethodDecl */ }
@@ -120,6 +154,8 @@ public class IRTranslator implements Visitor {
     List<Stm> stms = new ArrayList<>();
     String mlabel = n.i.s;
     stms.add(label(mlabel));
+    // implicit this available inside methods
+    tempOf("this");
     // allocate temps for parameters and locals
     for (int j = 0; j < n.fl.size(); j++) {
       tempOf(n.fl.elementAt(j).i.s);
@@ -194,14 +230,14 @@ public class IRTranslator implements Visitor {
 
   public void visit(syntaxtree.Assign n) {
     n.e.accept(this); Exp rhs = resultExp;
-    resultStm = assign(n.i.s, rhs);
+    resultStm = assignVar(n.i.s, rhs);
   }
 
   public void visit(syntaxtree.ArrayAssign n) {
     // a[i] = v  ==> MOVE(MEM(a + i*4), v)
     n.e1.accept(this); Exp idx = resultExp;
     n.e2.accept(this); Exp val = resultExp;
-    Exp base = temp(tempOf(n.i.s));
+    Exp base = varExp(n.i.s);
     Exp addr = bin(BINOP.PLUS, base, bin(BINOP.MUL, idx, new CONST(4)));
     resultStm = new MOVE(new MEM(addr), val);
   }
@@ -284,7 +320,7 @@ public class IRTranslator implements Visitor {
   public void visit(syntaxtree.True n) { resultExp = const1(); }
   public void visit(syntaxtree.False n) { resultExp = const0(); }
 
-  public void visit(syntaxtree.IdentifierExp n) { resultExp = new TEMP(tempOf(n.s)); }
+  public void visit(syntaxtree.IdentifierExp n) { resultExp = varExp(n.s); }
 
   public void visit(syntaxtree.This n) { resultExp = new TEMP(tempOf("this")); }
 
@@ -297,9 +333,19 @@ public class IRTranslator implements Visitor {
   }
 
   public void visit(syntaxtree.NewObject n) {
+    String cname = n.i.s;
+    int fcount = classFields.getOrDefault(cname, new ArrayList<>()).size();
+    int sizeBytes = fcount * WORD_SIZE;
     Temp t = new Temp();
-    Stm s = new MOVE(new TEMP(t), new CALL(name("new_object_" + n.i.s), null));
-    resultExp = new ESEQ(s, new TEMP(t));
+    List<Stm> inits = new ArrayList<>();
+    // allocate object space (sizeBytes)
+    inits.add(new MOVE(new TEMP(t), new CALL(name("new_object_" + cname), new ExpList(new CONST(sizeBytes), null))));
+    // zero-initialize fields
+    for (int i = 0; i < fcount; i++) {
+      int off = i * WORD_SIZE;
+      inits.add(new MOVE(new MEM(bin(BINOP.PLUS, new TEMP(t), new CONST(off))), const0()));
+    }
+    resultExp = new ESEQ(seq(inits), new TEMP(t));
   }
 
   public void visit(syntaxtree.Not n) {
@@ -308,4 +354,29 @@ public class IRTranslator implements Visitor {
   }
 
   public void visit(syntaxtree.Identifier n) { /* only names */ }
+
+  // Helpers for resolving variables: locals/params vs class fields
+  private boolean isLocal(String name) {
+    HashMap<String, Temp> e = env();
+    return e != null && e.containsKey(name);
+  }
+
+  private Exp fieldExp(String name) {
+    HashMap<String, Integer> fmap = (currentClassName != null) ? fieldOffsets.get(currentClassName) : null;
+    Integer off = (fmap != null) ? fmap.get(name) : null;
+    if (off == null) {
+      // unknown field: treat as local temp
+      return new TEMP(tempOf(name));
+    }
+    return new MEM(bin(BINOP.PLUS, new TEMP(tempOf("this")), new CONST(off)));
+  }
+
+  private Exp varExp(String name) {
+    return isLocal(name) ? new TEMP(tempOf(name)) : fieldExp(name);
+  }
+
+  private Stm assignVar(String name, Exp rhs) {
+    Exp dst = isLocal(name) ? new TEMP(tempOf(name)) : fieldExp(name);
+    return new MOVE(dst, rhs);
+  }
 }
