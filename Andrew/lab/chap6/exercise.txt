@@ -110,3 +110,136 @@ lw $ra, 16($sp)
 addi $sp, $sp, 20
 jr $ra
 
+
+k 초과 인자 스택 처리도 하도록 추가 작성해주세요
+
+목표
+
+Mips.Frame을 업데이트해서 인자가 k개를 초과하면 
+$fp 기준 양의 오프셋으로 매핑하고, 
+프롤로그에서의 move는 $a0..$a3로만 제한 
+또한 드라이버 예제를 확장해서 인자 6개를 전달
+
+적용 내용
+
+Mips.Frame
+
+ - ARG_BASE = 8을 도입해 
+   $fp 기준 양수 오프셋으로 스택 인자 배치.
+
+ - 첫 K=4 인자:
+
+    * escape면 InFrame(음수 오프셋)로 프레임에 
+      저장하도록 공간 할당.
+
+    * non-escape면 InReg(Temp)로 레지스터 기반 처리.
+
+ - K 초과 인자:
+
+    * 항상 InFrame(양수 오프셋)으로 표시
+    (콜러 스택에 존재).
+
+    * 오프셋 계산: offset = 8 + (index-K) * 4.
+
+ - 프로로그 수정:
+  
+    * 루프 내에서 a < K 조건으로 $aN 이동만 처리.
+
+    * 스택 인자(>K)는 이미 콜러 스택에 있으므로 
+      별도 이동 없음.
+
+Mips.FrameDriver
+
+ - listOf(boolean...) 헬퍼로 BoolList 생성 안정화.
+
+ - 6개 인자 케이스로 변경: 
+    [true, false, true, false, true, false].
+
+
+드라이버 실행 결과 예시
+
+$ java Mips.FrameDriver
+=== <=K args ===
+# name: foo
+# frameSize: 12
+addi $sp, $sp, -20
+sw $ra, 16($sp)
+sw $fp, 12($sp)
+addi $fp, $sp, 12
+sw $a0, -4($fp)
+sw $a2, -8($fp)
+
+addi $sp, $fp, -12
+lw $fp, 12($sp)
+lw $ra, 16($sp)
+addi $sp, $sp, 20
+jr $ra
+
+=== >K args ===
+# name: bar
+# frameSize: 12
+addi $sp, $sp, -20
+sw $ra, 16($sp)
+sw $fp, 12($sp)
+addi $fp, $sp, 12
+sw $a0, -4($fp)
+sw $a2, -8($fp)
+
+addi $sp, $fp, -12
+lw $fp, 12($sp)
+lw $ra, 16($sp)
+addi $sp, $sp, 20
+jr $ra
+
+Mips.FrameDriver
+
+ - dumpFormals(Frame f) 추가: 각 인자에 대해 
+   InReg 또는 InFrame offset을 출력. 
+   양수 오프셋은 stack-arg(+), 
+   음수 오프셋은 in-frame(-)로 표시.
+
+ - <=K 및 >K 케이스 모두에서 dumpFormals 호출.
+
+
+ === <=K args ===
+# name: foo
+# frameSize: 12
+# formals:
+arg[0]: InFrame offset=-4 (in-frame(-))
+arg[1]: InReg
+arg[2]: InFrame offset=-8 (in-frame(-))
+addi $sp, $sp, -20
+sw $ra, 16($sp)
+sw $fp, 12($sp)
+addi $fp, $sp, 12
+sw $a0, -4($fp)
+sw $a2, -8($fp)
+
+addi $sp, $fp, -12
+lw $fp, 12($sp)
+lw $ra, 16($sp)
+addi $sp, $sp, 20
+jr $ra
+
+=== >K args ===
+# name: bar
+# frameSize: 12
+# formals:
+arg[0]: InFrame offset=-4 (in-frame(-))
+arg[1]: InReg
+arg[2]: InFrame offset=-8 (in-frame(-))
+arg[3]: InReg
+arg[4]: InFrame offset=8 (stack-arg(+))
+arg[5]: InFrame offset=12 (stack-arg(+))
+addi $sp, $sp, -20
+sw $ra, 16($sp)
+sw $fp, 12($sp)
+addi $fp, $sp, 12
+sw $a0, -4($fp)
+sw $a2, -8($fp)
+
+addi $sp, $fp, -12
+lw $fp, 12($sp)
+lw $ra, 16($sp)
+addi $sp, $sp, 20
+jr $ra
