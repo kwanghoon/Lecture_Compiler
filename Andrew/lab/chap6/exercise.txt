@@ -1,0 +1,12 @@
+Symbol 폴더 아래 Symbol.java를 추가하고
+
+Temp/DefaultMap.java
+Temp/CombineMap.java
+Temp/TempMap.java
+
+ Temp.Temp를 Temp로 수정
+
+$ cd chap6
+$ find . -name "*.java" > sources.txt
+$ javac @sources.txt
+

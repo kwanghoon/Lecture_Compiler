@@ -1,7 +1,7 @@
 package Temp;
 
 public class DefaultMap implements TempMap {
-	public String tempMap(Temp.Temp t) {
+	public String tempMap(Temp t) {
 	   return t.toString();
 	}
 
