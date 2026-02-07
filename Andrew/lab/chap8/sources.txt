@@ -36,16 +36,10 @@
 ./Mips/Frame.java
 ./Mips/FrameDriver.java
 ./Mips/Access.java
-./Canon/MiniJavaParserConstants.java
-./Canon/JavaCharStream.java
 ./Canon/TraceSchedule.java
 ./Canon/StmListList.java
 ./Canon/Canon.java
 ./Canon/BasicBlocks.java
-./Canon/MiniJavaParserTokenManager.java
-./Canon/ParseException.java
-./Canon/MiniJavaParser.java
-./Canon/Main.java
 ./MiniJavaParserTokenManager.java
 ./Symbol/Symbol.java
 ./ParseException.java
