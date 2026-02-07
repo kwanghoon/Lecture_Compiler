@@ -292,13 +292,13 @@ public class IRTranslator implements Visitor {
     // Abstract: represent as a fresh temp; optionally call runtime new_array(size)
     n.e.accept(this); Exp size = resultExp;
     Temp t = new Temp();
-    Stm s = new EXP(new CALL(name("new_array"), new ExpList(size, null)));
+    Stm s = new MOVE(new TEMP(t), new CALL(name("new_array"), new ExpList(size, null)));
     resultExp = new ESEQ(s, new TEMP(t));
   }
 
   public void visit(syntaxtree.NewObject n) {
     Temp t = new Temp();
-    Stm s = new EXP(new CALL(name("new_object_" + n.i.s), null));
+    Stm s = new MOVE(new TEMP(t), new CALL(name("new_object_" + n.i.s), null));
     resultExp = new ESEQ(s, new TEMP(t));
   }
 
