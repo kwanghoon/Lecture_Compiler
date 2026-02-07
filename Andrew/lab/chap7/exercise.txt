@@ -15,3 +15,11 @@ JUMP.java에 추가 및 수정
 $ find . -name "*.java" > sources.txt
 $ javac @sources.txt 
 
+chap5/handcrafted/{*.java,*.jj,syntaxtree,visitor}를 
+chap7로 복사
+
+$ find . -name "*.java" > sources.txt
+$ javac @sources.txt 
+
+에러가 없음을 확인
+
