@@ -195,8 +195,8 @@ public class Frame implements TempMap {
       entry = seq(entry, new Tree.MOVE(new Tree.MEM(addr), new Tree.TEMP(s.head)));
     }
 
-    // Concatenate entry moves with body, but ensure method entry label comes first
-    Tree.Stm withBody = seq(entry, body);
+    // Concatenate entry moves with body, ensuring the method entry LABEL comes first
+    Tree.Stm withBody = placeEntryAfterLabel(body, entry);
 
     // Restore callee-save registers at exit, in the same order
     int idx = 0;
@@ -251,5 +251,22 @@ public class Frame implements TempMap {
     if (a == null) return b;
     if (b == null) return a;
     return new Tree.SEQ(a, b);
+  }
+
+  // Helper: insert entry sequence immediately after the first LABEL in the body
+  private static Tree.Stm placeEntryAfterLabel(Tree.Stm body, Tree.Stm entry) {
+    if (entry == null) return body;
+    if (body instanceof Tree.SEQ) {
+      Tree.SEQ s = (Tree.SEQ) body;
+      if (s.left instanceof Tree.LABEL) {
+        return new Tree.SEQ(s.left, seq(entry, s.right));
+      }
+      return new Tree.SEQ(s.left, placeEntryAfterLabel(s.right, entry));
+    } else if (body instanceof Tree.LABEL) {
+      return new Tree.SEQ(body, entry);
+    } else {
+      // No leading label found; place entry before body as fallback
+      return seq(entry, body);
+    }
   }
 }

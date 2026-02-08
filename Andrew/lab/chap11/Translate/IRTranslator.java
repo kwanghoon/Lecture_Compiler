@@ -155,7 +155,8 @@ public class IRTranslator implements Visitor {
     envPush();
     List<Stm> stms = new ArrayList<>();
     String mlabel = n.i.s;
-    // stms.add(label(mlabel));
+    // entry label first
+    stms.add(label(mlabel));
     // implicit this available inside methods
     tempOf("this");
     // allocate temps for parameters and locals
@@ -175,15 +176,27 @@ public class IRTranslator implements Visitor {
     n.e.accept(this); ret = resultExp;
     Temp retTemp = new Temp();
     stms.add(new MOVE(new TEMP(retTemp), ret));
-    // Apply procEntryExit1 per-method before canonicalization
-    // Build a Frame with formals: include implicit 'this' plus method parameters
-    BoolList escapes = null;
-    int formalsCount = 1 + n.fl.size();
-    for (int i = 0; i < formalsCount; i++) {
-      escapes = new BoolList(false, escapes); // non-escaping by default
+    // Build parameter binding moves: map arg regs/stack into env temps
+    List<Stm> entryMoves = new ArrayList<>();
+    // bind 'this' from $a0
+    entryMoves.add(new MOVE(new TEMP(tempOf("this")), new TEMP(Frame.argReg(0))));
+    // bind method parameters
+    for (int i = 0; i < n.fl.size(); i++) {
+      String pname = n.fl.elementAt(i).i.s;
+      int argIndex = i + 1; // after 'this'
+      if (argIndex < Frame.numArgRegs()) {
+        entryMoves.add(new MOVE(new TEMP(tempOf(pname)), new TEMP(Frame.argReg(argIndex))));
+      } else {
+        int stackIdx = argIndex - Frame.numArgRegs();
+        int off = 8 + stackIdx * Frame.wordSize();
+        Exp addr = new BINOP(BINOP.PLUS, new TEMP(Frame.FP), new CONST(off));
+        entryMoves.add(new MOVE(new TEMP(tempOf(pname)), new MEM(addr)));
+      }
     }
-    Frame frame = new Frame(mlabel, escapes);
-    resultStm = frame.procEntryExit1(seq(label(mlabel), maybeSeq(stms)));
+    // Apply procEntryExit1 per-method before canonicalization
+    // Build a Frame for callee-save management; formals handled above
+    Frame frame = new Frame(mlabel, null);
+    resultStm = frame.procEntryExit1(seq(maybeSeq(stms.subList(0, 1)), maybeSeq(entryMoves), maybeSeq(stms.subList(1, stms.size()))));
     envPop();
   }
 
