@@ -1,0 +1,55 @@
+
+[준비]
+
+Canon/*.java를 chap8의 해당 파일로 대체해서 들여쓰기 수정
+
+chap8/Mips, Symbol, syntaxtree, Temp, Translate, Util, visitor 폴더를
+chap9로 복사
+
+chap8/*.java *.jj를 chap9로 복사
+
+$ find . -name "*.java" > sources.txt 
+$ javac @sources.txt 
+
+
+[ 목표 (readme.txt) ]
+
+선호하는 명령어 집합은 Mips이다. 
+ Maximal Munch를 사용하여 Assem-명령어로의 변환을 구현하시오. 
+ James Larus가 구현한 MIPS 시뮬레이터 SPIM을 사용하여 테스트할 수 있다.
+ 
+ 먼저 IR 트리에서 Assem 데이터 구조로의 Maximal Munch 변환 알고리즘을 
+ 구현하는 클래스 .Codegen을 작성하시오. Codegen 모듈을 적용하기 전에 
+ Canon 모듈을 사용하여 트리를 단순화하시오. 
+ 그 결과 Assem 트리를 어셈블리 언어로 변환하기 위해 format 함수를 사용하시오. 
+ 
+ 아직 레지스터 할당을 하지 않았으므로, 임시변수에서 문자열로의 변환 함수로 
+ format에 new Temp.DefaultMap()을 그대로 전달하시오.
+
+package Temp;
+
+public class DefaultMap implements TempMap {
+
+    public String tempMap(Temp.Temp t)
+            { return t.toString(); }
+}
+
+이렇게 하면 레지스터 이름을 전혀 사용하지 않는 어셈블리 언어가 생성됩니다. 
+명령어들은 t3, t283 등의 이름을 사용하는데, 이들 중 일부 임시변수는 
+Frame 모듈이 특정 머신 레지스터(143페이지 참조)를 나타내기 위해 만든 
+"내장" 임시변수입니다(예: Frame.FP). 프레임 모듈은 특수 임시변수를 
+그들의 자연스러운 이름으로 표시(fp가 t1 대신 나타나도록)하면 
+어셈블리 언어를 더 읽기 쉽게 만들 수 있습니다. 프레임 모듈은 특수 임시변수에서 
+이름으로, 특수하지 않은 임시변수에서는 null로 매핑을 제공해야 합니다:
+
+package Frame;
+
+public class Frame implements Temp.TempMap {
+    :
+        :
+        : abstract public String tempMap(Temp temp); }
+
+그런 다음, 레지스터 할당 이전에 어셈블리 언어를 표시하기 위한 목적을 위해, 
+먼저 frame.tempMap을 시도하고 그 결과가 null이면 Temp.toString()으로 
+대체하는 새로운 TempMap 함수를 만드시오.
+
