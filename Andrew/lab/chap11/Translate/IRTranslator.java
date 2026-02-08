@@ -3,6 +3,8 @@ package Translate;
 import java.util.*;
 
 import Tree.*;
+import Mips.Frame;
+import Util.BoolList;
 import Temp.Label;
 import Temp.Temp;
 import Symbol.Symbol;
@@ -153,7 +155,7 @@ public class IRTranslator implements Visitor {
     envPush();
     List<Stm> stms = new ArrayList<>();
     String mlabel = n.i.s;
-    stms.add(label(mlabel));
+    // stms.add(label(mlabel));
     // implicit this available inside methods
     tempOf("this");
     // allocate temps for parameters and locals
@@ -173,7 +175,15 @@ public class IRTranslator implements Visitor {
     n.e.accept(this); ret = resultExp;
     Temp retTemp = new Temp();
     stms.add(new MOVE(new TEMP(retTemp), ret));
-    resultStm = maybeSeq(stms);
+    // Apply procEntryExit1 per-method before canonicalization
+    // Build a Frame with formals: include implicit 'this' plus method parameters
+    BoolList escapes = null;
+    int formalsCount = 1 + n.fl.size();
+    for (int i = 0; i < formalsCount; i++) {
+      escapes = new BoolList(false, escapes); // non-escaping by default
+    }
+    Frame frame = new Frame(mlabel, escapes);
+    resultStm = frame.procEntryExit1(seq(label(mlabel), maybeSeq(stms)));
     envPop();
   }
 

@@ -15,6 +15,7 @@ import FlowGraph.FlowGraph;
 import FlowGraph.Liveness;
 import Graph.Node;
 import Graph.NodeList;
+import RegAlloc.RegAlloc;
 
 public class Main {
    public static void main(String [] args) {
@@ -26,56 +27,76 @@ public class Main {
             root.accept(new PrettyPrintVisitor());
             TypeCheckVisitor tc = new TypeCheckVisitor();
             tc.check(root);
-                  // Translate to IR
-                  IRTranslator tr = new IRTranslator();
-                  Tree.Stm ir = tr.translate(root);
+            
+            // Translate to IR
+            IRTranslator tr = new IRTranslator();
+            Tree.Stm ir = tr.translate(root);
+            // Prepare a frame for later passes (sink, printing)
+            Frame frame = new Frame("main", null);
 
-                  Print printer = new Print(System.out);
-                  System.out.println("=== IR (unscheduled) ===");
-                  printer.prStm(ir);
+            Print printer = new Print(System.out);
+            System.out.println("=== IR (unscheduled) ===");
+            printer.prStm(ir);
 
-                  // Canonicalize and linearize
-                  StmList linear = Canon.linearize(ir);
-                  System.out.println("=== Canonical linearized ===");
-                  for (StmList l = linear; l != null; l = l.tail) {
-                     printer.prStm(l.head);
-                  }
+            // Canonicalize and linearize
+            StmList linear = Canon.linearize(ir);
+            System.out.println("=== Canonical linearized ===");
+            for (StmList l = linear; l != null; l = l.tail) {
+               printer.prStm(l.head);
+            }
 
-                  // Basic blocks and trace scheduling
-                  BasicBlocks blocks = new BasicBlocks(linear);
-                  TraceSchedule ts = new TraceSchedule(blocks);
-                  System.out.println("=== Trace scheduled ===");
-                  for (StmList l = ts.stms; l != null; l = l.tail) {
-                     printer.prStm(l.head);
-                  }
+            // Basic blocks and trace scheduling
+            BasicBlocks blocks = new BasicBlocks(linear);
+            TraceSchedule ts = new TraceSchedule(blocks);
+            System.out.println("=== Trace scheduled ===");
+            for (StmList l = ts.stms; l != null; l = l.tail) {
+               printer.prStm(l.head);
+            }
 
-                  // Instruction selection (Maximal Munch to Assem)
-                  Codegen cg = new Codegen();
-                  InstrList instrs = cg.codegen(ts.stms);
-                  System.out.println("=== Assem (Maximal Munch, unallocated) ===");
-                  Temp.TempMap tmap = new Temp.CombineMap(Frame.regNameMap(), new Temp.DefaultMap());
-                  for (InstrList il = instrs; il != null; il = il.tail) {
-                     Instr ins = il.head;
-                     System.out.print(ins.format(tmap));
-                     if (!(ins instanceof Assem.LABEL)) System.out.print("\n");
-                  }
+            // Instruction selection (Maximal Munch to Assem)
+            Codegen cg = new Codegen();
+            InstrList instrs = cg.codegen(ts.stms);
+            // Entry/exit (sink) for liveness: attach after codegen
+            instrs = frame.procEntryExit2(instrs);
+            System.out.println("=== Assem (Maximal Munch, unallocated) ===");
+            Temp.TempMap tmap = new Temp.CombineMap(Frame.regNameMap(), new Temp.DefaultMap());
+            for (InstrList il = instrs; il != null; il = il.tail) {
+               Instr ins = il.head;
+               System.out.print(ins.format(tmap));
+               if (!(ins instanceof Assem.LABEL)) System.out.print("\n");
+            }
 
-                  // Build flow graph and run liveness analysis
-                  FlowGraph fg = new AssemFlowGraph(instrs);
-                  Liveness live = new Liveness(fg);
-                  System.out.println("=== Liveness (in/out sets) ===");
-                  int index = 0;
-                  for (NodeList nodes = fg.nodes(); nodes != null; nodes = nodes.tail) {
-                     Node node = nodes.head;
-                     Instr instr = ((AssemFlowGraph) fg).instr(node);
-                     System.out.println("#" + index + " " + instr.format(tmap));
-                     System.out.print("  in:  ");
-                     printTemps(live.in(node), tmap);
-                     System.out.print("  out: ");
-                     printTemps(live.out(node), tmap);
-                     System.out.println();
-                     index++;
-                  }
+            // Build flow graph and run liveness analysis
+            // FlowGraph fg = new AssemFlowGraph(instrs);
+            // Liveness live = new Liveness(fg);
+            // System.out.println("=== Liveness (in/out sets) ===");
+            // int index = 0;
+            // for (NodeList nodes = fg.nodes(); nodes != null; nodes = nodes.tail) {
+            //    Node node = nodes.head;
+            //    Instr instr = ((AssemFlowGraph) fg).instr(node);
+            //    System.out.println("#" + index + " " + instr.format(tmap));
+            //    System.out.print("  in:  ");
+            //    printTemps(live.in(node), tmap);
+            //    System.out.print("  out: ");
+            //    printTemps(live.out(node), tmap);
+            //    System.out.println();
+            //    index++;
+            // }
+
+            // Register allocation using the computed liveness/interference
+            RegAlloc alloc = new RegAlloc(frame, instrs);
+            Temp.TempMap allocatedMap = new Temp.CombineMap(
+                  new Temp.CombineMap(alloc, Frame.regNameMap()),
+                  new Temp.DefaultMap());
+            System.out.println("=== Assem (allocated) ===");
+            // Print prologue, body, epilogue
+            System.out.print(frame.prologue());
+            for (InstrList il = instrs; il != null; il = il.tail) {
+               Instr ins = il.head;
+               System.out.print(ins.format(allocatedMap));
+               if (!(ins instanceof Assem.LABEL)) System.out.print("\n");
+            }
+            System.out.print(frame.epilogue());
          } catch (ParseException e) {
             System.err.println("Parse error in " + path + ":\n" + e.toString());
             System.exit(2);

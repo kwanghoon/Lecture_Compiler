@@ -154,6 +154,61 @@ public class Frame implements TempMap {
     return headList;
   }
 
+  public Tree.Stm procEntryExit1(Tree.Stm body) {
+    // Build IR prologue/epilogue around body: formal arg binding and callee-save save/restore.
+    Tree.Stm entry = null;
+    // Bind register arguments into formal accesses
+    for (int i = 0; i < formals.size(); i++) {
+      Access acc = formals.get(i);
+      if (i < NUM_ARG_REGS) {
+        Temp areg = ARG_REG_ARRAY[i];
+        if (acc instanceof InReg) {
+          Temp formal = ((InReg) acc).temp;
+          entry = seq(entry, new Tree.MOVE(new Tree.TEMP(formal), new Tree.TEMP(areg)));
+        } else if (acc instanceof InFrame) {
+          int off = ((InFrame) acc).offset;
+          Tree.Exp addr = new Tree.BINOP(Tree.BINOP.PLUS, new Tree.TEMP(FP), new Tree.CONST(off));
+          entry = seq(entry, new Tree.MOVE(new Tree.MEM(addr), new Tree.TEMP(areg)));
+        }
+      } else {
+        // Args beyond K are passed on caller's stack at positive offsets from $fp.
+        // If a future implementation creates InReg for non-escaping formals here,
+        // move MEM($fp+offset) into that temp. Current Frame uses InFrame, so already accessible.
+        if (acc instanceof InReg) {
+          // Not currently produced by Frame, but handle defensively.
+          int stackIdx = i - NUM_ARG_REGS;
+          int off = ARG_BASE + stackIdx * WORD;
+          Tree.Exp addr = new Tree.BINOP(Tree.BINOP.PLUS, new Tree.TEMP(FP), new Tree.CONST(off));
+          Temp formal = ((InReg) acc).temp;
+          entry = seq(entry, new Tree.MOVE(new Tree.TEMP(formal), new Tree.MEM(addr)));
+        }
+      }
+    }
+
+    // Save callee-save registers to fresh frame slots (no spilling implemented)
+    List<Integer> saveOffsets = new ArrayList<>();
+    for (TempList s = calleeSaves(); s != null; s = s.tail) {
+      Access slot = allocLocal(true);
+      int off = ((InFrame) slot).offset; // allocLocal(true) yields InFrame
+      saveOffsets.add(off);
+      Tree.Exp addr = new Tree.BINOP(Tree.BINOP.PLUS, new Tree.TEMP(FP), new Tree.CONST(off));
+      entry = seq(entry, new Tree.MOVE(new Tree.MEM(addr), new Tree.TEMP(s.head)));
+    }
+
+    // Concatenate entry moves with body, but ensure method entry label comes first
+    Tree.Stm withBody = seq(entry, body);
+
+    // Restore callee-save registers at exit, in the same order
+    int idx = 0;
+    for (TempList s = calleeSaves(); s != null; s = s.tail, idx++) {
+      int off = saveOffsets.get(idx);
+      Tree.Exp addr = new Tree.BINOP(Tree.BINOP.PLUS, new Tree.TEMP(FP), new Tree.CONST(off));
+      withBody = seq(withBody, new Tree.MOVE(new Tree.TEMP(s.head), new Tree.MEM(addr)));
+    }
+
+    return withBody;
+  }
+
   public InstrList procEntryExit2(InstrList body) {
     InstrList sink = new InstrList(new OPER("", null, sinkTemps()), null);
     return append(body, sink);
@@ -189,5 +244,12 @@ public class Frame implements TempMap {
       this.body = body;
       this.epilog = epilog;
     }
+  }
+
+  // Helper: concatenate statements
+  private static Tree.Stm seq(Tree.Stm a, Tree.Stm b) {
+    if (a == null) return b;
+    if (b == null) return a;
+    return new Tree.SEQ(a, b);
   }
 }
