@@ -62,14 +62,27 @@ Frame 모듈이 특정 머신 레지스터(143페이지 참조)를 나타내기 
 
 레지스터 목록
 
-다음과 같은 레지스터 목록들을 만드세요. 각 레지스터에 대해 어셈블리 언어 표현을 위한 문자열과 Tree 및 Assem 자료 구조에서 참조하기 위한 Temp.Temp가 필요합니다.
-specialregs RV와 FP와 같은 "특수" 레지스터, 스택 포인터 SP, 복귀 주소 레지스터 RA, 그리고 (일부 기계에서) 제로 레지스터 ZERO와 같은 것들을 구현하는 데 사용되는 $\mu$ 레지스터 목록입니다. 일부 기계에는 다른 특수 레지스터가 있을 수 있습니다.
-argregs 외부로 전달되는 인자(정적 링크 포함)를 전달하는 $\mu$ 레지스터 목록입니다.
-calleesaves 호출된 프로시저(수행자)가 변경되지 않도록 보존해야 하는(또는 저장 및 복원해야 하는) $\mu$ 레지스터 목록입니다.
-callersaves 수행자가 내용을 버릴 수 있는 $\mu$ 레지스터 목록입니다.
-이 네 가지 레지스터 목록은 겹치지 않아야 하며, Assem 명령어에 나타날 수 있는 모든 레지스터를 포함해야 합니다. 이 목록들은 공개적이지 않지만, Frame과 Codegen 모두에서 내부적으로 유용하며—예를 들어, munchArgs를 구현하고 calldefs 목록을 구성하는 데 사용됩니다.
+다음과 같은 레지스터 목록들을 만드세요. 각 레지스터에 대해 어셈블리 언어 
+표현을 위한 문자열과 Tree 및 Assem 자료 구조에서 참조하기 위한 
+Temp.Temp가 필요합니다.
 
-이 네 가지 레지스터 목록은 겹치지 않아야 하며, Assem 명령어에 나타날 수 있는 모든 레지스터를 포함해야 합니다. 이 목록들은 공개적이지 않지만, Frame과 Codegen 모두에서 내부적으로 유용하며—예를 들어, munchArgs를 구현하고 calldefs 목록을 구성하는 데 사용됩니다.
+- specialregs RV와 FP와 같은 "특수" 레지스터, 스택 포인터 SP, 
+  복귀 주소 레지스터 RA, 그리고 (일부 기계에서) 제로 레지스터 ZERO와 
+  같은 것들을 구현하는 데 사용되는 $\mu$ 레지스터 목록입니다. 
+  일부 기계에는 다른 특수 레지스터가 있을 수 있습니다.
+
+- argregs 외부로 전달되는 인자(정적 링크 포함)를 전달하는 $\mu$ 레지스터 
+  목록입니다.
+
+- calleesaves 호출된 프로시저(수행자)가 변경되지 않도록 보존해야 하는
+  (또는 저장 및 복원해야 하는) $\mu$ 레지스터 목록입니다.
+
+- callersaves 수행자가 내용을 버릴 수 있는 $\mu$ 레지스터 목록입니다.
+
+이 네 가지 레지스터 목록은 겹치지 않아야 하며, Assem 명령어에 나타날 수 
+있는 모든 레지스터를 포함해야 합니다. 이 목록들은 공개적이지 않지만, 
+Frame과 Codegen 모두에서 내부적으로 유용하며—예를 들어, 
+munchArgs를 구현하고 calldefs 목록을 구성하는 데 사용됩니다.
 
     package Frame;
 
@@ -78,7 +91,11 @@ callersaves 수행자가 내용을 버릴 수 있는 $\mu$ 레지스터 목록�
         abstract public Assem.InstrList procEntryExit2(
             Assem.InstrList body);
     }
-    이 함수는 레지스터 할당기에게 특정 레지스터들이 프로시저 종료 시점에 여전히 유효(live)하다는 것을 알려주기 위해 함수 본문(body)에 "싱크(sink)" 명령어를 추가합니다. Jouette 기계의 경우, 이는 간단하게 다음과 같습니다:
+    이 함수는 레지스터 할당기에게 특정 레지스터들이 프로시저 종료 시점에 
+    여전히 유효(live)하다는 것을 알려주기 위해 함수 본문(body)에 
+    "싱크(sink)" 명령어를 추가합니다. Jouette 기계의 경우, 
+    이는 간단하게 다음과 같습니다:
+
       Java
       package Jouette;
 
@@ -100,17 +117,30 @@ callersaves 수행자가 내용을 버릴 수 있는 $\mu$ 레지스터 목록�
           public Assem.InstrList procEntryExit2(
               Assem.InstrList body) {
               return append (body,
-                             new Assem.InstrList(
-                                 new Assem.OPER("", null, returnSink),null));
+                new Assem.InstrList(
+                    new Assem.OPER("", null, returnSink),null));
           }
       }
-이는 임시 레지스터인 zero, return-address, 스택 포인터, 그리고 모든 callee-saves 레지스터들이 함수 종료 시점에도 여전히 유효하다는 것을 의미합니다. zero가 끝까지 유효하다는 것은 레지스터 할당기가 다른 용도로 사용하려고 시도하는 것을 방지하여, 이 레지스터가 전체적으로 유효함을 의미합니다. 이와 같은 트릭은 기계가 가질 수 있는 다른 특수 레지스터에도 적용됩니다.
+      
+이는 임시 레지스터인 zero, return-address, 스택 포인터, 그리고 
+모든 callee-saves 레지스터들이 함수 종료 시점에도 여전히 유효하다는 
+것을 의미합니다. 
+
+zero가 끝까지 유효하다는 것은 레지스터 할당기가 다른 용도로 사용하려고 
+시도하는 것을 방지하여, 이 레지스터가 전체적으로 유효함을 의미합니다. 
+이와 같은 트릭은 기계가 가질 수 있는 다른 특수 레지스터에도 적용됩니다.
 
 $MINIJAVA/chap9에서 사용할 수 있는 파일은 다음과 같습니다:
-Canon/ 정규화 및 추적 생성.
-Assem/ Assem 모듈.
+
+ - Canon/ 정규화 및 추적 생성.
+ - Assem/ Assem 모듈.
+
 Main/Main.java 사용자가 수정할 수 있는 Main 모듈.
-코드 생성기는 각 프로시저 또는 함수의 본문만 처리하며, 프로시저 진입/종료 시퀀스는 처리하지 않습니다. Frame.procEntryExit3 함수의 "스캐폴드(scaffold)" 버전을 사용하십시오:
+코드 생성기는 각 프로시저 또는 함수의 본문만 처리하며, 
+프로시저 진입/종료 시퀀스는 처리하지 않습니다. 
+
+Frame.procEntryExit3 함수의 "스캐폴드(scaffold)" 버전을 사용하십시오:
+
   Java
   package μ;
 

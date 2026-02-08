@@ -9,6 +9,7 @@ import Canon.TraceSchedule;
 import Codegen.Codegen;
 import Assem.InstrList;
 import Assem.Instr;
+import Mips.Frame;
 
 public class Main {
    public static void main(String [] args) {
@@ -47,7 +48,7 @@ public class Main {
                   Codegen cg = new Codegen();
                   InstrList instrs = cg.codegen(ts.stms);
                   System.out.println("=== Assem (Maximal Munch, unallocated) ===");
-                  Temp.TempMap tmap = new Temp.DefaultMap();
+                  Temp.TempMap tmap = new Temp.CombineMap(Frame.regNameMap(), new Temp.DefaultMap());
                   for (InstrList il = instrs; il != null; il = il.tail) {
                      Instr ins = il.head;
                      System.out.print(ins.format(tmap));

@@ -3,6 +3,8 @@ package Codegen;
 import Assem.*;
 import Temp.*;
 import Tree.*;
+import Mips.Frame;
+import java.util.ArrayList;
 
 /**
  * MIPS-oriented Maximal Munch code generator.
@@ -189,22 +191,62 @@ public class Codegen {
   }
 
   private Temp munchCall(Tree.CALL call, Temp resOpt) {
-    // Evaluate args for side effects (no convention applied)
+    ArrayList<Temp> argTemps = new ArrayList<>();
     for (Tree.ExpList a = call.args; a != null; a = a.tail) {
-      munchExp(a.head);
+      argTemps.add(munchExp(a.head));
     }
+    int regArgs = Math.min(argTemps.size(), Frame.numArgRegs());
+    int stackArgs = argTemps.size() - regArgs;
+    int stackAdjustment = stackArgs * Frame.wordSize();
+    if (stackAdjustment > 0) {
+      TempList spList = new TempList(Frame.SP, null);
+      emit(new OPER("addi `d0, `s0, -" + stackAdjustment, spList, spList));
+    }
+    for (int i = 0; i < regArgs; i++) {
+      Temp src = argTemps.get(i);
+      Temp dst = Frame.argReg(i);
+      emit(new Assem.MOVE("move `d0, `s0", dst, src));
+    }
+    for (int i = 0; i < stackArgs; i++) {
+      Temp src = argTemps.get(regArgs + i);
+      int offset = i * Frame.wordSize();
+      emit(new OPER("sw `s0, " + offset + "(`s1)",
+          null,
+          new TempList(src, new TempList(Frame.SP, null))));
+    }
+
+    TempList callDefs = Frame.callerSaves();
+    for (int i = Frame.numArgRegs() - 1; i >= 0; i--) {
+      callDefs = new TempList(Frame.argReg(i), callDefs);
+    }
+    callDefs = new TempList(Frame.RV2, callDefs);
+    callDefs = new TempList(Frame.RV, callDefs);
+    callDefs = new TempList(Frame.RA, callDefs);
+
+    TempList callUses = null;
+    for (int i = regArgs - 1; i >= 0; i--) {
+      callUses = new TempList(Frame.argReg(i), callUses);
+    }
+
     if (call.func instanceof Tree.NAME) {
       String lbl = ((Tree.NAME) call.func).label.toString();
-      emit(new OPER("jal " + lbl, null, null));
+      emit(new OPER("jal " + lbl, callDefs, callUses));
     } else {
       Temp f = munchExp(call.func);
-      emit(new OPER("jalr `s0", null, new TempList(f, null)));
+      callUses = new TempList(f, callUses);
+      emit(new OPER("jalr `s0", callDefs, callUses));
     }
+
+    if (stackAdjustment > 0) {
+      TempList spList = new TempList(Frame.SP, null);
+      emit(new OPER("addi `d0, `s0, " + stackAdjustment, spList, spList));
+    }
+
     if (resOpt != null) {
-      emit(new OPER("move `d0, $v0", new TempList(resOpt, null), null));
+      emit(new Assem.MOVE("move `d0, `s0", resOpt, Frame.RV));
       return resOpt;
     } else {
-      return null; // EXP(CALL ...) case, no result needed
+      return null;
     }
   }
 }
