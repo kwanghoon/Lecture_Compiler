@@ -74,6 +74,8 @@
 ./Tree/NAME.java
 ./Tree/JUMP.java
 ./FlowGraph/FlowGraph.java
+./FlowGraph/Liveness.java
+./FlowGraph/AssemFlowGraph.java
 ./Util/BoolList.java
 ./Codegen/Codegen.java
 ./MiniJavaParser.java

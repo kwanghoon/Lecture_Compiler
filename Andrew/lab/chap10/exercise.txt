@@ -9,6 +9,14 @@ AssemFlowGraph 클래스를 구현하여 Assem 명령어 리스트를 플로우
 LIVENESS
 
 다음 중 한 가지 방식으로 Liveness 모듈을 구현하세요.
-집합-방정식(set-equation) 알고리즘을 사용하되, 집합 표현은 불리언 배열(array-of-boolean) 
-또는 정렬된 임시변수 목록(sorted-list-of-temporaries)
-중 하나를 선택해서 구현할 것.
+집합-방정식(set-equation) 알고리즘을 사용하되,
+정렬된 임시변수 목록(sorted-list-of-temporaries)으로 구현할 것.
+
+Testing Liveness analysis results 
+
+Main.java에 Liveness analysis 패스를 추가하고 분석 결과를 
+출력하도록 구현해주세요.
+
+ $ find ../programs -name "*.java" -exec java Main \{\} \;
+
+ 

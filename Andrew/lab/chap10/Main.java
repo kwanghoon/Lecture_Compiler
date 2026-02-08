@@ -10,6 +10,11 @@ import Codegen.Codegen;
 import Assem.InstrList;
 import Assem.Instr;
 import Mips.Frame;
+import FlowGraph.AssemFlowGraph;
+import FlowGraph.FlowGraph;
+import FlowGraph.Liveness;
+import Graph.Node;
+import Graph.NodeList;
 
 public class Main {
    public static void main(String [] args) {
@@ -54,6 +59,23 @@ public class Main {
                      System.out.print(ins.format(tmap));
                      if (!(ins instanceof Assem.LABEL)) System.out.print("\n");
                   }
+
+                  // Build flow graph and run liveness analysis
+                  FlowGraph fg = new AssemFlowGraph(instrs);
+                  Liveness live = new Liveness(fg);
+                  System.out.println("=== Liveness (in/out sets) ===");
+                  int index = 0;
+                  for (NodeList nodes = fg.nodes(); nodes != null; nodes = nodes.tail) {
+                     Node node = nodes.head;
+                     Instr instr = ((AssemFlowGraph) fg).instr(node);
+                     System.out.println("#" + index + " " + instr.format(tmap));
+                     System.out.print("  in:  ");
+                     printTemps(live.in(node), tmap);
+                     System.out.print("  out: ");
+                     printTemps(live.out(node), tmap);
+                     System.out.println();
+                     index++;
+                  }
          } catch (ParseException e) {
             System.err.println("Parse error in " + path + ":\n" + e.toString());
             System.exit(2);
@@ -62,5 +84,19 @@ public class Main {
             System.exit(3);
          }
       }
+   }
+   private static void printTemps(Temp.TempList temps, Temp.TempMap map) {
+      if (temps == null) {
+         System.out.println("{}");
+         return;
+      }
+      System.out.print("{");
+      boolean first = true;
+      for (Temp.TempList t = temps; t != null; t = t.tail) {
+         if (!first) System.out.print(", ");
+         System.out.print(map.tempMap(t.head));
+         first = false;
+      }
+      System.out.println("}");
    }
 }
