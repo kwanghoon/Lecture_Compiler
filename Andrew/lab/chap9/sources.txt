@@ -53,6 +53,7 @@
 ./MiniJavaParser.java
 ./Main.java
 ./Token.java
+./Codegen/Codegen.java
 ./syntaxtree/Call.java
 ./syntaxtree/MethodDeclList.java
 ./syntaxtree/ArrayLookup.java

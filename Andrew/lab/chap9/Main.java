@@ -6,6 +6,9 @@ import Tree.StmList;
 import Canon.Canon;
 import Canon.BasicBlocks;
 import Canon.TraceSchedule;
+import Codegen.Codegen;
+import Assem.InstrList;
+import Assem.Instr;
 
 public class Main {
    public static void main(String [] args) {
@@ -38,6 +41,17 @@ public class Main {
                   System.out.println("=== Trace scheduled ===");
                   for (StmList l = ts.stms; l != null; l = l.tail) {
                      printer.prStm(l.head);
+                  }
+
+                  // Instruction selection (Maximal Munch to Assem)
+                  Codegen cg = new Codegen();
+                  InstrList instrs = cg.codegen(ts.stms);
+                  System.out.println("=== Assem (Maximal Munch, unallocated) ===");
+                  Temp.TempMap tmap = new Temp.DefaultMap();
+                  for (InstrList il = instrs; il != null; il = il.tail) {
+                     Instr ins = il.head;
+                     System.out.print(ins.format(tmap));
+                     if (!(ins instanceof Assem.LABEL)) System.out.print("\n");
                   }
          } catch (ParseException e) {
             System.err.println("Parse error in " + path + ":\n" + e.toString());
