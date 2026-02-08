@@ -1,0 +1,14 @@
+chap9의 폴더와 *.java와 *.jj를 chap10으로 복사
+
+Constructing flow graphs
+
+AssemFlowGraph 클래스를 구현하여 Assem 명령어 리스트를 플로우 
+그래프로 변환하세요. chap10에서 제공된 Graph.Graph, FlowGraph 
+추상 클래스를 사용하십시오.
+
+LIVENESS
+
+다음 중 한 가지 방식으로 Liveness 모듈을 구현하세요.
+집합-방정식(set-equation) 알고리즘을 사용하되, 집합 표현은 불리언 배열(array-of-boolean) 
+또는 정렬된 임시변수 목록(sorted-list-of-temporaries)
+중 하나를 선택해서 구현할 것.
