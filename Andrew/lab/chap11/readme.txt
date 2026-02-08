@@ -1,0 +1,55 @@
+그래프 색칠 방식 레지스터 할당을 두 모듈로 구현하세요. 
+Color는 그래프 색칠만 담당하고, 
+RegAlloc은 스필을 관리하면서 Color를 서브루틴으로 호출합니다.
+ 단순화를 위해 스필과 코얼레싱은 구현하지 마세요. 
+ 이렇게 하면 알고리즘이 훨씬 간단해집니다.
+
+package RegAlloc; 
+
+public class RegAlloc implements Temp.TempMap { 
+
+       public Assem.InstrList instrs; 
+       public String tempMap(Temp temp); 
+       public RegAlloc(Frame.Frame f, Assem.InstrList il); 
+
+} 
+
+class Color implements TempMap { 
+
+      public TempList spills(); 
+      public String tempMap(Temp t); 
+      public Color(InterferenceGraph ig, 
+	           TempMap initial, 
+		   TempList registers); 
+}
+
+
+간섭 그래프, 호출 규약 때문에 일부 템프에 이미 지정된 초기 할당(프리컬러링), 
+그리고 색(레지스터) 리스트가 주어지면, Color는 초기 할당을 확장한 결과를 만들어냅니다. 
+이 결과는 플로우 그래프에서 사용된 모든 템프들에게 registers 리스트의 
+레지스터를 사용해 색을 배정합니다.
+
+초기 할당은 프레임(프리컬러된 템프를 TempMap 형태로 제공)이며, registers 인자는 
+모든 기계 레지스터 목록인 Frame.registers 입니다(251쪽 참조). 초기 할당에 들어 
+있는 레지스터도 registers 인자에 포함될 수 있는데, 이를 다른 노드 색칠에 사용해도 
+괜찮기 때문입니다.
+
+Color의 결과는 TempMap(Color가 TempMap을 구현)으로 표현되는 레지스터 할당과 
+스필 리스트입니다. RegAlloc의 결과(스필이 없었다면)는 이를 그대로 반환하는 
+TempMap으로, 최종 어셈블리 코드 출력을 위해 Assem.format의 인자로 사용할 수 
+있습니다.
+
+더 나은 Color 인터페이스는 각 템프의 스필 비용을 지정하는 spillCost 인자를 
+포함시켜야 합니다. 이 값은 단순히 사용/정의 횟수일 수도 있고, 루프 중첩 정도를 
+가중치로 준 사용/정의 횟수일 수도 있습니다. 모든 템프에 대해 1을 반환하는 
+단순한 spillCost도 동작합니다.
+
+코얼레싱이 없는 단순 색칠 구현은 simplifyWorklist 하나만 필요합니다. 
+이 worklist에는 프리컬러되지 않았고 아직 단순화되지 않았으며 차수가 K보다 작은 
+노드들을 넣습니다. freezeWorklist는 당연히 필요 없습니다. 또한 simplifyWorklist가 
+비면 원래 그래프의 모든 노드를 순회해 스필 후보를 찾겠다고 하면 spillWorklist도 
+필요 없습니다.
+
+simplifyWorklist만 있다면 이중 연결 리스트 표현은 필요 없습니다.
+ 이 worklist는 중간을 접근할 일이 없으므로 단일 연결 리스트나 스택으로 
+ 구현해도 됩니다.
