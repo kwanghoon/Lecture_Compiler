@@ -14,6 +14,8 @@ $ javac @sources.txt
 
 [ 목표 (readme.txt) ]
 
+* Instruction Selection
+
 선호하는 명령어 집합은 Mips이다. 
  Maximal Munch를 사용하여 Assem-명령어로의 변환을 구현하시오. 
  James Larus가 구현한 MIPS 시뮬레이터 SPIM을 사용하여 테스트할 수 있다.
@@ -26,13 +28,13 @@ $ javac @sources.txt
  아직 레지스터 할당을 하지 않았으므로, 임시변수에서 문자열로의 변환 함수로 
  format에 new Temp.DefaultMap()을 그대로 전달하시오.
 
-package Temp;
+    package Temp;
 
-public class DefaultMap implements TempMap {
+    public class DefaultMap implements TempMap {
 
-    public String tempMap(Temp.Temp t)
-            { return t.toString(); }
-}
+        public String tempMap(Temp.Temp t)
+                { return t.toString(); }
+    }
 
 이렇게 하면 레지스터 이름을 전혀 사용하지 않는 어셈블리 언어가 생성됩니다. 
 명령어들은 t3, t283 등의 이름을 사용하는데, 이들 중 일부 임시변수는 
@@ -42,10 +44,10 @@ Frame 모듈이 특정 머신 레지스터(143페이지 참조)를 나타내기 
 어셈블리 언어를 더 읽기 쉽게 만들 수 있습니다. 프레임 모듈은 특수 임시변수에서 
 이름으로, 특수하지 않은 임시변수에서는 null로 매핑을 제공해야 합니다:
 
-package Frame;
+    package Frame;
 
-public class Frame implements Temp.TempMap {
-    :
+    public class Frame implements Temp.TempMap {
+        :
         :
         : abstract public String tempMap(Temp temp); }
 
@@ -53,3 +55,157 @@ public class Frame implements Temp.TempMap {
 먼저 frame.tempMap을 시도하고 그 결과가 null이면 Temp.toString()으로 
 대체하는 새로운 TempMap 함수를 만드시오.
 
+* Register Lists
+
+
+
+
+레지스터 목록
+
+다음과 같은 레지스터 목록들을 만드세요. 각 레지스터에 대해 어셈블리 언어 표현을 위한 문자열과 Tree 및 Assem 자료 구조에서 참조하기 위한 Temp.Temp가 필요합니다.
+specialregs RV와 FP와 같은 "특수" 레지스터, 스택 포인터 SP, 복귀 주소 레지스터 RA, 그리고 (일부 기계에서) 제로 레지스터 ZERO와 같은 것들을 구현하는 데 사용되는 $\mu$ 레지스터 목록입니다. 일부 기계에는 다른 특수 레지스터가 있을 수 있습니다.
+argregs 외부로 전달되는 인자(정적 링크 포함)를 전달하는 $\mu$ 레지스터 목록입니다.
+calleesaves 호출된 프로시저(수행자)가 변경되지 않도록 보존해야 하는(또는 저장 및 복원해야 하는) $\mu$ 레지스터 목록입니다.
+callersaves 수행자가 내용을 버릴 수 있는 $\mu$ 레지스터 목록입니다.
+이 네 가지 레지스터 목록은 겹치지 않아야 하며, Assem 명령어에 나타날 수 있는 모든 레지스터를 포함해야 합니다. 이 목록들은 공개적이지 않지만, Frame과 Codegen 모두에서 내부적으로 유용하며—예를 들어, munchArgs를 구현하고 calldefs 목록을 구성하는 데 사용됩니다.
+
+이 네 가지 레지스터 목록은 겹치지 않아야 하며, Assem 명령어에 나타날 수 있는 모든 레지스터를 포함해야 합니다. 이 목록들은 공개적이지 않지만, Frame과 Codegen 모두에서 내부적으로 유용하며—예를 들어, munchArgs를 구현하고 calldefs 목록을 구성하는 데 사용됩니다.
+
+    package Frame;
+
+    class Frame implements Temp.TempMap {
+        . . .
+        abstract public Assem.InstrList procEntryExit2(
+            Assem.InstrList body);
+    }
+    이 함수는 레지스터 할당기에게 특정 레지스터들이 프로시저 종료 시점에 여전히 유효(live)하다는 것을 알려주기 위해 함수 본문(body)에 "싱크(sink)" 명령어를 추가합니다. Jouette 기계의 경우, 이는 간단하게 다음과 같습니다:
+      Java
+      package Jouette;
+
+      class Frame extends Frame.Frame {
+          . . .
+          static TempList returnSink = 
+              L(ZERO, L(RA, L(SP, calleeSaves)));
+
+          static Assem.InstrList append (Assem.InstrList a, 
+                                         Assem.InstrList b) {
+              if ( a== null) return b;
+              else {Assem.InstrList p;
+                    for( p=a; p.tail!=null; p=p.tail) {} 
+                    p.tail =b; 
+                    return a;
+              }
+          }
+
+          public Assem.InstrList procEntryExit2(
+              Assem.InstrList body) {
+              return append (body,
+                             new Assem.InstrList(
+                                 new Assem.OPER("", null, returnSink),null));
+          }
+      }
+이는 임시 레지스터인 zero, return-address, 스택 포인터, 그리고 모든 callee-saves 레지스터들이 함수 종료 시점에도 여전히 유효하다는 것을 의미합니다. zero가 끝까지 유효하다는 것은 레지스터 할당기가 다른 용도로 사용하려고 시도하는 것을 방지하여, 이 레지스터가 전체적으로 유효함을 의미합니다. 이와 같은 트릭은 기계가 가질 수 있는 다른 특수 레지스터에도 적용됩니다.
+
+$MINIJAVA/chap9에서 사용할 수 있는 파일은 다음과 같습니다:
+Canon/ 정규화 및 추적 생성.
+Assem/ Assem 모듈.
+Main/Main.java 사용자가 수정할 수 있는 Main 모듈.
+코드 생성기는 각 프로시저 또는 함수의 본문만 처리하며, 프로시저 진입/종료 시퀀스는 처리하지 않습니다. Frame.procEntryExit3 함수의 "스캐폴드(scaffold)" 버전을 사용하십시오:
+  Java
+  package μ;
+
+  class Frame extends Frame.Frame {
+      . . .
+      public Frame.Proc procEntryExit3 (Assem.InstrList body) {
+          return new Frame.Proc(
+              "PROCEDURE " + name.toString() + "\n", body,
+              "END " + name.toString() + "\n");
+      }
+  }
+
+
+
+[Factorial.java를 MIPS(TEMP 이름)로 컴파일한 예시]
+
+=== Assem (Maximal Munch, unallocated) ===
+    main:li t10, 0
+    jal new_object_Fac
+    move t9, $v0
+    move t0, t9
+    li t12, 10
+    jal ComputeFac
+    move t11, $v0
+    move t6, t11
+    jal print
+    ComputeFac:li t4, 0
+    li t13, 1
+    blt t2, t13, L0
+    L1:L2:li t14, 0
+    bne t4, t14, L3
+    L4:move t8, t2
+    li t17, 1
+    sub t16, t2, t17
+    jal ComputeFac
+    move t15, $v0
+    move t7, t15
+    mul t18, t8, t7
+    move t3, t18
+    L5:move t5, t3
+    j L6
+    L0:li t4, 1
+    j L2
+    L3:li t3, 1
+    j L5
+
+
+[디버깅]
+
+위 MIPS 프로그램에 해당하는 C-like 함수 (포인터는 없음)로 
+역컴파일해보세요
+
+앞서 제시한 MIPS 프로그램에 각 라인 번호를 붙이고, 
+역컴파일한 C-like 프로그램의 각 문장이 어디에 해당하는지를 
+라인 번호와 매칭해서 설명해주세요
+
+    1. main:li t10, 0
+    2. jal new_object_Fac
+    3. move t9, $v0
+    4. move t0, t9
+    5. li t12, 10
+    6. jal ComputeFac
+    7. move t11, $v0
+    8. move t6, t11
+    9. jal print
+    10. ComputeFac:li t4, 0
+    11. li t13, 1
+    12. blt t2, t13, L0
+    13. L1:L2:li t14, 0
+    14. bne t4, t14, L3
+    15. L4:move t8, t2
+    16. li t17, 1
+    17. sub t16, t2, t17
+    18. jal ComputeFac
+    19. move t15, $v0
+    20. move t7, t15
+    21. mul t18, t8, t7
+    22. move t3, t18
+    23. L5:move t5, t3
+    24. j L6
+    25. L0:li t4, 1
+    26. j L2
+    27. L3:li t3, 1
+    28. j L5
+
+**C-like 매핑 (ComputeFac)**
+    - 선언/초기화 `int num_aux;` → 10
+    - 조건 `if (num < 1)` → 11–12
+    - then 분기 `num_aux = 1;` → 25 (후속 합류로 26→13–14 진행)
+    - else 분기 `num_aux = num * ComputeFac(num - 1);` → 15–22
+    - 반환 `return num_aux;` → 공통 반환 준비 23, 함수 종료 점프 24
+        - base case 반환 경로: 27–28로 `t3 = 1` 설정 후 23–24로 종료
+        - else 경로 반환: 22에서 `t3 = num * rec`, 23–24로 종료
+
+**C-like 매핑 (main)**
+    - 객체 생성(새 Fac 인스턴스; C-like에선 무시 가능) → 1–4
+    - 호출 `int t = ComputeFac(10);` → 5 (상수 10), 6 (호출), 7 (결과 수신), 8 (`t`로 이동)
+    - 출력 `print(t);` → 9
