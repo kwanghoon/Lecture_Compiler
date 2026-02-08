@@ -71,3 +71,266 @@ chap7에서 생성한 IR에 대해
 chap7에서 생성한 IR에 대해 
 Canon.linearize → BasicBlocks → TraceSchedule 순으로 
 연결해 출력까지 확인하도록 chap8/Main.java를 수정해주세요.
+
+
+팩토리얼 프로그램 예제
+
+$ java Main ../programs/Factorial.java 
+class Factorial {
+  public static void main (String [] a) {
+    System.out.println(new Fac().ComputeFac(10));  }
+}
+
+class Fac { 
+
+  public int ComputeFac (int num) { 
+    int num_aux;
+    if ((num < 1)) 
+    num_aux = 1;
+    else num_aux = (num * this.ComputeFac((num - 1)));
+    return num_aux;
+  }
+}
+=== IR (unscheduled) ===
+SEQ(
+ SEQ(
+  LABEL main,
+  EXP(
+   CALL(
+    NAME print,
+     CALL(
+      NAME ComputeFac,
+       ESEQ(
+        MOVE(
+         TEMP t0,
+         CALL(
+          NAME new_object_Fac,
+           CONST 0)),
+        TEMP t0),
+       CONST 10)))),
+ SEQ(
+  SEQ(
+   LABEL ComputeFac,
+   SEQ(
+    SEQ(
+     SEQ(
+      SEQ(
+       SEQ(
+        SEQ(
+         CJUMP(NE,
+          ESEQ(
+           SEQ(
+            SEQ(
+             SEQ(
+              SEQ(
+               SEQ(
+                SEQ(
+                 MOVE(
+                  TEMP t4,
+                  CONST 0),
+                 CJUMP(LT,
+                  TEMP t2,
+                  CONST 1,
+                  L0,L1)),
+                LABEL L0),
+               MOVE(
+                TEMP t4,
+                CONST 1)),
+              JUMP(
+               NAME L2)),
+             LABEL L1),
+            LABEL L2),
+           TEMP t4),
+          CONST 0,
+          L3,L4),
+         LABEL L3),
+        MOVE(
+         TEMP t3,
+         CONST 1)),
+       JUMP(
+        NAME L5)),
+      LABEL L4),
+     MOVE(
+      TEMP t3,
+      BINOP(MUL,
+       TEMP t2,
+       CALL(
+        NAME ComputeFac,
+         TEMP t1,
+         BINOP(MINUS,
+          TEMP t2,
+          CONST 1))))),
+    LABEL L5)),
+  MOVE(
+   TEMP t5,
+   TEMP t3)))
+=== Canonical linearized ===
+LABEL main
+MOVE(
+ TEMP t0,
+ CALL(
+  NAME new_object_Fac,
+   CONST 0))
+MOVE(
+ TEMP t6,
+ CALL(
+  NAME ComputeFac,
+   TEMP t0,
+   CONST 10))
+EXP(
+ CALL(
+  NAME print,
+   TEMP t6))
+LABEL ComputeFac
+MOVE(
+ TEMP t4,
+ CONST 0)
+CJUMP(LT,
+ TEMP t2,
+ CONST 1,
+ L0,L1)
+LABEL L0
+MOVE(
+ TEMP t4,
+ CONST 1)
+JUMP(
+ NAME L2)
+LABEL L1
+LABEL L2
+CJUMP(NE,
+ TEMP t4,
+ CONST 0,
+ L3,L4)
+LABEL L3
+MOVE(
+ TEMP t3,
+ CONST 1)
+JUMP(
+ NAME L5)
+LABEL L4
+MOVE(
+ TEMP t8,
+ TEMP t2)
+MOVE(
+ TEMP t7,
+ CALL(
+  NAME ComputeFac,
+   TEMP t1,
+   BINOP(MINUS,
+    TEMP t2,
+    CONST 1)))
+MOVE(
+ TEMP t3,
+ BINOP(MUL,
+  TEMP t8,
+  TEMP t7))
+LABEL L5
+MOVE(
+ TEMP t5,
+ TEMP t3)
+=== Trace scheduled ===
+LABEL main
+MOVE(
+ TEMP t0,
+ CALL(
+  NAME new_object_Fac,
+   CONST 0))
+MOVE(
+ TEMP t6,
+ CALL(
+  NAME ComputeFac,
+   TEMP t0,
+   CONST 10))
+EXP(
+ CALL(
+  NAME print,
+   TEMP t6))
+LABEL ComputeFac
+MOVE(
+ TEMP t4,
+ CONST 0)
+CJUMP(LT,
+ TEMP t2,
+ CONST 1,
+ L0,L1)
+LABEL L1
+LABEL L2
+CJUMP(NE,
+ TEMP t4,
+ CONST 0,
+ L3,L4)
+LABEL L4
+MOVE(
+ TEMP t8,
+ TEMP t2)
+MOVE(
+ TEMP t7,
+ CALL(
+  NAME ComputeFac,
+   TEMP t1,
+   BINOP(MINUS,
+    TEMP t2,
+    CONST 1)))
+MOVE(
+ TEMP t3,
+ BINOP(MUL,
+  TEMP t8,
+  TEMP t7))
+LABEL L5
+MOVE(
+ TEMP t5,
+ TEMP t3)
+JUMP(
+ NAME L6)
+LABEL L0
+MOVE(
+ TEMP t4,
+ CONST 1)
+JUMP(
+ NAME L2)
+LABEL L3
+MOVE(
+ TEMP t3,
+ CONST 1)
+JUMP(
+ NAME L5)
+LABEL L6
+
+
+Canon (linearize) 구현 
+
+abstract public class Exp {
+  abstract public ExpList kids();
+  abstract public Exp build(ExpList kids);
+}
+
+Step one is to make a “subexpression-extraction” method for
+each kind. Step two is to make a “subexpression-insertion” method: Given
+an ESEQ-clean version of each subexpression, this builds a new version of the
+expression or statement.
+
+Using these build methods, we can write functions
+
+  static Tree.Stm do_stm(Tree.Stm s)
+  static Tree.ESEQ do_exp (Tree.Exp e)
+
+that pull all the ESEQs out of a statement or expression, respectively. That
+is, do_stm uses s.kids() to get the immediate subexpressions of s, which
+will be an expression-list l. It then pulls all the ESEQs out of l recursively,
+yielding a clump of side-effecting statements s1 and a cleaned-up list l'. Then
+SEQ(s1, s.build(l')) constructs a new statement, like the original s but with
+no ESEQs.
+
+These functions rely on auxiliary functions reorder_stm and
+reorder_exp for help.
+
+  static Tree.Stm reorder_stm(Tree.Stm s)
+  static Tree.ESEQ reorder_exp (Tree.Exp e)
+
+Highlights
+
+ - 목적: Tree.Stm을 Tree.StmList로 평탄화하고 ESEQ/중첩 CALL 제거.
+ - 핵심 규칙: 좌→우 인자 재배치, 교환 불가 시 TEMP로 임시 저장, SEQ/ESEQ 제거, CALL 승격(MoveCall/ExpCall).
+ - 순서 보장: 원래 평가 순서·부작용 보존, 교환 가능성(NAME/CONST 또는 NOP)만 재배치.
+ - 결과 형태: 각 문장 자식은 순수 표현식, 리스트에는 가능하면 EXP(CONST)가 남지 않음.
+ - 예시 포함: MOVE(ESEQ(...), ...)와 EXP(CALL ...) 정규화 후 선형화 흐름.
